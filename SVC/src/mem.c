@@ -11,7 +11,7 @@
 #include "printf.h"
 #endif  /* DEBUG_0 */
 
-typedef struct __note_t {
+typedef struct __node_t {
     int size;
     struct __note_t *next;
     struct __note_t *prev;
@@ -19,7 +19,7 @@ typedef struct __note_t {
 } node_t;
 
 
-note_t *free_mem_head;
+node_t *free_mem_head;
 int mem_alloc_algo;
 int mem_blk_size;
 
@@ -140,9 +140,45 @@ void *first_fit_alloc(size_t size) {
 }
 
 void first_fit_dealloc(void *ptr) {
-    
+    node_t *deallocateNode = (ptr - sizeOf(deallocateNode));
+    void *startingAddress= ptr - sizeOf(deallocateNode);
+    void *endingAddress = ptr + deallocateNode->size;
+
+    node_t *curNode = free_mem_head;
+
+
+
+    while(curNode!=NULL){
+        
+        //if the end of current Node's address space is the starting address expand data
+        //Cur node is starting address
+        //increment sizeOf(node_t) to increment past it
+        //Add the curNode->size +1 to get to end of size and to next data segment
+        if(((void*) curNode + sizeOf(curNode) + curNode->size + 1 )== startingAddress ){
+            curNode->next = deallocateNode->next;
+            curNode->size= curNode->size+sizeOf(deallocateNode)+deallocateNode->size;
+            //This line below is so we can keep track of the deallocated node 
+            //if we have Free|Dealocated|Free memory situation
+            deallocateNode= curNode;
+        }
+        else if((void*) curNode = endingAddress+4){
+            deallocateNode->next = curNode->next;
+            deallocateNode->size = deallocateNode->size +sizeOf(curNode)+curNode->size;
+        }
+        curNode = curNode->next;
+    }
+
+    return;
 }
 
 int first_fit_count_extfrag(size_t size) {
-    
+    int counter=0;
+    node_t *curNode = free_mem_head;
+
+    while(curNode!=NULL){
+        if (curNode->size<size){
+            counter++;
+        }
+    }
+    return counter;
 }
