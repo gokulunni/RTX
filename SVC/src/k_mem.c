@@ -10,7 +10,7 @@
 #ifdef DEBUG_0
 #include "printf.h"
 #endif  /* DEBUG_0 */
-
+#define CEIL(x,y) ((x+y-1)/y)
 
 int first_fit_mem_init(size_t blk_size);
 void *first_fit_mem_alloc(size_t size);
@@ -50,17 +50,17 @@ int k_mem_init(size_t blk_size, int algo){
 #ifdef DEBUG_0
 	printf("k_mem_init: blk_size = %d, algo = %d\r\n", blk_size, algo);
 	printf("k_mem_init: image ends at 0x%x\r\n", end_addr);
-	printf("k_mem_init: IRAM1 ends at 0x%x\r\n", IRAM1_END); // TODO: IRAM1_END?
+	printf("k_mem_init: IRAM1 ends at 0x%x\r\n", IRAM1_END);
 #endif /* DEBUG_0 */
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            return first_fit_mem_init(blk_size)
+            return first_fit_mem_init(end_addr, blk_size);
         default:
             return RTX_ERR;
     }
     
-	return RTX_ERR;
+	return 0;
 }
 
 void *k_mem_alloc(size_t size) {
@@ -75,13 +75,12 @@ void *k_mem_alloc(size_t size) {
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            first_fit_mem_alloc(size)
-            break;
+            return first_fit_mem_alloc(size);
         default:
-            break;
+            return RTX_ERR;
     }
     
-	return RTX_ERR;
+	return NULL;
 }
 
 void k_mem_dealloc(void *ptr) {
@@ -95,10 +94,9 @@ void k_mem_dealloc(void *ptr) {
     
     switch (mem_alloc_algo) {
            case FIRST_FIT:
-               first_fit_mem_dealloc(ptr)
-               break;
+               return first_fit_mem_dealloc(ptr);
            default:
-               break;
+               return RTX_ERR;
        }
     
     
@@ -116,12 +114,11 @@ int k_mem_count_extfrag(size_t size) {
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            first_fit_count_extfrag(size)
-            break;
+            return first_fit_count_extfrag(size);
         default:
-            break;
+            return RTX_ERR;
     }
-    
+
 	return 0;
 }
 
@@ -130,67 +127,50 @@ int k_mem_count_extfrag(size_t size) {
 */
 
 
-int first_fit_mem_init(size_t blk_size) {
-    // TODO: mem_size
-    // CHECK SIZE BIGGER THAN MIN
-    int mem_size = 0;
-    
-    free_mem_head = mmap(NULL, mem_size, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0)
-    
-    if (free_mem_head == MAP_FAILED) {
-        // PRINT ERROR
+int first_fit_mem_init(unsigned int end_addr, size_t blk_size) {
+    if (blk_size <= 0) {
         return RTX_ERR;
     }
-    
-    head->size = mem_size - sizeof(node_t);
-    head->prev = NULL;
-    head->next = NULL;
+
+    free_mem_head = end_addr + 4;
+    free_mem_head->size = IRAM1_END - end_addr;
+    free_mem_head->prev = NULL;
+    free_mem_head->next = NULL;
+
+    // TODO: do we need to clear data
 
     return RTX_OK;
 }
 
 
 void *first_fit_mem_alloc(size_t size) {
-    
     if (size <= 0) {
         return RTX_ERR;
     }
     
-    int block_size = size + sizeof(node_t);
-    
-    node_t *n = free_mem_head;
-    while (n != NULL) {
-        if (n->size > block_size) {
-            
-        } else if (n->size == block_size) {
-            
-            
-            
-            return n;
-        } else if (n->size < blk_size) {
-            //print out investigate this
+    int mem_chunk_size = CEIL((size + sizeof(node_t)), mem_blk_size) * mem_blk_size;
+
+    node_t *cur_node = free_mem_head;
+    while (cur_node != NULL) {
+        if (cur_node->size > mem_chunk_size) {
+            node_t new_node = cur_node + mem_chunk_size;
+            new_node->size = cur_node->size - mem_chunk_size;
+            new_node->next = cur_node->next;
+            new_node->prev = cur_node->prev;
+            cur_node->size = mem_chunk_size;
+            return cur_node;
+        } else if (cur_node->size == mem_chunk_size) {
+            node_t next_node = cur_node->next;
+            node_t prev_node = cur_node->prev;
+            prev_node->next = next_node;
+            next_node->prev = prev_node
+            return cur_node + sizeof(node_t);
         }
-    }
-    
-    
-//     while(linked list not null){
-//        if( linkedList_Size>= size+ headerSize){
+//        else if (cur_node->size < blk_size) {
 //
-//            if (linkedList_Size> size&& linkedList_Size > blockSize){
-//            //Split if size is bigger
-//                return split()
-//            }
-//            else if linkedList_size<blockSize{
-//                print out investigate this
-//            }
-//            else{
-//                //Otherwise return address
-//                return linedList.Address + sizeOf(node_t);
-//            }
-//
+//            //print out investigate this
 //        }
-//
-//    }
+    }
 }
 
 
