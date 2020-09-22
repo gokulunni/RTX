@@ -11,6 +11,13 @@
 #include "printf.h"
 #endif  /* DEBUG_0 */
 
+
+int first_fit_mem_init(size_t blk_size);
+void *first_fit_mem_alloc(size_t size);
+void first_fit_mem_dealloc(void *ptr);
+int first_fit_count_extfrag(size_t size);
+
+
 /* 
    This symbol is defined in the scatter file, 
    refer to ARM Compiler v5.x Linker User Guide
@@ -48,7 +55,7 @@ int k_mem_init(size_t blk_size, int algo){
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            return first_fit_init(blk_size)
+            return first_fit_mem_init(blk_size)
         default:
             return RTX_ERR;
     }
@@ -68,7 +75,7 @@ void *k_mem_alloc(size_t size) {
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            first_fit_alloc(size)
+            first_fit_mem_alloc(size)
             break;
         default:
             break;
@@ -88,7 +95,7 @@ void k_mem_dealloc(void *ptr) {
     
     switch (mem_alloc_algo) {
            case FIRST_FIT:
-               first_fit_dealloc(ptr)
+               first_fit_mem_dealloc(ptr)
                break;
            default:
                break;
@@ -143,7 +150,7 @@ int first_fit_mem_init(size_t blk_size) {
 }
 
 
-void *first_fit_alloc(size_t size) {
+void *first_fit_mem_alloc(size_t size) {
     
     if (size <= 0) {
         return RTX_ERR;
@@ -187,7 +194,7 @@ void *first_fit_alloc(size_t size) {
 }
 
 
-void first_fit_dealloc(void *ptr) {
+void first_fit_mem_dealloc(void *ptr) {
     node_t *deallocateNode = (ptr - sizeOf(deallocateNode));
     void *startingAddress= ptr - sizeOf(deallocateNode);
     void *endingAddress = ptr + deallocateNode->size;
