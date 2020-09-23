@@ -240,23 +240,23 @@ void first_fit_mem_dealloc(void *ptr) {
         new_node->prev = NULL;
         new_node->next = NULL;
         free_mem_head = new_node;
-    }
+    } else {
+        while (cur_node != NULL) {
+               if ((void *)cur_node > (void *) dealloc_ptr) {
+                   new_node = (node_t *) dealloc_ptr;
+                   new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+                   new_node->prev = cur_node->prev;
+                   cur_node->prev = new_node;
+                   new_node->next = cur_node;
+                   if (new_node->prev != NULL) {
+                       new_node->prev->next = new_node;
+                   } else {
+                       free_mem_head = new_node;
+                   }
+               }
 
-    while (cur_node != NULL) {
-        if ((void *)cur_node > (void *) dealloc_ptr) {
-            new_node = (node_t *) dealloc_ptr;
-            new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
-            new_node->prev = cur_node->prev;
-            cur_node->prev = new_node;
-            new_node->next = cur_node;
-            if (new_node->prev != NULL) {
-                new_node->prev->next = new_node;
-            } else {
-                free_mem_head = new_node;
-            }
-        }
-
-        cur_node = cur_node->next;
+               cur_node = cur_node->next;
+           }
     }
 
     if (new_node) {
