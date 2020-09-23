@@ -26,6 +26,9 @@ typedef struct node {
 //TODO: magic?
 } node_t;
 
+typedef struct used_mem_node {
+    int size;
+} used_mem_node_t;
 
 node_t *free_mem_head;
 int mem_alloc_algo;
