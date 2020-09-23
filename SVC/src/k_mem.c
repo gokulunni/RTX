@@ -279,7 +279,7 @@ int first_fit_count_extfrag(size_t size) {
     node_t *curNode = free_mem_head;
 
     while(curNode != NULL){
-        if (curNode->size < size){ // TODO: do we need to take into account header?
+        if (curNode->size < size+ sizeof(size_t)){ // TODO: do we need to take into account header?
             counter++;
         }
         curNode = curNode->next;
