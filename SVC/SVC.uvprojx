@@ -16,7 +16,7 @@
         <TargetCommonOption>
           <Device>LPC1768</Device>
           <Vendor>NXP</Vendor>
-          <PackID>Keil.LPC1700_DFP.2.4.0</PackID>
+          <PackID>Keil.LPC1700_DFP.2.6.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x10000000,0x8000) IRAM2(0x2007C000,0x8000) IROM(0x00000000,0x80000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -408,12 +408,12 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -439,13 +439,13 @@
       <TargetName>SVC RAM</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::.\ARMCC</pCCUsed>
+      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>LPC1768</Device>
           <Vendor>NXP</Vendor>
-          <PackID>Keil.LPC1700_DFP.2.4.0</PackID>
+          <PackID>Keil.LPC1700_DFP.2.6.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x10000000,0x8000) IRAM2(0x2007C000,0x8000) IROM(0x00000000,0x80000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -752,7 +752,7 @@
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <useXO>0</useXO>
             <v6Lang>3</v6Lang>
             <v6LangP>3</v6LangP>
@@ -837,12 +837,12 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -888,7 +888,7 @@
       <file attr="config" category="header" condition="LPC1700 CMSIS Device" name="RTE_Driver\Config\RTE_Device.h" version="2.4.1">
         <instance index="0">RTE\Device\LPC1768\RTE_Device.h</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="LPC17xx CMSIS Device ARMCC"/>
-        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.6.0"/>
         <targetInfos>
           <targetInfo name="SVC RAM"/>
           <targetInfo name="SVC SIM"/>
@@ -897,7 +897,7 @@
       <file attr="config" category="source" condition="LPC176x" name="Device\Source\ARM\startup_LPC17xx.s" version="1.0.0">
         <instance index="0">RTE\Device\LPC1768\startup_LPC17xx.s</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="LPC17xx CMSIS Device ARMCC"/>
-        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.6.0"/>
         <targetInfos>
           <targetInfo name="SVC RAM"/>
           <targetInfo name="SVC SIM"/>
@@ -906,7 +906,7 @@
       <file attr="config" category="source" condition="LPC176x" name="Device\Source\system_LPC17xx.c" version="1.0.0">
         <instance index="0">RTE\Device\LPC1768\system_LPC17xx.c</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="LPC17xx CMSIS Device ARMCC"/>
-        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <package name="LPC1700_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.6.0"/>
         <targetInfos>
           <targetInfo name="SVC RAM"/>
           <targetInfo name="SVC SIM"/>

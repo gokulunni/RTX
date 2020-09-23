@@ -20,30 +20,33 @@
 #define IROM_BASE  0x0
 #endif
 
-#define TOTAL_MEM_SIZE (ImageRW_IRAM1ZILIMIT - 0x10008000);
+#define HEAP_START 0x1000047c
+#define HEAP_END   0x10008000
+#define TOTAL_MEM_SIZE    (HEAP_END - HEAP_START)
 
 /* Function Prototypes */
-int coalescingTest();
-int externalFragmentationTest();
-int splitMergeTest();
-int invalidArgs_memalloc_test();
-int invalidArgs_memcountextfrag_test();
-int invalidArgs_memdealloc_test();
-int completeMemoryUsageTest();
+int coalescingTest(void);
+int externalFragmentationTest(void);
+int splitMergeTest(void);
+int invalidArgs_memalloc_test(void);
+int invalidArgs_memcountextfrag_test(void);
+int invalidArgs_memdealloc_test(void);
+int completeMemoryUsageTest(void);
 
 int tests_passed;
 int total_tests = 7;
-void (*tests[total_tests]) (void) = {coalescingTest, externalFragmentationTest, splitMergeTest, 
+int (*tests[]) (void) = {coalescingTest, externalFragmentationTest, splitMergeTest, 
                                      invalidArgs_memalloc_test, invalidArgs_memdealloc_test, invalidArgs_memcountextfrag_test,
                                      completeMemoryUsageTest};
 
-int coalescingTest()
+int coalescingTest(void)
 {
   void *pointers[3];
   int num_chunks = 3;
   int chunk_size = TOTAL_MEM_SIZE/num_chunks;
   
-  for(int i = 0; i < num_chunks; i++)
+	int i;
+  for(i = 0; i < num_chunks; i++)
   {
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
@@ -53,13 +56,14 @@ int coalescingTest()
     }
   }
 
-  for(int i = 0; i < num_chunks; i++)
+  for(i = 0; i < num_chunks; i++)
   {
     mem_dealloc(pointers[i]);
   }
 
   //Try to alloc a large chunk and see if successful to verify coalescing
-  if(mem_alloc(TOTAL_MEM_SIZE))
+	void *alloc_success = mem_alloc(TOTAL_MEM_SIZE)
+  if(alloc_success)
   {
     return 1;
   }
@@ -67,12 +71,14 @@ int coalescingTest()
   return 0;
 }
 
-int externalFragmentationTest()
+int externalFragmentationTest(void)
 {
   int num_chunks = 10;
   int chunk_size = 10;
   void *pointers[num_chunks];
-  for(int i = 0; i < num_chunks; i++)
+	
+	int i;
+  for(i = 0; i < num_chunks; i++)
   {
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
@@ -82,12 +88,12 @@ int externalFragmentationTest()
     }
   }
 
-  for(int i = 0; i < 10; i++)
+  for(i = 0; i < 10; i++)
   {
     mem_dealloc(pointers[i]);
   }
-
-  if(mem_count_extfrag(TOTAL_MEM_SIZE + 1) != 1)
+	int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+  if(fragments!= 1)
   {
     return 0;
   }
@@ -95,7 +101,7 @@ int externalFragmentationTest()
   return 1;
 }
 
-int splitMergeTest()
+int splitMergeTest(void)
 {
   int num_allocs = 0;
   int num_deallocs = 0;
@@ -103,7 +109,8 @@ int splitMergeTest()
   int num_chunks = 10;
   void *pointers[num_chunks];
 
-  for(int i = 0; i < num_chunks; i++)
+	int i;
+  for(i = 0; i < num_chunks; i++)
   {
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
@@ -112,70 +119,78 @@ int splitMergeTest()
       return 0;
     }
     num_allocs++;
-    if(mem_count_extfrag(TOTAL_MEM_SIZE + 1) != num_allocs + 1)
+		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+    if(fragments != num_allocs + 1)
       return 0;
   }
 
-  for(int i = 0; i < num_chunks; i++)
+  for(i = 0; i < num_chunks; i++)
   {
     mem_dealloc(pointers[i]);
     num_deallocs++;
-    if(mem_count_extfrag(TOTAL_MEM_SIZE + 1) != num_allocs - num_deallocs + 1)
+		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+    if(fragments != num_allocs - num_deallocs + 1)
       return 0;
   }
   return 1;
 }
 
-int invalidArgs_memalloc_test()
+int invalidArgs_memalloc_test(void)
 {
-  if(mem_alloc(TOTAL_MEM_SIZE + 1) != NULL || mem_alloc(-1) != NULL)
+	void *oversized_pointer = mem_alloc(TOTAL_MEM_SIZE + 1);
+	void *invalid_pointer = mem_alloc(-1);
+  if(oversized_pointer != NULL || invalid_pointer != NULL)
     return 0;
 
   return 1;
 }
 
-int invalidArgs_memcountextfrag_test()
+int invalidArgs_memcountextfrag_test(void)
 {
 
   //what return value should we expect?
-  if (mem_count_extfrag(NULL) != NULL)
+	int ret_val = mem_count_extfrag(NULL);
+  if (ret_val != NULL)
     return 0;
 
   return 1;
 }
 
-int invalidArgs_memdealloc_test()
+int invalidArgs_memdealloc_test(void)
 {
   //How can we verify dealloc???
 
   //double free -> undefined behaviour
   void* tmp = mem_alloc(1);
   mem_dealloc(tmp);
-  mem_dealloc(tmp) != NULL
+  mem_dealloc(tmp);
 
   //Free on stack pointer
-  void *stack_pointer;
+	int stack_var = 5;
+  int *stack_pointer = &stack_var;
   mem_dealloc(stack_pointer);
 
   return 1;
 }
 
-int completeMemoryUsageTest()
+int completeMemoryUsageTest(void)
 {
   int num_allocs = 10;
   int alloc_sizes = TOTAL_MEM_SIZE / num_allocs;
   void* tmps[num_allocs + 1];
 
-  for (int i = 0; i < num_allocs; i++)
+	int i;
+  for (i = 0; i < num_allocs; i++)
   {
     tmps[i] = mem_alloc(alloc_sizes);
   }
 
   //check to see if the next allocation goes through
-  if (tmps[num_allocs] = mem_alloc(alloc_sizes) != NULL)
+	tmps[num_allocs] = mem_alloc(alloc_sizes);
+  if (tmps[num_allocs] != NULL)
     return 0;
 
-  for (int i = 0; i < num_allocs; i++)
+  for (i = 0; i < num_allocs; i++)
   {
     mem_dealloc(tmps[i]);
   }
@@ -185,7 +200,9 @@ int completeMemoryUsageTest()
 int main()
 {
    
-  U32 ret_val = 1234;
+  int ret_val;
+	int passed = 0;
+	int i;
 
   SystemInit();  /* initialize the system */
   __disable_irq();
@@ -211,7 +228,7 @@ int main()
     return -1;
 
   printf("G04_test: START");  
-  for(int i = 0; i < total_tests; i++)
+  for(i = 0; i < total_tests; i++)
   {
     if((*tests[i])())
     {
