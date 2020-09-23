@@ -34,7 +34,7 @@ node_t *free_mem_head;
 int mem_alloc_algo;
 size_t mem_blk_size;
 
-
+void print_linked_list();
 int first_fit_mem_init(unsigned int end_addr);
 void *first_fit_mem_alloc(size_t size);
 void first_fit_mem_dealloc(void *ptr);
@@ -126,117 +126,151 @@ int k_mem_count_extfrag(size_t size) {
 
 int first_fit_mem_init(unsigned int end_addr) {
     free_mem_head = (node_t *) (end_addr + 4);
-    free_mem_head->size = IRAM1_END - end_addr - 4;
+    free_mem_head->size = IRAM1_END - end_addr - 4 - sizeof(node_t);
     free_mem_head->prev = NULL;
     free_mem_head->next = NULL;
-		printf("Header size %d\r\n", sizeof(node_t));
-    // TODO: do we need to clear data
+
+#ifdef DEBUG_0
+    printf("Free memory block metadata node size 0x%x\r\n", sizeof(node_t));
+    printf("Used memory block metadata node size 0x%x\r\n", sizeof(used_mem_node_t));
+    printf("First fit linked list address 0x%x at init\r\n", free_mem_head);
+    printf("First fit head node size 0x%x at init\r\n", free_mem_head->size);
+    printf("First fit head node prev 0x%x at init\r\n", free_mem_head->prev);
+    printf("First fit head node next 0x%x at init\r\n", free_mem_head->next);
+#endif /* DEBUG_0 */
 
     return RTX_OK;
 }
 
 
 void *first_fit_mem_alloc(size_t size) {
-		node_t *cur_node;
-		node_t *new_node;
-		int mem_chunk_size;
+    int mem_chunk_size;
+    node_t *new_node;
+    used_mem_node_t *ret_node;
+    node_t *cur_node = free_mem_head;
 	
     if (size <= 0) {
         return NULL;
     }
+
+#ifdef DEBUG_0
+    printf("Linked list of free memory blocks before allocation\r\n");
+    print_linked_list();
+#endif /* DEBUG_0 */
     
-    mem_chunk_size = CEIL((size + sizeof(node_t)), mem_blk_size) * mem_blk_size;
-    printf("mem chunk size %d\r\n", mem_chunk_size);
-    cur_node = free_mem_head;
+    mem_chunk_size = CEIL((size + sizeof(used_mem_node_t)), mem_blk_size) * mem_blk_size;
+#ifdef DEBUG_0
+    printf("Return memory block size: 0x%x\r\n", mem_chunk_size);
+#endif /* DEBUG_0 */
+
     while (cur_node != NULL) {
-        if (cur_node->size > mem_chunk_size) {
-            new_node = (node_t *) (cur_node + mem_chunk_size/sizeof(node_t));
+        if (cur_node->size + sizeof(node_t) > mem_chunk_size) {
+#ifdef DEBUG_0
+            printf("Splitting a memory block size\r\n", cur_node->size + sizeof(node_t));
+            printf("Current node address 0x%x before splitting\r\n", cur_node);
+            printf("Current node size 0x%x before splitting\r\n", cur_node->size);
+            printf("Current node prev 0x%x before splitting\r\n", cur_node->prev);
+            printf("Current node next 0x%x before splitting\r\n", cur_node->next);
+#endif /* DEBUG_0 */
+
+            new_node = (node_t *) ((char *) cur_node + mem_chunk_size);
             new_node->size = cur_node->size - mem_chunk_size;
+
+            if (free_mem_head == cur_node) {
+                free_mem_head = new_node;
+            }
+
             new_node->next = cur_node->next;
             new_node->prev = cur_node->prev;
-            printf("new_node address 0x%x\r\n", new_node);
-            printf("new_node size 0x%x\r\n", new_node->size);
-            printf("new_node prev 0x%x\r\n", new_node->prev);
-            printf("new_node next 0x%x\r\n", new_node->next);
-            cur_node->size = mem_chunk_size;
-            printf("cur_node address 0x%x\r\n", cur_node);
-            printf("cur_node size 0x%x\r\n", cur_node->size);
-            printf("cur_node prev 0x%x\r\n", cur_node->prev);
-            printf("cur_node next 0x%x\r\n", cur_node->next);
-            return cur_node + sizeof(node_t);
-        } else if (cur_node->size == mem_chunk_size) {
-            cur_node->prev->next = cur_node->next;
-            cur_node->next->prev = cur_node->prev;
-            return cur_node + sizeof(node_t);
+
+#ifdef DEBUG_0
+            printf("New node address 0x%x after splitting\r\n", new_node);
+            printf("New node size 0x%x after splitting\r\n", new_node->size);
+            printf("New node prev 0x%x after splitting\r\n", new_node->prev);
+            printf("New node next 0x%x after splitting\r\n", new_node->next);
+#endif /* DEBUG_0 */
+
+            ret_node = (used_mem_node_t *) cur_node;
+            ret_node->size = mem_chunk_size;
+
+#ifdef DEBUG_0
+            printf("Used node address 0x%x after splitting\r\n", ret_node);
+            printf("New node size 0x%x after splitting\r\n", ret_node->size);
+#endif /* DEBUG_0 */
+            print_linked_list();
+            return ret_node + 1;
+        } else if (cur_node->size + sizeof(node_t) == mem_chunk_size) {
+            if (free_mem_head == cur_node) {
+                free_mem_head = cur_node->next;
+            }
+
+            if (cur_node->next != NULL) {
+                cur_node->next->prev = cur_node->prev;
+            }
+
+            if (cur_node->prev != NULL) {
+                cur_node->prev->next = cur_node->next;
+            }
+
+            ret_node = (used_mem_node_t *) cur_node;
+            ret_node->size = cur_node->size;
+
+#ifdef DEBUG_0
+            printf("Used node address 0x%x after splitting\r\n", ret_node);
+            printf("New node size 0x%x after splitting\r\n", ret_node->size);
+#endif /* DEBUG_0 */
+            print_linked_list();
+            return ret_node + 1;
         }
-//        else if (cur_node->size < blk_size) {
-//
-//            //print out investigate this
-//        }
+        cur_node = cur_node->next;
     }
 		
-		return NULL;
+    return NULL;
 }
 
 
 void first_fit_mem_dealloc(void *ptr) {
-//    node_t *deallocateNode = (ptr - sizeof(deallocateNode));
-//    void *startingAddress= ptr - sizeof(deallocateNode);
-//    void *endingAddress = ptr + deallocateNode->size;
-//    node_t *curNode = free_mem_head;
+    node_t *cur_node = free_mem_head;
+    node_t *new_node;
+    used_mem_node_t *dealloc_ptr = (used_mem_node_t *) ptr - 1;
 
-//    int frontSet =FALSE;
-//    node_t *nodeBefore=NULL;
+    if (free_mem_head == NULL) {
+        new_node = (node_t *) dealloc_ptr;
+        new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+        new_node->prev = NULL;
+        new_node->next = NULL;
+        free_mem_head = new_node;
+    }
 
-//    //Iterate through unallocated data linked list
-//    while(curNode!=NULL){
-//        
-//        //if the end of current Node's address space is the starting address expand data
-//        //Cur node is starting address
-//        //increment sizeOf(node_t) to increment past it
-//        //Add the curNode->size +1 to get to end of size and to next data segment
-//        if(((void*) curNode + sizeof(curNode) + curNode->size + 4 )== startingAddress ){
-//            curNode->next = deallocateNode->next;
-//            curNode->size= curNode->size + sizeof(deallocateNode) + deallocateNode->size;
-//            //This line below is so we can keep track of the deallocated node as it now an extension of curNode
-//            //if we have Free|Dealocated|Free memory situation
-//            deallocateNode= curNode;
-//            frontSet = TRUE;
-//        }
-//        else if ((void*) curNode == endingAddress+4){
-//            deallocateNode->next = curNode->next;
-//            deallocateNode->size = deallocateNode->size + sizeof(curNode)+curNode->size;
-//        }
-//        
-//        //Find the previous free node in linked list before the deallocateNode
-//        if (curNode < startingAddress){
-//            nodeBefore = curNode;
-//        }
-//        
-//        curNode = curNode->next;
-//    }
+    while (cur_node != NULL) {
+        if ((void *)cur_node > (void *) dealloc_ptr) {
+            new_node = (node_t *) dealloc_ptr;
+            new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+            new_node->prev = cur_node->prev;
+            cur_node->prev = new_node;
+            new_node->next = cur_node;
+            if (new_node->prev != NULL) {
+                new_node->prev->next = new_node;
+            } else {
+                free_mem_head = new_node;
+            }
+        }
 
-//    //Put the deallocated node in the correct location within the linked list of unallocated data
-//    //Assuming we have the case allocated|Deallocate|(allocated or Free)
-//    if(!frontSet){
-//        deallocateNode->prev = nodeBefore;
-//        if(nodeBefore->next < endingAddress){
-//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 1");
-//        }
-//        else if(nodeBefore > startingAddress){
-//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 2");
-//        }
-//        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)>startingAddress){
-//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 3");
-//        }
-//        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)+4==startingAddress){
-//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 4");
-//        }
-//        deallocateNode->next = nodeBefore->next;
-//        nodeBefore->next = deallocateNode;
-//    }
+        cur_node = cur_node->next;
+    }
 
-    return;
+    if (new_node) {
+        if (new_node->prev != NULL && new_node == (node_t *) ((char *) new_node->prev + sizeof(new_node->prev) + new_node->prev->size + 1)) {
+            new_node->prev->size = new_node->prev->size + new_node->size + sizeof(node_t);
+            new_node->prev->next = new_node->next;
+            new_node = new_node->prev;
+        }
+
+        if (new_node->next != NULL && new_node->next == (node_t *) ((char*) new_node + sizeof(new_node) + new_node->size + 1)) {
+            new_node->size = new_node->size + new_node->next->size + sizeof(node_t);
+            new_node->next = new_node->next->next;
+        }
+    }
 }
 
 
@@ -252,4 +286,19 @@ int first_fit_count_extfrag(size_t size) {
     }
     
     return counter;
+}
+
+void print_linked_list() {
+#ifdef DEBUG_0
+    node_t *cur_node = free_mem_head;
+    int index = 0;
+    while (cur_node != NULL) {
+        printf("Node{%d} address 0x%x\r\n", index, cur_node);
+        printf("Node{%d} size 0x%x\r\n", index, cur_node->size);
+        printf("Node{%d} prev 0x%x\r\n", index, cur_node->prev);
+        printf("Node{%d} next 0x%x\r\n", index, cur_node->next);
+        cur_node = cur_node->next;
+        index++;
+    }
+#endif /* DEBUG_0 */
 }
