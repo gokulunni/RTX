@@ -39,13 +39,13 @@ int first_fit_count_extfrag(size_t size);
 
 
 int k_mem_init(size_t blk_size, int algo){
-		unsigned int end_addr;
+    unsigned int end_addr;
 		
     if (blk_size <= 0) {
         return RTX_ERR;
     }
     
-		end_addr = (unsigned int) &Image$$RW_IRAM1$$ZI$$Limit;
+    end_addr = (unsigned int) &Image$$RW_IRAM1$$ZI$$Limit;
     
     mem_blk_size = blk_size;
     mem_alloc_algo = algo;
@@ -62,8 +62,6 @@ int k_mem_init(size_t blk_size, int algo){
         default:
             return RTX_ERR;
     }
-    
-	return 0;
 }
 
 void *k_mem_alloc(size_t size) {
@@ -82,8 +80,6 @@ void *k_mem_alloc(size_t size) {
         default:
             return NULL;
     }
-    
-	return NULL;
 }
 
 void k_mem_dealloc(void *ptr) {
@@ -96,14 +92,11 @@ void k_mem_dealloc(void *ptr) {
     // CHECK PTR is VALID
     
     switch (mem_alloc_algo) {
-           case FIRST_FIT:
-               first_fit_mem_dealloc(ptr);
-           default:
-               return;
-       }
-    
-    
-	return;
+        case FIRST_FIT:
+            first_fit_mem_dealloc(ptr);
+        default:
+            return;
+    }
 }
 
 int k_mem_count_extfrag(size_t size) {
@@ -121,8 +114,6 @@ int k_mem_count_extfrag(size_t size) {
         default:
             return RTX_ERR;
     }
-
-	return 0;
 }
 
 /*
@@ -135,7 +126,7 @@ int first_fit_mem_init(unsigned int end_addr) {
     free_mem_head->size = IRAM1_END - end_addr - 4;
     free_mem_head->prev = NULL;
     free_mem_head->next = NULL;
-
+		printf("Header size %d\r\n", sizeof(node_t));
     // TODO: do we need to clear data
 
     return RTX_OK;
@@ -152,23 +143,23 @@ void *first_fit_mem_alloc(size_t size) {
     }
     
     mem_chunk_size = CEIL((size + sizeof(node_t)), mem_blk_size) * mem_blk_size;
-		printf("mem chunk size %d\r\n", mem_chunk_size);
+    printf("mem chunk size %d\r\n", mem_chunk_size);
     cur_node = free_mem_head;
     while (cur_node != NULL) {
         if (cur_node->size > mem_chunk_size) {
-            new_node = (node_t *) (cur_node + mem_chunk_size);
+            new_node = (node_t *) (cur_node + mem_chunk_size/sizeof(node_t));
             new_node->size = cur_node->size - mem_chunk_size;
             new_node->next = cur_node->next;
             new_node->prev = cur_node->prev;
-						printf("new_node address 0x%x\r\n", new_node);
-						printf("new_node size 0x%x\r\n", new_node->size);
-						printf("new_node prev 0x%x\r\n", new_node->prev);
-						printf("new_node next 0x%x\r\n", new_node->next);
+            printf("new_node address 0x%x\r\n", new_node);
+            printf("new_node size 0x%x\r\n", new_node->size);
+            printf("new_node prev 0x%x\r\n", new_node->prev);
+            printf("new_node next 0x%x\r\n", new_node->next);
             cur_node->size = mem_chunk_size;
-						printf("new_node address 0x%x\r\n", cur_node);
-						printf("new_node size 0x%x\r\n", cur_node->size);
-						printf("new_node prev 0x%x\r\n", cur_node->prev);
-						printf("new_node next 0x%x\r\n", cur_node->next);
+            printf("cur_node address 0x%x\r\n", cur_node);
+            printf("cur_node size 0x%x\r\n", cur_node->size);
+            printf("cur_node prev 0x%x\r\n", cur_node->prev);
+            printf("cur_node next 0x%x\r\n", cur_node->next);
             return cur_node + sizeof(node_t);
         } else if (cur_node->size == mem_chunk_size) {
             cur_node->prev->next = cur_node->next;
@@ -186,61 +177,61 @@ void *first_fit_mem_alloc(size_t size) {
 
 
 void first_fit_mem_dealloc(void *ptr) {
-    node_t *deallocateNode = (ptr - sizeof(deallocateNode));
-    void *startingAddress= ptr - sizeof(deallocateNode);
-    void *endingAddress = ptr + deallocateNode->size;
-    node_t *curNode = free_mem_head;
+//    node_t *deallocateNode = (ptr - sizeof(deallocateNode));
+//    void *startingAddress= ptr - sizeof(deallocateNode);
+//    void *endingAddress = ptr + deallocateNode->size;
+//    node_t *curNode = free_mem_head;
 
-    int frontSet =FALSE;
-    node_t *nodeBefore=NULL;
+//    int frontSet =FALSE;
+//    node_t *nodeBefore=NULL;
 
-    //Iterate through unallocated data linked list
-    while(curNode!=NULL){
-        
-        //if the end of current Node's address space is the starting address expand data
-        //Cur node is starting address
-        //increment sizeOf(node_t) to increment past it
-        //Add the curNode->size +1 to get to end of size and to next data segment
-        if(((void*) curNode + sizeof(curNode) + curNode->size + 4 )== startingAddress ){
-            curNode->next = deallocateNode->next;
-            curNode->size= curNode->size + sizeof(deallocateNode) + deallocateNode->size;
-            //This line below is so we can keep track of the deallocated node as it now an extension of curNode
-            //if we have Free|Dealocated|Free memory situation
-            deallocateNode= curNode;
-            frontSet = TRUE;
-        }
-        else if ((void*) curNode == endingAddress+4){
-            deallocateNode->next = curNode->next;
-            deallocateNode->size = deallocateNode->size + sizeof(curNode)+curNode->size;
-        }
-        
-        //Find the previous free node in linked list before the deallocateNode
-        if (curNode < startingAddress){
-            nodeBefore = curNode;
-        }
-        
-        curNode = curNode->next;
-    }
+//    //Iterate through unallocated data linked list
+//    while(curNode!=NULL){
+//        
+//        //if the end of current Node's address space is the starting address expand data
+//        //Cur node is starting address
+//        //increment sizeOf(node_t) to increment past it
+//        //Add the curNode->size +1 to get to end of size and to next data segment
+//        if(((void*) curNode + sizeof(curNode) + curNode->size + 4 )== startingAddress ){
+//            curNode->next = deallocateNode->next;
+//            curNode->size= curNode->size + sizeof(deallocateNode) + deallocateNode->size;
+//            //This line below is so we can keep track of the deallocated node as it now an extension of curNode
+//            //if we have Free|Dealocated|Free memory situation
+//            deallocateNode= curNode;
+//            frontSet = TRUE;
+//        }
+//        else if ((void*) curNode == endingAddress+4){
+//            deallocateNode->next = curNode->next;
+//            deallocateNode->size = deallocateNode->size + sizeof(curNode)+curNode->size;
+//        }
+//        
+//        //Find the previous free node in linked list before the deallocateNode
+//        if (curNode < startingAddress){
+//            nodeBefore = curNode;
+//        }
+//        
+//        curNode = curNode->next;
+//    }
 
-    //Put the deallocated node in the correct location within the linked list of unallocated data
-    //Assuming we have the case allocated|Deallocate|(allocated or Free)
-    if(!frontSet){
-        deallocateNode->prev = nodeBefore;
-        if(nodeBefore->next < endingAddress){
-            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 1");
-        }
-        else if(nodeBefore > startingAddress){
-            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 2");
-        }
-        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)>startingAddress){
-            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 3");
-        }
-        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)+4==startingAddress){
-            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 4");
-        }
-        deallocateNode->next = nodeBefore->next;
-        nodeBefore->next = deallocateNode;
-    }
+//    //Put the deallocated node in the correct location within the linked list of unallocated data
+//    //Assuming we have the case allocated|Deallocate|(allocated or Free)
+//    if(!frontSet){
+//        deallocateNode->prev = nodeBefore;
+//        if(nodeBefore->next < endingAddress){
+//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 1");
+//        }
+//        else if(nodeBefore > startingAddress){
+//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 2");
+//        }
+//        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)>startingAddress){
+//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 3");
+//        }
+//        else if (nodeBefore+nodeBefore->size+sizeOfNode(nodeBefore)+4==startingAddress){
+//            print("We have encountered an issue in allocated|Deallocate|(allocated or free) Code error 4");
+//        }
+//        deallocateNode->next = nodeBefore->next;
+//        nodeBefore->next = deallocateNode;
+//    }
 
     return;
 }
