@@ -22,6 +22,8 @@
 
 #define HEAP_START 0x1000047c
 #define HEAP_END   0x10008000
+#define FREE_HEADER_SIZE 12
+#define ALLOC_HEADER_SIZE 4
 #define TOTAL_MEM_SIZE    (HEAP_END - HEAP_START)
 
 /* Function Prototypes */
@@ -43,7 +45,7 @@ int coalescingTest(void)
 {
   void *pointers[3];
   int num_chunks = 3;
-  int chunk_size = TOTAL_MEM_SIZE/num_chunks;
+  int chunk_size = (TOTAL_MEM_SIZE - FREE_HEADER_SIZE/num_chunks) - ALLOC_HEADER_SIZE;
   
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -75,7 +77,7 @@ int externalFragmentationTest(void)
 {
   int num_chunks = 10;
   int chunk_size = 10;
-  void *pointers[num_chunks];
+  void *pointers[10];
 	
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -101,13 +103,37 @@ int externalFragmentationTest(void)
   return 1;
 }
 
+int completeMemoryUsageTest(void)
+{
+  int num_allocs = 10;
+  int alloc_sizes = TOTAL_MEM_SIZE / num_allocs;
+  void* tmps[10 + 1];
+
+	int i;
+  for (i = 0; i < num_allocs; i++)
+  {
+    tmps[i] = mem_alloc(alloc_sizes);
+  }
+
+  //check to see if the next allocation goes through
+	tmps[num_allocs] = mem_alloc(alloc_sizes);
+  if (tmps[num_allocs] != NULL)
+    return 0;
+
+  for (i = 0; i < num_allocs; i++)
+  {
+    mem_dealloc(tmps[i]);
+  }
+  return 1;
+}
+
 int splitMergeTest(void)
 {
   int num_allocs = 0;
   int num_deallocs = 0;
   int chunk_size = 10;
   int num_chunks = 10;
-  void *pointers[num_chunks];
+  void *pointers[10];
 
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -173,37 +199,13 @@ int invalidArgs_memdealloc_test(void)
   return 1;
 }
 
-int completeMemoryUsageTest(void)
-{
-  int num_allocs = 10;
-  int alloc_sizes = TOTAL_MEM_SIZE / num_allocs;
-  void* tmps[num_allocs + 1];
-
-	int i;
-  for (i = 0; i < num_allocs; i++)
-  {
-    tmps[i] = mem_alloc(alloc_sizes);
-  }
-
-  //check to see if the next allocation goes through
-	tmps[num_allocs] = mem_alloc(alloc_sizes);
-  if (tmps[num_allocs] != NULL)
-    return 0;
-
-  for (i = 0; i < num_allocs; i++)
-  {
-    mem_dealloc(tmps[i]);
-  }
-  return 1;
-}
-
 int main()
 {
    
   int ret_val;
 	int passed = 0;
 	int i;
-
+	
   SystemInit();  /* initialize the system */
   __disable_irq();
   uart_init(1);  /* uart1 uses polling for output */
@@ -227,24 +229,25 @@ int main()
   if(ret_val == -1)
     return -1;
 
-  printf("G04_test: START");  
+  printf("G04_test: START\n");  
   for(i = 0; i < total_tests; i++)
   {
     if((*tests[i])())
     {
-      printf("G04_test: test %d OK\n", i);
+      printf("G04_test: test %d OK\n", i+1);
       passed++;
     }
     else
-      printf("G04_test: test %d FAIL\n", i);
+      printf("G04_test: test %d FAIL\n", i+1);
   }
 
   printf("%d/%d OK\n", passed, total_tests);
   printf("%d/%d FAIL\n", total_tests-passed, total_tests);
-  printf("G04_test: END");
+  printf("G04_test: END\n");
   
   /* printf has been retargeted to use the UART1,
      check putc function in uart_polling.c.
   */
   return 0;  
 }
+
