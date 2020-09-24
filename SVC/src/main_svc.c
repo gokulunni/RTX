@@ -32,12 +32,13 @@ int invalidArgs_memalloc_test(void);
 int invalidArgs_memcountextfrag_test(void);
 int invalidArgs_memdealloc_test(void);
 int completeMemoryUsageTest(void);
+int whiteBoxTest(void);
 
 int tests_passed;
-int total_tests = 7;
+int total_tests = 8;
 int (*tests[]) (void) = {coalescingTest, externalFragmentationTest, splitMergeTest, 
                                      invalidArgs_memalloc_test, invalidArgs_memdealloc_test, invalidArgs_memcountextfrag_test,
-                                     completeMemoryUsageTest};
+                                     completeMemoryUsageTest, whiteBoxTest};
 
 int coalescingTest(void)
 {
@@ -195,6 +196,17 @@ int completeMemoryUsageTest(void)
     mem_dealloc(tmps[i]);
   }
   return 1;
+}
+
+int whiteBoxTest(void)
+{
+  void* first_blk = mem_alloc(5);
+  //check that the first memory allocated starts at heap
+  if (first_blk != HEAP_START + 4 + 12)
+	return 0;
+
+  mem_dealloc(first_blk);
+  
 }
 
 int main()
