@@ -218,9 +218,9 @@ int invalidArgs_memcountextfrag_test(void)
   //what return value should we expect?
 	int ret_val = mem_count_extfrag(NULL);
   if (ret_val != NULL)
-    return 0;
+    return 1;
 
-  return 1;
+  return 0;
 }
 
 int invalidArgs_memdealloc_test(void)
