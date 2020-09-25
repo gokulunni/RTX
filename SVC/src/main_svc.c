@@ -334,8 +334,8 @@ int randomOrderTest(void)
   {
     #ifdef DEBUG_1
     printf("(randomOrderTest) could not re-allocate memory\n");
-    return 0;
     #endif
+    return 0;
   }
 
   void* pointer1 = mem_alloc(30);
@@ -346,8 +346,8 @@ int randomOrderTest(void)
   {
     #ifdef DEBUG_1
     printf("(randomOrderTest) could not deallocate memory on what was re-allocated\n");
-    return 0;
     #endif
+    return 0;
   }
 
 
