@@ -248,17 +248,30 @@ int whiteBoxTest(void)
 	for(int i = 0; i < 20; i++)
 	{
 		blocks[i] = mem_alloc(20);
-		//check that the first memory allocated starts at heap
+		//Ensure that there is only 1 fragmentation 
 		
 		unsigned int address = (unsigned int) blocks[i];
-		unsigned int expected = heap_start + 24 + ALLOC_HEADER_SIZE*(i+1) + (20 * i);
-		if (address != expected)
+		int fragments= mem_count_extfrag(32000);
+		if (fragments!=1){
+			//We should always have one fragmentation until colesing
 			return 0;
+		}
 	}
 	
+	//Deallocate some random block inbetween
+	mem_dealloc(blocks[4]);
+	
+	int fragments= mem_count_extfrag(32000);
+	if (fragments!=2){
+		//We should always have two fragments now that we deallocated a block
+		return 0;
+	}
+
+	
 	for(int i = 0; i < 20; i++)
-		mem_dealloc(blocks[i]);
-  
+		if(i!=4){
+			mem_dealloc(blocks[i]);
+		}
 	return 1;
 }
 
