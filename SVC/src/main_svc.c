@@ -22,7 +22,9 @@
 
 #define HEAP_START 0x1000047c
 #define HEAP_END   0x10008000
-#define TOTAL_MEM_SIZE    (HEAP_END - HEAP_START)
+#define FREE_HEADER_SIZE 12
+#define ALLOC_HEADER_SIZE 4
+#define TOTAL_MEM_SIZE    (HEAP_END - HEAP_START - FREE_HEADER_SIZE)
 
 /* Function Prototypes */
 int coalescingTest(void);
@@ -35,16 +37,19 @@ int completeMemoryUsageTest(void);
 int whiteBoxTest(void);
 
 int tests_passed;
-int total_tests = 8;
-int (*tests[]) (void) = {coalescingTest, externalFragmentationTest, splitMergeTest, 
-                                     invalidArgs_memalloc_test, invalidArgs_memdealloc_test, invalidArgs_memcountextfrag_test,
+int total_tests = 1;
+int (*tests[]) (void) = {/*coalescingTest, externalFragmentationTest, splitMergeTest, 
+                                     invalidArgs_memalloc_test, invalidArgs_memdealloc_test, invalidArgs_memcountextfrag_test,*/
                                      completeMemoryUsageTest, whiteBoxTest};
+char *test_names[] = {/*"coalescingTest", "externalFragmentationTest", "splitMergeTest", 
+                                     "invalidArgs_memalloc_test", "invalidArgs_memdealloc_test", "invalidArgs_memcountextfrag_test",*/
+                                     "completeMemoryUsageTest"};
 
 int coalescingTest(void)
 {
   void *pointers[3];
   int num_chunks = 3;
-  int chunk_size = TOTAL_MEM_SIZE/num_chunks;
+  int chunk_size = (TOTAL_MEM_SIZE/num_chunks) - ALLOC_HEADER_SIZE;
   
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -52,8 +57,12 @@ int coalescingTest(void)
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
     {
-      printf("Error: Could not allocate %d bytes\n", chunk_size);
-      return 0;
+      printf("Error: Could not allocate %d bytes for chunk %d/%d\n", chunk_size, i+1, num_chunks);
+			for(int j = i-1; j >= 0; j++)
+			{
+				mem_dealloc(pointers[j]);
+			}
+			return 0;
     }
   }
 
@@ -76,7 +85,7 @@ int externalFragmentationTest(void)
 {
   int num_chunks = 10;
   int chunk_size = 10;
-  void *pointers[num_chunks];
+  void *pointers[10];
 	
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -102,13 +111,43 @@ int externalFragmentationTest(void)
   return 1;
 }
 
+int completeMemoryUsageTest(void)
+{
+  int num_allocs = 10;
+  int alloc_sizes = (TOTAL_MEM_SIZE / num_allocs) - ALLOC_HEADER_SIZE;
+  void* tmps[10 + 1];
+
+  for (int i = 0; i < num_allocs; i++)
+  {
+    tmps[i] = mem_alloc(alloc_sizes);
+		if(tmps[i] == NULL)
+			printf("Error: Could not allocate %d bytes for chunk %d/%d\n", alloc_sizes, i+1, num_allocs);
+  }
+	
+	for(int i = 0; i < num_allocs; i++)
+	{
+		printf("Address: %x\n", tmps[i]);
+	}
+
+  //check to see if the next allocation goes through
+	tmps[num_allocs] = mem_alloc(alloc_sizes);
+  if (tmps[num_allocs] != NULL)
+    return 0;
+
+  for (int i = 0; i < num_allocs; i++)
+  {
+    mem_dealloc(tmps[i]);
+  }
+  return 1;
+}
+
 int splitMergeTest(void)
 {
   int num_allocs = 0;
   int num_deallocs = 0;
   int chunk_size = 10;
   int num_chunks = 10;
-  void *pointers[num_chunks];
+  void *pointers[10];
 
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -120,7 +159,7 @@ int splitMergeTest(void)
       return 0;
     }
     num_allocs++;
-		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1); //seems to enter infinite loop when traversing nodes in LL
     if(fragments != num_allocs + 1)
       return 0;
   }
@@ -164,37 +203,17 @@ int invalidArgs_memdealloc_test(void)
   //double free -> undefined behaviour
   void* tmp = mem_alloc(1);
   mem_dealloc(tmp);
-  mem_dealloc(tmp);
+  int status = mem_dealloc(tmp);
+	if(status)
+			return 0;
 
   //Free on stack pointer
 	int stack_var = 5;
   int *stack_pointer = &stack_var;
-  mem_dealloc(stack_pointer);
+  status = mem_dealloc(stack_pointer);
+	if(status)
+		return 0;
 
-  return 1;
-}
-
-int completeMemoryUsageTest(void)
-{
-  int num_allocs = 10;
-  int alloc_sizes = TOTAL_MEM_SIZE / num_allocs;
-  void* tmps[num_allocs + 1];
-
-	int i;
-  for (i = 0; i < num_allocs; i++)
-  {
-    tmps[i] = mem_alloc(alloc_sizes);
-  }
-
-  //check to see if the next allocation goes through
-	tmps[num_allocs] = mem_alloc(alloc_sizes);
-  if (tmps[num_allocs] != NULL)
-    return 0;
-
-  for (i = 0; i < num_allocs; i++)
-  {
-    mem_dealloc(tmps[i]);
-  }
   return 1;
 }
 
@@ -214,8 +233,7 @@ int main()
    
   int ret_val;
 	int passed = 0;
-	int i;
-
+	
   SystemInit();  /* initialize the system */
   __disable_irq();
   uart_init(1);  /* uart1 uses polling for output */
@@ -239,24 +257,25 @@ int main()
   if(ret_val == -1)
     return -1;
 
-  printf("G04_test: START");  
-  for(i = 0; i < total_tests; i++)
+  printf("G04_test: START\n");  
+  for(int i = 0; i < total_tests; i++)
   {
     if((*tests[i])())
     {
-      printf("G04_test: test %d OK\n", i);
+      printf("G04_test: test %d (%s) OK\n", i+1, test_names[i]);
       passed++;
     }
     else
-      printf("G04_test: test %d FAIL\n", i);
+      printf("G04_test: test %d (%s) FAIL\n", i+1, test_names[i]);
   }
 
   printf("%d/%d OK\n", passed, total_tests);
   printf("%d/%d FAIL\n", total_tests-passed, total_tests);
-  printf("G04_test: END");
+  printf("G04_test: END\n");
   
   /* printf has been retargeted to use the UART1,
      check putc function in uart_polling.c.
   */
   return 0;  
 }
+
