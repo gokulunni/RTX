@@ -34,7 +34,7 @@ int mem_alloc_algo;
 size_t mem_blk_size;
 int mem_init_status;
 
-void print_linked_list();
+void print_linked_list(char *prefix);
 int first_fit_mem_init(unsigned int end_addr);
 void *first_fit_mem_alloc(size_t size);
 void first_fit_mem_dealloc(void *ptr);
@@ -121,7 +121,7 @@ void k_mem_dealloc(void *ptr) {
     
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            return first_fit_mem_dealloc(ptr);
+            first_fit_mem_dealloc(ptr);
         default:
             return;
     }
@@ -137,7 +137,7 @@ int k_mem_count_extfrag(size_t size) {
         #ifdef DEBUG_0
         printf("k_mem_count_extfrag: mem_init_status != RTX_OK, mem_init_status = %d\r\n", mem_init_status);
         #endif /* DEBUG_0 */
-        return;
+        return RTX_ERR;
     }
     
     if (size <= 0) {
@@ -235,7 +235,7 @@ void *first_fit_mem_alloc(size_t size) {
             #endif /* DEBUG_0 */
 
             ret_node = (used_mem_node_t *) cur_node;
-            ret_node->size = mem_chunk_size;
+            ret_node->size = mem_chunk_size - sizeof(used_mem_node_t);
 
             #ifdef DEBUG_0
             printf("first_fit_mem_alloc: New allocated node address 0x%x\r\n", ret_node);
@@ -297,7 +297,7 @@ void first_fit_mem_dealloc(void *ptr) {
         #endif /* DEBUG_0 */
         
         new_node = (node_t *) dealloc_ptr;
-        new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+        new_node->size = dealloc_ptr->size + sizeof(used_mem_node_t) - sizeof(node_t);
         new_node->prev = NULL;
         new_node->next = NULL;
         free_mem_head = new_node;
@@ -312,7 +312,7 @@ void first_fit_mem_dealloc(void *ptr) {
                 #endif /* DEBUG_0 */
                 
                 new_node = (node_t *) dealloc_ptr;
-                new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+                new_node->size = dealloc_ptr->size + sizeof(used_mem_node_t) - sizeof(node_t);
                 new_node->prev = cur_node->prev;
                 cur_node->prev = new_node;
                 new_node->next = cur_node;
@@ -332,7 +332,7 @@ void first_fit_mem_dealloc(void *ptr) {
                 #endif /* DEBUG_0 */
                 
                 new_node = (node_t *) dealloc_ptr;
-                new_node->size = dealloc_ptr->size + sizeof(dealloc_ptr) - sizeof(new_node);
+                new_node->size = dealloc_ptr->size + sizeof(used_mem_node_t) - sizeof(node_t);
                 new_node->prev = cur_node;
                 new_node->next = NULL;
                 cur_node->next = new_node;
@@ -342,7 +342,7 @@ void first_fit_mem_dealloc(void *ptr) {
         }
         
         if (new_node) {
-            if (new_node->prev != NULL && new_node == (node_t *) ((char *) new_node->prev + sizeof(new_node->prev) + new_node->prev->size + 1)) {
+            if (new_node->prev != NULL && new_node == (node_t *) ((char *) new_node->prev + sizeof(node_t) + new_node->prev->size)) {
                 #ifdef DEBUG_0
                 printf("first_fit_mem_dealloc: Coalescing with previous node\r\n");
                 #endif /* DEBUG_0 */
@@ -359,7 +359,7 @@ void first_fit_mem_dealloc(void *ptr) {
                 #endif /* DEBUG_0 */
             }
 
-            if (new_node->next != NULL && new_node->next == (node_t *) ((char*) new_node + sizeof(new_node) + new_node->size + 1)) {
+            if (new_node->next != NULL && new_node->next == (node_t *) ((char*) new_node + sizeof(node_t) + new_node->size)) {
                 #ifdef DEBUG_0
                 printf("first_fit_mem_dealloc: Coalescing with next node\r\n");
                 #endif /* DEBUG_0 */
@@ -406,6 +406,7 @@ void print_linked_list(char *prefix) {
     node_t *cur_node = free_mem_head;
     int index = 0;
     
+		printf("Printing linked list\r\n");
     while (cur_node != NULL) {
         printf("%s: Node{%d} address 0x%x\r\n", prefix, index, cur_node);
         printf("%s: Node{%d} size 0x%x\r\n", prefix, index, cur_node->size);
