@@ -35,14 +35,15 @@ int invalidArgs_memcountextfrag_test(void);
 int invalidArgs_memdealloc_test(void);
 int completeMemoryUsageTest(void);
 int whiteBoxTest(void);
+int varyingSizesTest(void);
 
-int total_tests = 7;
-int (*tests[]) (void) = {/*coalescingTest,*/ externalFragmentationTest, splitMergeTest, 
+int total_tests = 5;
+int (*tests[]) (void) = {/*coalescingTest,*/ externalFragmentationTest, /*splitMergeTest, */
                                      invalidArgs_memalloc_test, /*invalidArgs_memdealloc_test,*/ invalidArgs_memcountextfrag_test,
-                                     completeMemoryUsageTest, whiteBoxTest};
-char *test_names[] = {/*"coalescingTest",*/ "externalFragmentationTest", "splitMergeTest", 
+                                     /*completeMemoryUsageTest, */ whiteBoxTest, varyingSizesTest};
+char *test_names[] = {/*"coalescingTest",*/ "externalFragmentationTest", /*"splitMergeTest", */
                                      "invalidArgs_memalloc_test", /*"invalidArgs_memdealloc_test",*/ "invalidArgs_memcountextfrag_test",
-                                     "completeMemoryUsageTest", "whiteBoxTest"};
+                                    /*"completeMemoryUsageTest", */ "whiteBoxTest", "varyingSizesTest"};
 
 int coalescingTest(void)
 {
@@ -244,6 +245,47 @@ int whiteBoxTest(void)
 	return 1;
 }
 
+int varyingSizesTest(void)
+{
+	void *pointers[69];
+	int blocks = 69;
+	for(int i = 0; i < 69; i++)
+	{
+		pointers[i] = mem_alloc((i+1)*2);
+		if(pointers[i] == NULL)
+		{
+			printf("Error (varyingSizeTest): Could not allocate %d bytes for fragment %d\n", i*2, i);
+			for(int j = i-1; j >= 0; j++)
+			{
+				mem_dealloc(pointers[j]);
+			}
+      return 0;
+		}
+	}
+	
+	int frags = mem_count_extfrag(TOTAL_MEM_SIZE+1);
+	if(frags != blocks)
+	{
+		printf("Unexpected Result (varyingSizeTest): expected %d fragment but found %d\n", blocks, frags);
+		return 0;
+	}
+	
+	for(int j = 0; j < 69; j++)
+	{
+			mem_dealloc(pointers[j]);
+	}
+		
+	frags = mem_count_extfrag(TOTAL_MEM_SIZE+1);
+	if(frags != 1)
+	{
+		printf("Unexpected Result (varyingSizeTest): expected 1 fragment but found %d\n", frags);
+		return 0;
+	}
+		
+		
+		return 1;
+	
+}
 int main()
 {
    
