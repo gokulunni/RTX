@@ -400,13 +400,13 @@ int first_fit_count_extfrag(size_t size) {
         #ifdef DEBUG_0
         printf("first_fit_mem_alloc: size is less than 1, size = %d\r\n", size);
         #endif /* DEBUG_0 */
-        return NULL;
+        return 0;
     }
     else if((int)size==NULL){
         #ifdef DEBUG_0
         printf("first_fit_mem_alloc: size is null");
         #endif /* DEBUG_0 */
-        return NULL;
+        return 0;
     }
 
 
