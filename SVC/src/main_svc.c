@@ -36,14 +36,13 @@ int invalidArgs_memdealloc_test(void);
 int completeMemoryUsageTest(void);
 int whiteBoxTest(void);
 
-int tests_passed;
-int total_tests = 1;
-int (*tests[]) (void) = {/*coalescingTest, externalFragmentationTest, splitMergeTest, 
-                                     invalidArgs_memalloc_test, invalidArgs_memdealloc_test, invalidArgs_memcountextfrag_test,*/
+int total_tests = 7;
+int (*tests[]) (void) = {/*coalescingTest,*/ externalFragmentationTest, splitMergeTest, 
+                                     invalidArgs_memalloc_test, /*invalidArgs_memdealloc_test,*/ invalidArgs_memcountextfrag_test,
                                      completeMemoryUsageTest, whiteBoxTest};
-char *test_names[] = {/*"coalescingTest", "externalFragmentationTest", "splitMergeTest", 
-                                     "invalidArgs_memalloc_test", "invalidArgs_memdealloc_test", "invalidArgs_memcountextfrag_test",*/
-                                     "completeMemoryUsageTest"};
+char *test_names[] = {/*"coalescingTest",*/ "externalFragmentationTest", "splitMergeTest", 
+                                     "invalidArgs_memalloc_test", /*"invalidArgs_memdealloc_test",*/ "invalidArgs_memcountextfrag_test",
+                                     "completeMemoryUsageTest", "whiteBoxTest"};
 
 int coalescingTest(void)
 {
@@ -94,6 +93,10 @@ int externalFragmentationTest(void)
     if(pointers[i] == NULL)
     {
       printf("Error: Could not allocate %d bytes\n", chunk_size);
+			for(int j = i-1; j >= 0; j++)
+			{
+				mem_dealloc(pointers[j]);
+			}
       return 0;
     }
   }
@@ -105,6 +108,7 @@ int externalFragmentationTest(void)
 	int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
   if(fragments!= 1)
   {
+		printf("Unexpected number of fragments: %d\n", fragments);
     return 0;
   }
 
@@ -122,6 +126,11 @@ int completeMemoryUsageTest(void)
     tmps[i] = mem_alloc(alloc_sizes);
 		if(tmps[i] == NULL)
 			printf("Error: Could not allocate %d bytes for chunk %d/%d\n", alloc_sizes, i+1, num_allocs);
+		
+		for(int j = i-1; j >= 0; j++)
+		{
+			mem_dealloc(tmps[j]);
+		}
   }
 	
 	for(int i = 0; i < num_allocs; i++)
@@ -198,8 +207,6 @@ int invalidArgs_memcountextfrag_test(void)
 
 int invalidArgs_memdealloc_test(void)
 {
-  //How can we verify dealloc???
-
   //double free -> undefined behaviour
   void* tmp = mem_alloc(1);
   mem_dealloc(tmp);
@@ -219,13 +226,22 @@ int invalidArgs_memdealloc_test(void)
 
 int whiteBoxTest(void)
 {
-  void* first_blk = mem_alloc(5);
-  //check that the first memory allocated starts at heap
-  if (first_blk != HEAP_START + 4 + 12)
-	return 0;
-
-  mem_dealloc(first_blk);
+	void* blocks[20];
+	for(int i = 0; i < 20; i++)
+	{
+		blocks[i] = mem_alloc(20);
+		//check that the first memory allocated starts at heap
+		
+		unsigned int address = (unsigned int) blocks[i];
+		unsigned int expected = HEAP_START + 24 + ALLOC_HEADER_SIZE*(i+1) + (20 * i);
+		if (address != expected)
+			return 0;
+	}
+	
+	for(int i = 0; i < 20; i++)
+		mem_dealloc(blocks[i]);
   
+	return 1;
 }
 
 int main()
