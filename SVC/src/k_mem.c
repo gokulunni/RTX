@@ -316,6 +316,7 @@ void first_fit_mem_dealloc(void *ptr) {
                 new_node->prev = cur_node->prev;
                 cur_node->prev = new_node;
                 new_node->next = cur_node;
+                
                 if (new_node->prev != NULL) {
                     new_node->prev->next = new_node;
                 } else {
@@ -349,6 +350,7 @@ void first_fit_mem_dealloc(void *ptr) {
                 
                 new_node->prev->size = new_node->prev->size + new_node->size + sizeof(node_t);
                 new_node->prev->next = new_node->next;
+                new_node->next->prev = new_node->prev;
                 new_node = new_node->prev;
                 
                 #ifdef DEBUG_0
@@ -366,6 +368,10 @@ void first_fit_mem_dealloc(void *ptr) {
                 
                 new_node->size = new_node->size + new_node->next->size + sizeof(node_t);
                 new_node->next = new_node->next->next;
+                
+                if (new_node->next->next) {
+                    new_node->next->next->prev = new_node;
+                }
                 
                 #ifdef DEBUG_0
                 printf("first_fit_mem_dealloc: coalesced node address 0x%x\r\n", new_node);
