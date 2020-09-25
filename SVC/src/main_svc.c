@@ -41,7 +41,7 @@ int whiteBoxTest(void);
 int varyingSizesTest(void);
 int randomOrderTest(void);
 
-int total_tests = 6;
+int total_tests = 5;
 int (*tests[]) (void) = {/*coalescingTest,*/ externalFragmentationTest, /*splitMergeTest, */
                                      invalidArgs_memalloc_test, /*invalidArgs_memdealloc_test,*/ invalidArgs_memcountextfrag_test,
                                      /*completeMemoryUsageTest, */ whiteBoxTest, varyingSizesTest, randomOrderTest};
