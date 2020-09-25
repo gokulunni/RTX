@@ -20,11 +20,14 @@
 #define IROM_BASE  0x0
 #endif
 
-#define HEAP_START 0x1000047c
+/* #define HEAP_START 0x1000047c */
 #define HEAP_END   0x10008000
 #define FREE_HEADER_SIZE 12
 #define ALLOC_HEADER_SIZE 4
-#define TOTAL_MEM_SIZE    (HEAP_END - HEAP_START - FREE_HEADER_SIZE)
+
+extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
+unsigned int heap_start;
+int total_mem_size;
 
 /* Function Prototypes */
 int coalescingTest(void);
@@ -49,7 +52,7 @@ int coalescingTest(void)
 {
   void *pointers[3];
   int num_chunks = 3;
-  int chunk_size = (TOTAL_MEM_SIZE/num_chunks) - ALLOC_HEADER_SIZE;
+  int chunk_size = (total_mem_size - FREE_HEADER_SIZE/num_chunks) - ALLOC_HEADER_SIZE;
   
 	int i;
   for(i = 0; i < num_chunks; i++)
@@ -57,7 +60,9 @@ int coalescingTest(void)
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
     {
+     #ifdef DEBUG_1
       printf("Error: Could not allocate %d bytes for chunk %d/%d\n", chunk_size, i+1, num_chunks);
+      #endif
 			for(int j = i-1; j >= 0; j++)
 			{
 				mem_dealloc(pointers[j]);
@@ -72,7 +77,8 @@ int coalescingTest(void)
   }
 
   //Try to alloc a large chunk and see if successful to verify coalescing
-	void *alloc_success = mem_alloc(TOTAL_MEM_SIZE)
+  void *alloc_success = mem_alloc(total_mem_size - FREE_HEADER_SIZE - ALLOC_HEADER_SIZE);
+  
   if(alloc_success)
   {
     return 1;
@@ -93,7 +99,9 @@ int externalFragmentationTest(void)
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
     {
-      printf("Error: Could not allocate %d bytes\n", chunk_size);
+		#ifdef DEBUG_1
+      	printf("Error: Could not allocate %d bytes\n", chunk_size);
+      	#endif
 			for(int j = i-1; j >= 0; j++)
 			{
 				mem_dealloc(pointers[j]);
@@ -106,10 +114,12 @@ int externalFragmentationTest(void)
   {
     mem_dealloc(pointers[i]);
   }
-	int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+	int fragments = mem_count_extfrag(total_mem_size + 1);
   if(fragments!= 1)
   {
-		printf("Unexpected number of fragments: %d\n", fragments);
+  		#ifdef DEBUG_1
+		printf("Unexpected number of fragments (completeMemoryUsageTest): %d\n", fragments);
+		#endif
     return 0;
   }
 
@@ -119,14 +129,17 @@ int externalFragmentationTest(void)
 int completeMemoryUsageTest(void)
 {
   int num_allocs = 10;
-  int alloc_sizes = (TOTAL_MEM_SIZE / num_allocs) - ALLOC_HEADER_SIZE;
+  int alloc_sizes = (total_mem_size - FREE_HEADER_SIZE/ num_allocs) - ALLOC_HEADER_SIZE;
   void* tmps[10 + 1];
 
   for (int i = 0; i < num_allocs; i++)
   {
     tmps[i] = mem_alloc(alloc_sizes);
-		if(tmps[i] == NULL)
-			printf("Error: Could not allocate %d bytes for chunk %d/%d\n", alloc_sizes, i+1, num_allocs);
+		if(tmps[i] == NULL){
+			#ifdef DEBUG_1
+			printf("Error (completeMemoryUsageTest): Could not allocate %d bytes for chunk %d/%d\n", alloc_sizes, i+1, num_allocs);
+			#endif
+		}
 		
 		for(int j = i-1; j >= 0; j++)
 		{
@@ -136,7 +149,9 @@ int completeMemoryUsageTest(void)
 	
 	for(int i = 0; i < num_allocs; i++)
 	{
-		printf("Address: %x\n", tmps[i]);
+		#ifdef DEBUG_1
+		printf("Address (completeMemoryUsageTest): %x\n", tmps[i]);
+		#endif
 	}
 
   //check to see if the next allocation goes through
@@ -165,11 +180,13 @@ int splitMergeTest(void)
     pointers[i] = mem_alloc(chunk_size);
     if(pointers[i] == NULL)
     {
-      printf("Error: Could not allocate %d bytes\n", chunk_size);
+      #ifdef DEBUG_1
+      printf("Error (splitMergeTest): Could not allocate %d bytes\n", chunk_size);
+      #endif
       return 0;
     }
     num_allocs++;
-		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1); //seems to enter infinite loop when traversing nodes in LL
+		int fragments = mem_count_extfrag(total_mem_size + 1); //seems to enter infinite loop when traversing nodes in LL
     if(fragments != num_allocs + 1)
       return 0;
   }
@@ -178,7 +195,7 @@ int splitMergeTest(void)
   {
     mem_dealloc(pointers[i]);
     num_deallocs++;
-		int fragments = mem_count_extfrag(TOTAL_MEM_SIZE + 1);
+		int fragments = mem_count_extfrag(total_mem_size + 1);
     if(fragments != num_allocs - num_deallocs + 1)
       return 0;
   }
@@ -187,7 +204,7 @@ int splitMergeTest(void)
 
 int invalidArgs_memalloc_test(void)
 {
-	void *oversized_pointer = mem_alloc(TOTAL_MEM_SIZE + 1);
+	void *oversized_pointer = mem_alloc(total_mem_size + 1);
 	void *invalid_pointer = mem_alloc(-1);
   if(oversized_pointer != NULL || invalid_pointer != NULL)
     return 0;
@@ -234,7 +251,7 @@ int whiteBoxTest(void)
 		//check that the first memory allocated starts at heap
 		
 		unsigned int address = (unsigned int) blocks[i];
-		unsigned int expected = HEAP_START + 24 + ALLOC_HEADER_SIZE*(i+1) + (20 * i);
+		unsigned int expected = heap_start + 24 + ALLOC_HEADER_SIZE*(i+1) + (20 * i);
 		if (address != expected)
 			return 0;
 	}
@@ -254,8 +271,10 @@ int varyingSizesTest(void)
 		pointers[i] = mem_alloc((i+1)*2);
 		if(pointers[i] == NULL)
 		{
+			#ifdef DEBUG_1
 			printf("Error (varyingSizeTest): Could not allocate %d bytes for fragment %d\n", i*2, i);
-			for(int j = i-1; j >= 0; j++)
+			#endif
+			for(int j = i-1; j >= 0; j--)
 			{
 				mem_dealloc(pointers[j]);
 			}
@@ -263,10 +282,12 @@ int varyingSizesTest(void)
 		}
 	}
 	
-	int frags = mem_count_extfrag(TOTAL_MEM_SIZE+1);
+	int frags = mem_count_extfrag(total_mem_size+1);
 	if(frags != blocks)
 	{
+		#ifdef DEBUG_1
 		printf("Unexpected Result (varyingSizeTest): expected %d fragment but found %d\n", blocks, frags);
+		#endif
 		return 0;
 	}
 	
@@ -275,10 +296,12 @@ int varyingSizesTest(void)
 			mem_dealloc(pointers[j]);
 	}
 		
-	frags = mem_count_extfrag(TOTAL_MEM_SIZE+1);
+	frags = mem_count_extfrag(total_mem_size+1);
 	if(frags != 1)
 	{
+		#ifdef DEBUG_1
 		printf("Unexpected Result (varyingSizeTest): expected 1 fragment but found %d\n", frags);
+		#endif
 		return 0;
 	}
 		
@@ -298,7 +321,7 @@ int main()
   init_printf(NULL, putc);
   __enable_irq();
   
-  
+  #ifdef DEBUG_1
 	printf("Dereferencing Null to get inital SP = 0x%x\r\n", *(U32 *)(IROM_BASE));
 	printf("Derefrencing Reset vector to get intial PC = 0x%x\r\n", *(U32 *)(IROM_BASE + 4));
   printf("We are at privileged level, so we can access SP.\r\n"); 
@@ -310,11 +333,17 @@ int main()
   printf("We are at unprivileged level, we cannot access SP.\r\n");
 	printf("Cannot read MSP = 0x%x\r\n", __get_MSP());
 	printf("Cannot read PSP = 0x%x\r\n", __get_PSP());
-
+#endif
+	
 	ret_val = mem_init(4, FIRST_FIT);
   if(ret_val == -1)
     return -1;
 
+	/* Set heap start address, and total size */
+	heap_start = Image$$RW_IRAM1$$ZI$$Limit + 4;
+	total_mem_size = HEAP_END - heap_start;;
+	
+	/*Begin test */
   printf("G04_test: START\n");  
   for(int i = 0; i < total_tests; i++)
   {
