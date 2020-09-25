@@ -283,7 +283,7 @@ int varyingSizesTest(void)
 	}
 	
 	int frags = mem_count_extfrag(total_mem_size+1);
-	if(frags != blocks)
+	if(frags != 1)
 	{
 		#ifdef DEBUG_1
 		printf("Unexpected Result (varyingSizeTest): expected %d fragment but found %d\n", blocks, frags);
