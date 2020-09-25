@@ -189,6 +189,12 @@ void *first_fit_mem_alloc(size_t size) {
         #endif /* DEBUG_0 */
         return NULL;
     }
+    else if((int)size==NULL){
+        #ifdef DEBUG_0
+        printf("first_fit_mem_alloc: size is null");
+        #endif /* DEBUG_0 */
+        return NULL;
+    }
 
     #ifdef DEBUG_0
     printf("first_fit_mem_alloc: Linked list before allocation\r\n");
@@ -389,6 +395,22 @@ void first_fit_mem_dealloc(void *ptr) {
 
 
 int first_fit_count_extfrag(size_t size) {
+
+    if ((int)size <= 0) {
+        #ifdef DEBUG_0
+        printf("first_fit_mem_alloc: size is less than 1, size = %d\r\n", size);
+        #endif /* DEBUG_0 */
+        return NULL;
+    }
+    else if((int)size==NULL){
+        #ifdef DEBUG_0
+        printf("first_fit_mem_alloc: size is null");
+        #endif /* DEBUG_0 */
+        return NULL;
+    }
+
+
+
     node_t *cur_node = free_mem_head;
     int counter = 0;
 
