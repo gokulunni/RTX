@@ -39,14 +39,15 @@ int invalidArgs_memdealloc_test(void);
 int completeMemoryUsageTest(void);
 int whiteBoxTest(void);
 int varyingSizesTest(void);
+int randomOrderTest(void);
 
 int total_tests = 5;
 int (*tests[]) (void) = {/*coalescingTest,*/ externalFragmentationTest, /*splitMergeTest, */
                                      invalidArgs_memalloc_test, /*invalidArgs_memdealloc_test,*/ invalidArgs_memcountextfrag_test,
-                                     /*completeMemoryUsageTest, */ whiteBoxTest, varyingSizesTest};
+                                     /*completeMemoryUsageTest, */ whiteBoxTest, varyingSizesTest, randomOrderTest};
 char *test_names[] = {/*"coalescingTest",*/ "externalFragmentationTest", /*"splitMergeTest", */
                                      "invalidArgs_memalloc_test", /*"invalidArgs_memdealloc_test",*/ "invalidArgs_memcountextfrag_test",
-                                    /*"completeMemoryUsageTest", */ "whiteBoxTest", "varyingSizesTest"};
+                                    /*"completeMemoryUsageTest", */ "whiteBoxTest", "varyingSizesTest", "randomOrderTest"};
 
 int coalescingTest(void)
 {
@@ -322,6 +323,37 @@ int varyingSizesTest(void)
 		return 1;
 	
 }
+
+int randomOrderTest(void)
+{
+  void* pointer = mem_alloc(10);
+  mem_dealloc(pointer);
+  pointer = mem_alloc(20);
+
+  if (pointer == NULL)
+  {
+    #ifdef DEBUG_1
+    printf("(randomOrderTest) could not re-allocate memory\n");
+    return 0;
+    #endif
+  }
+
+  void* pointer1 = mem_alloc(30);
+  mem_dealloc(pointer);
+  mem_dealloc(pointer1);
+
+  if (pointer != NULL || pointer1 != NULL)
+  {
+    #ifdef DEBUG_1
+    printf("(randomOrderTest) could not deallocate memory on what was re-allocated\n");
+    return 0;
+    #endif
+  }
+
+
+  return 1;
+}
+
 int main()
 {
    
