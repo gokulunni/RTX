@@ -183,7 +183,7 @@ void *first_fit_mem_alloc(size_t size) {
     node_t *new_node;
     node_t *cur_node = free_mem_head;
 	
-    if (size <= 0) {
+    if ((int)size <= 0) {
         #ifdef DEBUG_0
         printf("first_fit_mem_alloc: size is less than 1, size = %d\r\n", size);
         #endif /* DEBUG_0 */
