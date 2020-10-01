@@ -79,6 +79,16 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     U32 *sp;
     RTX_TASK_INFO *p_taskinfo = task_info;
   
+    //Create queues
+    /*
+    PriorityQueue *queues[NUM_TASK_STATES];
+    for(int i = 0; i < NUM_TASK_STATES; i++)
+    {
+        queues[i] = mem_alloc(sizeof(PriorityQueue));
+    }
+    */
+
+    /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
     for ( i = 0; i < num_tasks; i++ ) {
         int j;
@@ -86,7 +96,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_tcb ->tid = i+1;
         p_tcb->state = NEW;
         sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
-        *(--sp)  = INITIAL_xPSR;    /* task initial xPSR  */
+        
+        *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
         *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
         for ( j = 0; j < 6; j++ ) { /*R0-R3, R12, LR */
             *(--sp) = 0x0;
@@ -94,7 +105,20 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_tcb->msp = sp;
         if ( p_taskinfo->priv == 0 ) { /* unpriviledged task */ 
             /* allocate user stack, not implemented */
+
+            //allocate user stack and point psp to it
+            //p_tcb -> psp = mem_alloc(p_tcb->u_stack_size);
         }
+        /*else
+        {
+            //set PSP = MSP for kernel threads
+            p_tcb -> psp = p_tcb -> msp;
+        }
+
+        //Add task to the priority queue for NEW tasks
+        //queues[index of NEW state].enqueue(p_tcb);
+        */
+
         p_taskinfo++;
     }
     return RTX_OK;
