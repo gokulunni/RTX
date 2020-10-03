@@ -14,6 +14,8 @@
 #include <LPC17xx.h>
 #include "uart_polling.h"
 #include "k_task.h"
+#include "PriorityQueue.h"
+#include "k_mem.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
@@ -25,6 +27,8 @@ TCB *gp_current_task = NULL;    /* always point to the current RUN process */
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
+
+PriorityQueue *ready_queue;
 
 /*---------------------------------------------------------------------------
 The meory map of the OS image may look like the following:
@@ -81,11 +85,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
   
     //Create queues
     /*
-    PriorityQueue *queues[NUM_TASK_STATES];
-    for(int i = 0; i < NUM_TASK_STATES; i++)
-    {
-        queues[i] = mem_alloc(sizeof(PriorityQueue));
-    }
+    ready_queue = k_mem_alloc(sizeof(PriorityQueue));
     */
 
     /* Pretend an exception happened, by adding exception stack frame */
@@ -116,7 +116,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         }
 
         //Add task to the priority queue for NEW tasks
-        //queues[index of NEW state].enqueue(p_tcb);
+        //Node *new_task = createNode(*p_tcb);
+        //push(&ready_queue, new_task);
         */
 
         p_taskinfo++;
@@ -133,17 +134,22 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 
 TCB *dummy_scheduler(void)
 {
-    if (gp_current_task == NULL) {
-        gp_current_task = &g_tcbs[1]; 
-        return &g_tcbs[1];
+    if(!isEmpty(&ready_queue))
+    {
+        Node* popped = pop(&ready_queue);
+				TCB *next_task = popped -> tcb;
+				k_mem_dealloc(popped);
+			
+        /* Move currently running task to ready queue */
+        gp_current_task -> state = READY;
+			  Node* new_node = createNode(*gp_current_task);
+        push(&ready_queue, new_node);
+        
+        return next_task;
     }
-
-    if ( gp_current_task == &g_tcbs[1] ) {
-        return &g_tcbs[2];
-    } else if ( gp_current_task == &g_tcbs[2] ) {
-        return &g_tcbs[1];
-    } else {
-        return NULL;
+    else
+    {
+        return gp_current_task;
     }
 }
 
@@ -185,7 +191,7 @@ int task_switch(TCB *p_tcb_old)
     return RTX_OK;
 }
 /**
- * @brief yield the processor. The caller becomes READY and the scheduler picsk the next ready to run task.
+ * @brief yield the processor. The caller becomes READY and the scheduler picks the next ready to run task.
  * @return RTX_ERR on error and zero on success
  * POST: gp_current_task gets updated to next to run process
  */

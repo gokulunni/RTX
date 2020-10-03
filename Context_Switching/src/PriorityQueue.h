@@ -1,7 +1,7 @@
 #include "k_rtx.h"
   
 typedef struct node { 
-    TCB tcb; 
+    TCB *tcb; 
     int priority; /* Lower values for higher priority */
     struct node* next; 
   
@@ -13,6 +13,6 @@ typedef struct priorityQueue {
 } PriorityQueue;
 
 Node* createNode(TCB tcb);
-void pop(PriorityQueue** queue);
-void push(PriorityQueue** queue, TCB tcb);
-int isEmpty(Node** head);
+Node* pop(PriorityQueue** queue);
+void push(PriorityQueue** queue, Node* task);
+int isEmpty(PriorityQueue** queue);
