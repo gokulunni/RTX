@@ -29,9 +29,9 @@
 
 typedef struct tcb
 {
-    /*struct tcb *next;*/ /* next tcb, not used in this example */  
+    struct tcb *next; /* next tcb, not used in this example */
     U32 *msp;    /* msp of the task */
-    //U32 *psp   /* psp of the task */
+    U32 *psp   /* psp of the task */
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
     U8  state;   /* task state */  
