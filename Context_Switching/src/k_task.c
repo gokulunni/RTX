@@ -194,20 +194,56 @@ int task_switch(TCB *p_tcb_old)
  */
 int k_tsk_yield(void)
 {
-    TCB *p_tcb_old = gp_current_task;
-    gp_current_task = dummy_scheduler();
+    //Their starter code
+    // TCB *p_tcb_old = NULL;
     
-    if (gp_current_task == NULL) {
-        gp_current_task = p_tcb_old; // revert back to the old task
+    // p_tcb_old = gp_current_task;
+    // gp_current_task = dummy_scheduler();
+    
+    // if ( gp_current_task == NULL  ) {
+    //     gp_current_task = p_tcb_old; // revert back to the old task
+    //     return RTX_ERR;
+    // }
+    // if ( p_tcb_old == NULL ) {
+    //     p_tcb_old = gp_current_task;
+    // }
+    // task_switch(p_tcb_old);
+    // return RTX_OK;
+
+    //Keep track of task that was running and name it p_tcb_old
+    TCB *p_tcb_old = NULL;
+
+    //Get the old task
+    p_tcb_old = gp_current_task;
+    //Pop the next task in queue
+    gp_current_task= ready_queue.pop();
+
+    #ifdef DEBUG_0
+    printf("Yielding task with ID: %d \n",p_tcb_old->tid);
+    #endif /* DEBUG_0 */
+
+
+    //If nothing can replace it 
+    if (gp_current_task == NULL){
+        #ifdef DEBUG_0
+        printf("Ready queue popped NULL task during yield()");
+        #endif /* DEBUG_0 */
+        gp_current_task=p_tcb_old;
         return RTX_ERR;
     }
-
-    if (p_tcb_old == NULL) {
+    if (p_tcb_old == NULL){
+        #ifdef DEBUG_0
+        printf("gp_current_task was NULL while Yield() was called");
+        #endif /* DEBUG_0 */
         p_tcb_old = gp_current_task;
     }
-
     task_switch(p_tcb_old);
+
+    //Push old tcb back into ready_queue
+    ready_queue.push(p_tcb_old);
+
     return RTX_OK;
+
 }
 
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size)
@@ -251,6 +287,21 @@ void k_tsk_exit(void)
 #ifdef DEBUG_0
     printf("k_tsk_exit: entering...\n\r");
 #endif /* DEBUG_0 */
+    //Keep track of task that was running and name it p_tcb_old
+    TCB *p_tcb_old = NULL;
+    gp_current_task= NULL;
+
+    //Get current running task
+    p_tcb_old = gp_current_task;
+
+    //How do I stop and delete the current running task?
+    
+
+    //Set the state to dormant
+    p_tcb_old->state=0;
+
+
+
     return;
 }
 
