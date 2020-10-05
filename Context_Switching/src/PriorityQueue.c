@@ -1,8 +1,19 @@
 #include "PriorityQueue.h"
+#include "k_rtx.h"
+
+TCB* get_task_by_id(PriorityQueue** queue, U8 tid) {
+    TCB* iterator = (*queue)->head;
+
+    while (iterator != NULL && iterator->tid != tid) {
+        iterator = iterator->next;
+    }
+
+    return iterator;
+}
 
 TCB* pop(PriorityQueue** queue)
-{ 
-    Node* popped = (*queue)->head;
+{
+    TCB *popped = (*queue)->head;
     if ((*queue)->head) {
         (*queue)->head = (*queue)->head->next;
     } else {
@@ -14,7 +25,7 @@ TCB* pop(PriorityQueue** queue)
   
 void push(PriorityQueue** queue, TCB* task)
 {
-    Node *head = (*queue) -> head;
+    TCB *head = (*queue) -> head;
 
     if(head == NULL) {
         head = temp;
@@ -31,7 +42,7 @@ void push(PriorityQueue** queue, TCB* task)
         task->next = head->next;
         head->next = task;
     } 
-} 
+}
 
 int isEmpty(PriorityQueue** queue) {
     return (*queue)->head == NULL; 
