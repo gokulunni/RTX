@@ -27,6 +27,7 @@ TCB *gp_current_task = NULL;    /* always point to the current RUN process */
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
+U32 total_num_tasks = 0;
 
 PriorityQueue *ready_queue;
 
@@ -215,6 +216,32 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     printf("k_tsk_create: entering...\n\r");
     printf("task = 0x%x, task_entry = 0x%x, prio=%d, stack_size = %d\n\r", task, task_entry, prio, stack_size);
 #endif /* DEBUG_0 */
+
+    if (total_num_tasks >= MAX_TASKS)
+        return -1;
+
+    TCB* new_task = &g_tcbs[total_num_tasks];
+    new_task->tid = total_num_tasks;
+    new_task->state = NEW;
+    new_task->psp = malloc(stack_size);
+    new_task->prio = prio;
+
+    U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
+    *(--sp) = INITIAL_xPSR;
+    *(--sp) = (U32)(task_entry);
+    for (int j = 0; j < 6; j++) {
+        *(--sp) = 0x0;
+    }
+    new_task->msp = sp;
+
+    push(&ready_queue, new_task);
+    if(gp_current_task->prio > new_task->prio)  {
+        //must run immediately
+        k_tsk_yield();
+    }
+    task = new_task->tid;
+    //k_tsk_exit();
+    //free(new_task->psp);
     return RTX_OK;
 
 }
