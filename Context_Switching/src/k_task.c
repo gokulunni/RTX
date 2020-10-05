@@ -84,13 +84,11 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     RTX_TASK_INFO *p_taskinfo = task_info;
   
     //Create queues
-    /*
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
-    */
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    for ( i = 0; i < num_tasks; i++ ) {
+    for (i = 0; i < num_tasks; i++) {
         int j;
         TCB *p_tcb = &g_tcbs[i+1];
         p_tcb ->tid = i+1;
@@ -105,23 +103,21 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_tcb->msp = sp;
         if ( p_taskinfo->priv == 0 ) { /* unpriviledged task */ 
             /* allocate user stack, not implemented */
-
+            p_tcb->priv = 0;
             //allocate user stack and point psp to it
-            //p_tcb -> psp = mem_alloc(p_tcb->u_stack_size);
-        }
-        /*else
-        {
-            //set PSP = MSP for kernel threads
-            p_tcb -> psp = p_tcb -> msp;
+            gp_current_task = p_tcb;
+            p_tcb -> psp = k_mem_alloc(p_tcb->u_stack_size);
+        } else {
+            p_tcb->priv = 1;
         }
 
         //Add task to the priority queue for NEW tasks
-        //Node *new_task = createNode(*p_tcb);
-        //push(&ready_queue, new_task);
-        */
+        Node *new_task = createNode(*p_tcb);
+        push(&ready_queue, new_task);
 
         p_taskinfo++;
     }
+    gp_current_task = NULL;
     return RTX_OK;
 }
 
@@ -134,23 +130,23 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 
 TCB *dummy_scheduler(void)
 {
-    if(!isEmpty(&ready_queue))
-    {
-        Node* popped = pop(&ready_queue);
-				TCB *next_task = popped -> tcb;
-				k_mem_dealloc(popped);
-			
-        /* Move currently running task to ready queue */
-        gp_current_task -> state = READY;
-			  Node* new_node = createNode(*gp_current_task);
-        push(&ready_queue, new_node);
-        
-        return next_task;
-    }
-    else
-    {
-        return gp_current_task;
-    }
+//    if(!isEmpty(&ready_queue))
+//    {
+//        Node* popped = pop(&ready_queue);
+//				TCB *next_task = popped -> tcb;
+//				k_mem_dealloc(popped);
+//
+//        /* Move currently running task to ready queue */
+//        gp_current_task -> state = READY;
+//			  Node* new_node = createNode(*gp_current_task);
+//        push(&ready_queue, new_node);
+//
+//        return next_task;
+//    }
+//    else
+//    {
+//        return gp_current_task;
+//    }
 }
 
 /*@brief: switch out old tcb (p_tcb_old), run the new tcb (gp_current_task)
@@ -197,18 +193,18 @@ int task_switch(TCB *p_tcb_old)
  */
 int k_tsk_yield(void)
 {
-    TCB *p_tcb_old = NULL;
-    
-    p_tcb_old = gp_current_task;
+    TCB *p_tcb_old = gp_current_task;
     gp_current_task = dummy_scheduler();
     
-    if ( gp_current_task == NULL  ) {
+    if (gp_current_task == NULL) {
         gp_current_task = p_tcb_old; // revert back to the old task
         return RTX_ERR;
     }
-    if ( p_tcb_old == NULL ) {
+
+    if (p_tcb_old == NULL) {
         p_tcb_old = gp_current_task;
     }
+
     task_switch(p_tcb_old);
     return RTX_OK;
 }
@@ -237,11 +233,38 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
 #endif /* DEBUG_0 */
+    TCB* task = get_task_by_id(ready_queue, task_id);
+
+    if (task != NULL) {
+        // An unprivileged task may change the priority of any other unprivileged task (including itself).
+        // A privileged task may change the priority of any other task (including itself).
+        // The priority of the null task cannot be changed and remains at level PRIO_NULL.
+        if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1) && task->prio == PRIO_NULL) {
+            task->prio = prio;
+
+            //    The caller of this primitive never blocks, but could be preempted.
+            //    If the value of prio is higher than the priority of the current running task,
+            //    and the task identified by task id is in ready state, then the task identified by
+            //    the task id preempts the current running task. Otherwise, the current running task
+            //    continues its execution.
+            if (task->state == READY && task->prio > gp_current_task->prio) {
+                TCB *p_tcb_old = gp_current_task;
+                push(&ready_queue, &p_tcb_old);
+                gp_current_task = task;
+                pop(&ready_queue);
+
+                task_switch(p_tcb_old);
+            }
+        }
+    }
+
     return RTX_OK;    
 }
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
 {
+    TCB *task''
+
 #ifdef DEBUG_0
     printf("k_tsk_get: entering...\n\r");
     printf("task_id = %d, buffer = 0x%x.\n\r", task_id, buffer);
@@ -249,16 +272,25 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
     if (buffer == NULL) {
         return RTX_ERR;
     }
+
+    // TODO: what is this buffer?
+    // TODO: is it only for ready tasks?
+    if (task_id == gp_current_task->tid) {
+        task = gp_current_task;
+    } else {
+        task = get_task_by_id(**ready_queue, task_id);
+    }
+
     /* The code fills the buffer with some fake task information. 
        You should fill the buffer with correct information    */
     buffer->tid = task_id;
-    buffer->prio = 99;
-    buffer->state = MEDIUM;
-    buffer->priv = 0;
-    buffer->ptask = 0x0;
-    buffer->k_sp = 0xBEEFDEAD;
+    buffer->prio = task->prio;
+    buffer->state = task->state;
+    buffer->priv = task->priv;
+    buffer->ptask = &task;
+    buffer->k_sp = task->msp;
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->u_sp = 0xDEADBEEF;
+    buffer->u_sp = task->psp;
     buffer->u_stack_size = 0x200;
 
     return RTX_OK;     
