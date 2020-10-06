@@ -119,6 +119,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 				p_taskinfo++;
     }
     gp_current_task = NULL;
+    dummy_scheduler();
     return RTX_OK;
 }
 
@@ -129,25 +130,22 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
  *      No other effect on other global variables.
  */
 
-TCB *dummy_scheduler(void)
-{
-//    if(!isEmpty(&ready_queue))
-//    {
-//        Node* popped = pop(&ready_queue);
-//				TCB *next_task = popped -> tcb;
-//				k_mem_dealloc(popped);
-//
-//        /* Move currently running task to ready queue */
-//        gp_current_task -> state = READY;
-//			  Node* new_node = createNode(*gp_current_task);
-//        push(&ready_queue, new_node);
-//
-//        return next_task;
-//    }
-//    else
-//    {
-//        return gp_current_task;
-//    }
+TCB *dummy_scheduler(void) {
+    if(!isEmpty(&ready_queue)) {
+        TCB *popped = pop(&ready_queue);
+
+        if (popped) {
+            popped -> state = READY;
+        }
+
+        if (gp_current_task && gp_current_task->prio != PRIO_NULL) {
+            push(&ready_queue, gp_current_task);
+        }
+
+        gp_current_task = popped;
+    }
+
+    return gp_current_task;
 }
 
 /*@brief: switch out old tcb (p_tcb_old), run the new tcb (gp_current_task)
@@ -317,7 +315,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
         // An unprivileged task may change the priority of any other unprivileged task (including itself).
         // A privileged task may change the priority of any other task (including itself).
         // The priority of the null task cannot be changed and remains at level PRIO_NULL.
-        if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1) && task->prio == PRIO_NULL) {
+        if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1) && task->prio != PRIO_NULL) {
             task->prio = prio;
 
             //    The caller of this primitive never blocks, but could be preempted.
@@ -325,7 +323,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
             //    and the task identified by task id is in ready state, then the task identified by
             //    the task id preempts the current running task. Otherwise, the current running task
             //    continues its execution.
-            if (task->state == READY && task->prio > gp_current_task->prio) {
+            if (task->state == READY && task->prio < gp_current_task->prio) {
                 TCB *p_tcb_old = gp_current_task;
                 push(&ready_queue, p_tcb_old);
                 gp_current_task = task;
