@@ -31,7 +31,7 @@ __asm void SVC_Handler (void)
 {
   PRESERVE8            ; 8 bytes alignement of the stack
   CPSID I              ; disable interrupt
-  MRS  R0, PSP         ; Read PSP into R0
+  MRS  R0, MSP         ; Read PSP into R0
   MSR MSP, R0         ; Set MSP = PSP
 	
   
