@@ -28,7 +28,7 @@ void push(PriorityQueue** queue, TCB* task)
     TCB *head = (*queue) -> head;
 
     if(head == NULL) {
-        head = temp;
+        head = task;
     } else if (head->prio > task->prio) {  /* Edge Case: The head of list is lower priority then new node*/
         // Insert New Node before head 
         task->next = head;

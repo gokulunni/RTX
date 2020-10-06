@@ -5,6 +5,11 @@
  *       The code borrowed some ideas from ARM RL-RTX source code
  */
  
+ #include "k_rtx.h"
+ 
+ 
+ extern TCB *gp_current_task;
+ 
 /* pop off exception stack frame from the stack */
 __asm void __rte(void)
 {
@@ -27,7 +32,7 @@ __asm void SVC_Handler (void)
   PRESERVE8            ; 8 bytes alignement of the stack
   CPSID I              ; disable interrupt
   MRS  R0, PSP         ; Read PSP into R0
-  MOV MSP, PSP         ; Set MSP = PSP
+  MSR MSP, R0         ; Set MSP = PSP
 	
   
   LDR  R1, [R0, #24]   ; Read Saved PC from SP (skip over 6 regs - R0-R3, R12, LR)
@@ -56,17 +61,17 @@ __asm void SVC_Handler (void)
                        ; to R0 on the exception stack frame  
 SVC_EXIT  
 
-  LDR R3, =__cpp(gp_current_task -> priv)    ; Load R3 with priv level of current task
+  LDR R3, =__cpp(&gp_current_task)    ; Load R3 with priv level of current task
   CMP R3, #1                                 ; check if priv level is 1 or 0
   BEQ kernel_thread                          ; if 1, handler was invoked by kernel thread
-  JMP user_thread                            ; if 0, handler was invoked by user thread
+  B user_thread                            ; if 0, handler was invoked by user thread
 
-kernel_thread:
+kernel_thread
   MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value, Thread mode, MSP
   CPSIE I                    ; enable interrupt
   BX   LR
 
-user_thread:
+user_thread
   MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value, Thread mode, PSP
   CPSIE I                    ;enable interrupt
   BX   LR

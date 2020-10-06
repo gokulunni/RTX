@@ -52,7 +52,7 @@ int mem_init_status;
 void print_linked_list(char *prefix);
 int first_fit_mem_init(unsigned int end_addr);
 void *first_fit_mem_alloc(size_t size);
-void first_fit_mem_dealloc(void *ptr);
+int first_fit_mem_dealloc(void *ptr);
 int first_fit_count_extfrag(size_t size);
 
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
@@ -82,7 +82,7 @@ int k_mem_init(size_t blk_size, int algo){
     printf("k_mem_init: blk_size = %d, algo = %d\r\n", blk_size, algo);
     printf("k_mem_init: image ends at 0x%x\r\n", end_addr);
     printf("k_mem_init: heap starts at 0x%x\r\n", end_addr + 4);
-    printf("k_mem_init: IRAM1 ends at 0x%x\r\n", IRAM1_END);=
+    printf("k_mem_init: IRAM1 ends at 0x%x\r\n", IRAM1_END);
 #endif /* DEBUG_0 */
 
     switch (mem_alloc_algo) {
@@ -124,7 +124,7 @@ void *k_mem_alloc(size_t size) {
     }
 }
 
-void k_mem_dealloc(void *ptr) {
+int k_mem_dealloc(void *ptr) {
 #ifdef DEBUG_0
     printf("******************************************************\r\n");
 	printf("k_mem_dealloc: freeing 0x%x\r\n", (U32) ptr);
@@ -134,14 +134,14 @@ void k_mem_dealloc(void *ptr) {
 #ifdef DEBUG_0
         printf("k_mem_dealloc: mem_init_status != RTX_OK, mem_init_status = %d\r\n", mem_init_status);
 #endif /* DEBUG_0 */
-        return;
+        return RTX_ERR;
     }
 
     switch (mem_alloc_algo) {
         case FIRST_FIT:
-            first_fit_mem_dealloc(ptr);
+            return first_fit_mem_dealloc(ptr);
         default:
-            return;
+            return RTX_ERR;
     }
 }
 
@@ -321,7 +321,7 @@ void *first_fit_mem_alloc(size_t size) {
 }
 
 
-void first_fit_mem_dealloc(void *ptr) {
+int first_fit_mem_dealloc(void *ptr) {
     node_t *new_node;
     node_t *cur_node = free_mem_head;
     used_mem_node_t *dealloc_ptr = (used_mem_node_t *) ptr - 1;
@@ -335,7 +335,7 @@ void first_fit_mem_dealloc(void *ptr) {
 #ifdef DEBUG_0
         printf("first_fit_mem_dealloc: task %d cannot dealloc task %d\r\n", gp_current_task->tid, dealloc_ptr->owner_tid);
 #endif /* DEBUG_0 */
-        return;
+        return RTX_ERR;
     }
 
     if (free_mem_head == NULL) {
@@ -350,7 +350,7 @@ void first_fit_mem_dealloc(void *ptr) {
         free_mem_head = new_node;
 
         print_linked_list("first_fit_mem_dealloc");
-        return;
+        return RTX_OK;
     } else {
         while (cur_node != NULL) {
             if ((void *)cur_node > (void *) dealloc_ptr) {
@@ -430,7 +430,7 @@ void first_fit_mem_dealloc(void *ptr) {
         }
 
         print_linked_list("first_fit_mem_dealloc");
-        return;
+        return RTX_OK;
     }
 }
 

@@ -107,16 +107,16 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
             p_tcb->priv = 0;
             //allocate user stack and point psp to it
             gp_current_task = p_tcb;
-            p_tcb -> psp = k_mem_alloc(p_tcb->u_stack_size);
+            p_tcb -> psp = k_mem_alloc(p_taskinfo->u_stack_size);
         } else {
             p_tcb->priv = 1;
         }
 
         //Add task to the priority queue for NEW tasks
-        Node *new_task = createNode(*p_tcb);
-        push(&ready_queue, new_task);
-
-        p_taskinfo++;
+        push(&ready_queue, p_tcb);
+				
+				total_num_tasks++;
+				p_taskinfo++;
     }
     gp_current_task = NULL;
     return RTX_OK;
@@ -216,7 +216,7 @@ int k_tsk_yield(void)
     //Get the old task
     p_tcb_old = gp_current_task;
     //Pop the next task in queue
-    gp_current_task= ready_queue.pop();
+    gp_current_task= pop(&ready_queue);
 
     #ifdef DEBUG_0
     printf("Yielding task with ID: %d \n",p_tcb_old->tid);
@@ -240,7 +240,7 @@ int k_tsk_yield(void)
     task_switch(p_tcb_old);
 
     //Push old tcb back into ready_queue
-    ready_queue.push(p_tcb_old);
+    push(&ready_queue, p_tcb_old);
 
     return RTX_OK;
 
@@ -259,7 +259,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     TCB* new_task = &g_tcbs[total_num_tasks];
     new_task->tid = total_num_tasks;
     new_task->state = NEW;
-    new_task->psp = malloc(stack_size);
+    new_task->psp = k_mem_alloc(stack_size);
     new_task->prio = prio;
 
     U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
@@ -275,7 +275,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         //must run immediately
         k_tsk_yield();
     }
-    task = new_task->tid;
+    task = &new_task->tid;
     //k_tsk_exit();
     //free(new_task->psp);
     return RTX_OK;
@@ -289,11 +289,10 @@ void k_tsk_exit(void)
 #endif /* DEBUG_0 */
     //Keep track of task that was running and name it p_tcb_old
     TCB *p_tcb_old = NULL;
+    gp_current_task= NULL;
+
     //Get current running task
     p_tcb_old = gp_current_task;
-	gp_current_task= NULL;
-
-    
 
     //How do I stop and delete the current running task?
     
@@ -312,7 +311,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
 #endif /* DEBUG_0 */
-    TCB* task = get_task_by_id(ready_queue, task_id);
+    TCB* task = get_task_by_id(&ready_queue, task_id);
 
     if (task != NULL) {
         // An unprivileged task may change the priority of any other unprivileged task (including itself).
@@ -328,7 +327,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
             //    continues its execution.
             if (task->state == READY && task->prio > gp_current_task->prio) {
                 TCB *p_tcb_old = gp_current_task;
-                push(&ready_queue, &p_tcb_old);
+                push(&ready_queue, p_tcb_old);
                 gp_current_task = task;
                 pop(&ready_queue);
 
@@ -342,7 +341,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
 {
-    TCB *task''
+    TCB *task;
 
 #ifdef DEBUG_0
     printf("k_tsk_get: entering...\n\r");
@@ -357,7 +356,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
     if (task_id == gp_current_task->tid) {
         task = gp_current_task;
     } else {
-        task = get_task_by_id(**ready_queue, task_id);
+        task = get_task_by_id(&ready_queue, task_id);
     }
 
     /* The code fills the buffer with some fake task information. 
@@ -366,10 +365,10 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
     buffer->prio = task->prio;
     buffer->state = task->state;
     buffer->priv = task->priv;
-    buffer->ptask = &task;
-    buffer->k_sp = task->msp;
+    buffer->ptask = (void *) task;
+    buffer->k_sp = (U32) task->msp;
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->u_sp = task->psp;
+    buffer->u_sp = (U32) task->psp;
     buffer->u_stack_size = 0x200;
 
     return RTX_OK;     
