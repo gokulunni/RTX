@@ -6,9 +6,9 @@
  */
  
  #include "k_rtx.h"
+ //#include "k_task.h"
  
- 
- extern TCB *gp_current_task;
+extern TCB *gp_current_task;
  
 /* pop off exception stack frame from the stack */
 __asm void __rte(void)
@@ -62,17 +62,22 @@ __asm void SVC_Handler (void)
 SVC_EXIT  
 
   LDR R3, =__cpp(&gp_current_task)    ; Load R3 with priv level of current task
-  CMP R3, #1                                 ; check if priv level is 1 or 0
+	STR R2, [R3, #120]                      ; 
+  CMP R2, #1                                 ; check if priv level is 1 or 0
   BEQ kernel_thread                          ; if 1, handler was invoked by kernel thread
   B user_thread                            ; if 0, handler was invoked by user thread
 
 kernel_thread
   MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value, Thread mode, MSP
+	MOV R3, #1                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 1
   CPSIE I                    ; enable interrupt
   BX   LR
 
 user_thread
   MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value, Thread mode, PSP
+	MOV R3, #1                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 1
   CPSIE I                    ;enable interrupt
   BX   LR
 }
