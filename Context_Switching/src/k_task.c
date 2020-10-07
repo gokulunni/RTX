@@ -287,11 +287,11 @@ void k_tsk_exit(void)
 #endif /* DEBUG_0 */
     //Keep track of task that was running and name it p_tcb_old
     TCB *p_tcb_old = NULL;
-    gp_current_task= NULL;
+    
 
     //Get current running task
     p_tcb_old = gp_current_task;
-
+	gp_current_task= NULL;
     //How do I stop and delete the current running task?
     
 
