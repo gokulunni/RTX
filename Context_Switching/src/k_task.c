@@ -109,6 +109,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
             gp_current_task = p_tcb;
             p_tcb -> psp = k_mem_alloc(p_taskinfo->u_stack_size);
         } else {
+            p_tcb->psp = p_tcb->msp;
             p_tcb->priv = 1;
         }
 
