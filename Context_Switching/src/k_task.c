@@ -86,7 +86,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
   
     //Create queues
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
-
+		ready_queue -> head = NULL;
+	
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
     for (i = 0; i < num_tasks; i++) {
@@ -120,7 +121,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 				p_taskinfo++;
     }
     gp_current_task = NULL;
-    dummy_scheduler();
     return RTX_OK;
 }
 
@@ -135,9 +135,9 @@ TCB *dummy_scheduler(void) {
     if(!isEmpty(&ready_queue)) {
         TCB *popped = pop(&ready_queue);
 
-        if (popped) {
+        /*if (popped) {
             popped -> state = READY;
-        }
+        }*/
 
         if (gp_current_task && gp_current_task->prio != PRIO_NULL) {
             push(&ready_queue, gp_current_task);
@@ -215,7 +215,7 @@ int k_tsk_yield(void)
     //Get the old task
     p_tcb_old = gp_current_task;
     //Pop the next task in queue
-    gp_current_task= pop(&ready_queue);
+    gp_current_task = dummy_scheduler();
 
     #ifdef DEBUG_0
     printf("Yielding task with ID: %d \n",p_tcb_old->tid);
