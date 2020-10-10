@@ -14,25 +14,20 @@
 #include <LPC17xx.h>
 #include "uart_polling.h"
 #include "k_task.h"
-#include "PriorityQueue.h"
-#include "k_mem.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* DEBUG_0 */
 
 /* ----- Global Variables ----- */
-TCB *gp_current_task = NULL;    /* always point to the current RUN process */
+TCB *gp_current_task = NULL;    /* always point to the current RUNNING task */
 
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
-U32 total_num_tasks = 0;
-
-PriorityQueue *ready_queue;
 
 /*---------------------------------------------------------------------------
-The memory map of the OS image may look like the following:
+The meory map of the OS image may look like the following:
 
                     0x10008000+---------------------------+ High Address
                               |                           |
@@ -84,30 +79,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     U32 *sp;
     RTX_TASK_INFO *p_taskinfo = task_info;
   
-    //Create queues
-    ready_queue = k_mem_alloc(sizeof(PriorityQueue));
-
-    TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
-    null_task->tid = 0;
-    null_task->state = NEW;
-    null_task->psp = k_mem_alloc(0x200); // TODO: what size?
-    null_task->msp = sp;
-    null_task->prio = PRIO_NULL;
-    null_task->priv = 0;
-    total_num_tasks++;
-
-    push(ready_queue, null_task);
-
-    /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    for (i = 0; i < num_tasks; i++) {
+    for ( i = 0; i < num_tasks; i++ ) {
         int j;
         TCB *p_tcb = &g_tcbs[i+1];
         p_tcb ->tid = i+1;
         p_tcb->state = NEW;
         sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
-        
-        *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
+        *(--sp)  = INITIAL_xPSR;    /* task initial xPSR  */
         *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
         for ( j = 0; j < 6; j++ ) { /*R0-R3, R12, LR */
             *(--sp) = 0x0;
@@ -115,22 +94,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_tcb->msp = sp;
         if ( p_taskinfo->priv == 0 ) { /* unpriviledged task */ 
             /* allocate user stack, not implemented */
-            p_tcb->priv = 0;
-            //allocate user stack and point psp to it
-            gp_current_task = p_tcb;
-            p_tcb -> psp = k_mem_alloc(p_taskinfo->u_stack_size);
-        } else {
-            p_tcb->psp = p_tcb->msp;
-            p_tcb->priv = 1;
         }
-
-        //Add task to the priority queue for NEW tasks
-        push(ready_queue, p_tcb);
-				
-        total_num_tasks++;
         p_taskinfo++;
     }
-
     return RTX_OK;
 }
 
@@ -141,18 +107,20 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
  *      No other effect on other global variables.
  */
 
-TCB *dummy_scheduler(void) {
-    if(!isEmpty(ready_queue)) {
-        TCB *popped = pop(ready_queue);
-
-        if (gp_current_task && gp_current_task->prio != PRIO_NULL) {
-            push(ready_queue, gp_current_task);
-        }
-
-        gp_current_task = popped;
+TCB *dummy_scheduler(void)
+{
+    if (gp_current_task == NULL) {
+        gp_current_task = &g_tcbs[1]; 
+        return &g_tcbs[1];
     }
 
-    return gp_current_task;
+    if ( gp_current_task == &g_tcbs[1] ) {
+        return &g_tcbs[2];
+    } else if ( gp_current_task == &g_tcbs[2] ) {
+        return &g_tcbs[1];
+    } else {
+        return NULL;
+    }
 }
 
 /*@brief: switch out old tcb (p_tcb_old), run the new tcb (gp_current_task)
@@ -182,9 +150,9 @@ int task_switch(TCB *p_tcb_old)
     if (gp_current_task != p_tcb_old) {
         if (state == READY){         
             p_tcb_old->state = READY; 
-            p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
+            p_tcb_old->msp = (U32 *) __get_MSP(); // save the sp of the old task
             gp_current_task->state = RUNNING;
-            __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack    
+            __set_MSP((U32) gp_current_task->msp); //switch to the stack of the new task    
         } else {
             gp_current_task = p_tcb_old; // revert back to the old proc on error
             return RTX_ERR;
@@ -193,61 +161,26 @@ int task_switch(TCB *p_tcb_old)
     return RTX_OK;
 }
 /**
- * @brief yield the processor. The caller becomes READY and the scheduler picks the next ready to run task.
+ * @brief yield the processor. The caller becomes READY and the scheduler picsk the next ready to run task.
  * @return RTX_ERR on error and zero on success
- * POST: gp_current_task gets updated to next to run process
+ * POST: gp_current_task gets updated to next to run task
  */
 int k_tsk_yield(void)
 {
-    //Their starter code
-    // TCB *p_tcb_old = NULL;
+    TCB *p_tcb_old = NULL;
     
-    // p_tcb_old = gp_current_task;
-    // gp_current_task = dummy_scheduler();
-    
-    // if ( gp_current_task == NULL  ) {
-    //     gp_current_task = p_tcb_old; // revert back to the old task
-    //     return RTX_ERR;
-    // }
-    // if ( p_tcb_old == NULL ) {
-    //     p_tcb_old = gp_current_task;
-    // }
-    // task_switch(p_tcb_old);
-    // return RTX_OK;
-
-    //Keep track of task that was running and name it p_tcb_old
-    //Get the old task
-    TCB *p_tcb_old = gp_current_task;
-    //Pop the next task in queue
-
+    p_tcb_old = gp_current_task;
     gp_current_task = dummy_scheduler();
-
-    #ifdef DEBUG_0
-    printf("Yielding task with ID: %d \n",p_tcb_old->tid);
-    #endif /* DEBUG_0 */
-
-
-    //If nothing can replace it 
-    if (gp_current_task == NULL){
-        #ifdef DEBUG_0
-        printf("Ready queue popped NULL task during yield()");
-        #endif /* DEBUG_0 */
-        gp_current_task=p_tcb_old;
+    
+    if ( gp_current_task == NULL  ) {
+        gp_current_task = p_tcb_old; // revert back to the old task
         return RTX_ERR;
     }
-    if (p_tcb_old == NULL){
-        #ifdef DEBUG_0
-        printf("gp_current_task was NULL while Yield() was called");
-        #endif /* DEBUG_0 */
+    if ( p_tcb_old == NULL ) {
         p_tcb_old = gp_current_task;
     }
     task_switch(p_tcb_old);
-
-    //Push old tcb back into ready_queue
-    push(ready_queue, p_tcb_old);
-
     return RTX_OK;
-
 }
 
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size)
@@ -256,30 +189,6 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     printf("k_tsk_create: entering...\n\r");
     printf("task = 0x%x, task_entry = 0x%x, prio=%d, stack_size = %d\n\r", task, task_entry, prio, stack_size);
 #endif /* DEBUG_0 */
-
-    if (total_num_tasks >= MAX_TASKS)
-        return -1;
-
-    TCB* new_task = &g_tcbs[total_num_tasks];
-    new_task->tid = total_num_tasks;
-    new_task->state = NEW;
-    new_task->psp = k_mem_alloc(stack_size);
-    new_task->prio = prio;
-
-    U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
-    *(--sp) = INITIAL_xPSR;
-    *(--sp) = (U32)(task_entry);
-    for (int j = 0; j < 6; j++) {
-        *(--sp) = 0x0;
-    }
-    new_task->msp = sp;
-
-    push(ready_queue, new_task);
-    if(gp_current_task->prio > new_task->prio)  {
-        //must run immediately
-        k_tsk_yield();
-    }
-    task = &new_task->tid;
     return RTX_OK;
 
 }
@@ -289,16 +198,6 @@ void k_tsk_exit(void)
 #ifdef DEBUG_0
     printf("k_tsk_exit: entering...\n\r");
 #endif /* DEBUG_0 */
-    //Keep track of task that was running and name it p_tcb_old
-    //Get current running task
-    TCB *p_tcb_old = gp_current_task;
-
-    k_tsk_yield();
-    //How do I stop and delete the current running task?
-
-    //Set the state to dormant
-    p_tcb_old->state=0;
-
     return;
 }
 
@@ -308,38 +207,11 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
 #endif /* DEBUG_0 */
-    TCB* task = get_task_by_id(ready_queue, task_id);
-
-    if (task != NULL) {
-        // An unprivileged task may change the priority of any other unprivileged task (including itself).
-        // A privileged task may change the priority of any other task (including itself).
-        // The priority of the null task cannot be changed and remains at level PRIO_NULL.
-        if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1) && task->prio != PRIO_NULL) {
-            task->prio = prio;
-
-            //    The caller of this primitive never blocks, but could be preempted.
-            //    If the value of prio is higher than the priority of the current running task,
-            //    and the task identified by task id is in ready state, then the task identified by
-            //    the task id preempts the current running task. Otherwise, the current running task
-            //    continues its execution.
-            if (task->state == READY && task->prio < gp_current_task->prio) {
-                TCB *p_tcb_old = gp_current_task;
-                push(ready_queue, p_tcb_old);
-                gp_current_task = task;
-                pop(ready_queue);
-
-                task_switch(p_tcb_old);
-            }
-        }
-    }
-
     return RTX_OK;    
 }
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
 {
-    TCB *task;
-
 #ifdef DEBUG_0
     printf("k_tsk_get: entering...\n\r");
     printf("task_id = %d, buffer = 0x%x.\n\r", task_id, buffer);
@@ -347,25 +219,16 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
     if (buffer == NULL) {
         return RTX_ERR;
     }
-
-    // TODO: what is this buffer?
-    // TODO: is it only for ready tasks?
-    if (task_id == gp_current_task->tid) {
-        task = gp_current_task;
-    } else {
-        task = get_task_by_id(ready_queue, task_id);
-    }
-
     /* The code fills the buffer with some fake task information. 
        You should fill the buffer with correct information    */
     buffer->tid = task_id;
-    buffer->prio = task->prio;
-    buffer->state = task->state;
-    buffer->priv = task->priv;
-    buffer->ptask = (void *) task;
-    buffer->k_sp = (U32) task->msp;
+    buffer->prio = 99;
+    buffer->state = MEDIUM;
+    buffer->priv = 0;
+    buffer->ptask = 0x0;
+    buffer->k_sp = 0xBEEFDEAD;
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->u_sp = (U32) task->psp;
+    buffer->u_sp = 0xDEADBEEF;
     buffer->u_stack_size = 0x200;
 
     return RTX_OK;     
