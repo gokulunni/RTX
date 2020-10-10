@@ -32,7 +32,7 @@ U32 total_num_tasks = 0;
 PriorityQueue *ready_queue;
 
 /*---------------------------------------------------------------------------
-The meory map of the OS image may look like the following:
+The memory map of the OS image may look like the following:
 
                     0x10008000+---------------------------+ High Address
                               |                           |
@@ -87,6 +87,17 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     //Create queues
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
 
+    TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
+    null_task->tid = 0;
+    null_task->state = NEW;
+    null_task->psp = k_mem_alloc(0x200); // TODO: what size?
+    null_task->msp = sp;
+    null_task->prio = PRIO_NULL;
+    null_task->priv = 0;
+    total_num_tasks++;
+
+    push(ready_queue, null_task);
+
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
     for (i = 0; i < num_tasks; i++) {
@@ -114,13 +125,12 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         }
 
         //Add task to the priority queue for NEW tasks
-        push(&ready_queue, p_tcb);
+        push(ready_queue, p_tcb);
 				
-				total_num_tasks++;
-				p_taskinfo++;
+        total_num_tasks++;
+        p_taskinfo++;
     }
-    gp_current_task = NULL;
-    dummy_scheduler();
+
     return RTX_OK;
 }
 
@@ -132,15 +142,15 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
  */
 
 TCB *dummy_scheduler(void) {
-    if(!isEmpty(&ready_queue)) {
-        TCB *popped = pop(&ready_queue);
+    if(!isEmpty(ready_queue)) {
+        TCB *popped = pop(ready_queue);
 
         if (popped) {
             popped -> state = READY;
         }
 
         if (gp_current_task && gp_current_task->prio != PRIO_NULL) {
-            push(&ready_queue, gp_current_task);
+            push(ready_queue, gp_current_task);
         }
 
         gp_current_task = popped;
@@ -210,12 +220,10 @@ int k_tsk_yield(void)
     // return RTX_OK;
 
     //Keep track of task that was running and name it p_tcb_old
-    TCB *p_tcb_old = NULL;
-
     //Get the old task
-    p_tcb_old = gp_current_task;
+    TCB *p_tcb_old = gp_current_task;
     //Pop the next task in queue
-    gp_current_task= pop(&ready_queue);
+    gp_current_task = pop(ready_queue);
 
     #ifdef DEBUG_0
     printf("Yielding task with ID: %d \n",p_tcb_old->tid);
@@ -239,7 +247,7 @@ int k_tsk_yield(void)
     task_switch(p_tcb_old);
 
     //Push old tcb back into ready_queue
-    push(&ready_queue, p_tcb_old);
+    push(ready_queue, p_tcb_old);
 
     return RTX_OK;
 
@@ -269,14 +277,12 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     }
     new_task->msp = sp;
 
-    push(&ready_queue, new_task);
+    push(ready_queue, new_task);
     if(gp_current_task->prio > new_task->prio)  {
         //must run immediately
         k_tsk_yield();
     }
     task = &new_task->tid;
-    //k_tsk_exit();
-    //free(new_task->psp);
     return RTX_OK;
 
 }
@@ -287,19 +293,14 @@ void k_tsk_exit(void)
     printf("k_tsk_exit: entering...\n\r");
 #endif /* DEBUG_0 */
     //Keep track of task that was running and name it p_tcb_old
-    TCB *p_tcb_old = NULL;
-    
-
     //Get current running task
-    p_tcb_old = gp_current_task;
-	gp_current_task= NULL;
+    TCB *p_tcb_old = gp_current_task;
+
+    k_tsk_yield();
     //How do I stop and delete the current running task?
-    
 
     //Set the state to dormant
     p_tcb_old->state=0;
-
-
 
     return;
 }
@@ -310,7 +311,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
 #endif /* DEBUG_0 */
-    TCB* task = get_task_by_id(&ready_queue, task_id);
+    TCB* task = get_task_by_id(ready_queue, task_id);
 
     if (task != NULL) {
         // An unprivileged task may change the priority of any other unprivileged task (including itself).
@@ -326,9 +327,9 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
             //    continues its execution.
             if (task->state == READY && task->prio < gp_current_task->prio) {
                 TCB *p_tcb_old = gp_current_task;
-                push(&ready_queue, p_tcb_old);
+                push(ready_queue, p_tcb_old);
                 gp_current_task = task;
-                pop(&ready_queue);
+                pop(ready_queue);
 
                 task_switch(p_tcb_old);
             }
@@ -355,7 +356,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
     if (task_id == gp_current_task->tid) {
         task = gp_current_task;
     } else {
-        task = get_task_by_id(&ready_queue, task_id);
+        task = get_task_by_id(ready_queue, task_id);
     }
 
     /* The code fills the buffer with some fake task information. 
