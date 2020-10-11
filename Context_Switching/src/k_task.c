@@ -175,10 +175,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
  */
 
 TCB *dummy_scheduler(void) {
+	
+	//This should never be false
+	//except potentially if the null task is running
     if(!isEmpty(ready_queue)) {
         TCB *popped = pop(ready_queue);
 
-        if (gp_current_task && gp_current_task->prio != PRIO_NULL) {
+				//Push current task back on ready queue
+        if (gp_current_task) {
             push(ready_queue, gp_current_task);
         }
 
@@ -275,9 +279,6 @@ int k_tsk_yield(void)
         p_tcb_old = gp_current_task;
     }
     task_switch(p_tcb_old);
-
-    //Push old tcb back into ready_queue
-    push(ready_queue, p_tcb_old);
 
     return RTX_OK;
 
