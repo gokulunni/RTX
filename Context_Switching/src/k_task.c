@@ -116,6 +116,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 
     TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
     null_task->tid = 0;
+    gp_current_task = null_task;
     null_task->state = NEW;
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->msp = sp;
@@ -336,6 +337,7 @@ void k_tsk_exit(void)
     TCB *p_tcb_old = gp_current_task;
     if (p_tcb_old->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
+        k_mem_dealloc(gp_current_task->psp);
         push_tid(gp_current_task->tid);
         gp_current_task = get_task_by_id(ready_queue, 0);
         gp_current_task = dummy_scheduler();
