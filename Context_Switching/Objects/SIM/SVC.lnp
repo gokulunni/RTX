@@ -1,0 +1,17 @@
+--cpu Cortex-M3
+".\objects\sim\hal.o"
+".\objects\sim\k_mem.o"
+".\objects\sim\k_rtx_init.o"
+".\objects\sim\k_task.o"
+".\objects\sim\priv_tasks.o"
+".\objects\sim\main_svc.o"
+".\objects\sim\printf.o"
+".\objects\sim\uart_polling.o"
+".\objects\sim\priorityqueue.o"
+".\objects\sim\usr_tasks.o"
+".\objects\sim\startup_lpc17xx.o"
+".\objects\sim\system_lpc17xx.o"
+--strict --scatter ".\Objects\SIM\SVC.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\SIM\SVC.map" -o .\Objects\SIM\SVC.axf

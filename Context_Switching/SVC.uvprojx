@@ -10,7 +10,7 @@
       <TargetName>CS SIM</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::.\ARMCC</pCCUsed>
+      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -436,12 +436,17 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
+            </File>
+            <File>
+              <FileName>PriorityQueue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\PriorityQueue.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -893,12 +898,17 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
+            </File>
+            <File>
+              <FileName>PriorityQueue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\PriorityQueue.c</FilePath>
             </File>
           </Files>
         </Group>

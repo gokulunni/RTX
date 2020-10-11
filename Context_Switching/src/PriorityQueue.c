@@ -25,6 +25,8 @@ TCB *pop(PriorityQueue *queue)
 } 
   
 void push(PriorityQueue *queue, TCB *task) {
+		TCB *Iterator = queue->head;
+	
     if(queue->head == NULL) {
         queue->head = task;
         task->next = NULL;
@@ -34,12 +36,12 @@ void push(PriorityQueue *queue, TCB *task) {
         queue->head = task;
     } else {
         /* Find position to insert new node */
-        while (queue->head->next != NULL && queue->head->next->prio > task->prio) {
-            queue->head = queue->head->next;
+        while (Iterator->next != NULL && Iterator->next->prio > task->prio) {
+            Iterator = Iterator->next;
         } 
 
-        task->next = queue->head->next;
-        queue->head->next = task;
+        task->next = Iterator->next;
+        Iterator->next = task;
     } 
 }
 
