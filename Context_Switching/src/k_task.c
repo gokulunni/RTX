@@ -31,6 +31,33 @@ U32 total_num_tasks = 0;
 
 PriorityQueue *ready_queue;
 
+struct free_tid {
+    int tid;
+    struct free_tid* next;
+} FREE_TID_T;
+
+FREE_TID_T *free_tid_head = NULL;
+
+void push_tid(int tid) {
+    FREE_TID_T *new_tid = {tid, free_tid_head};
+
+    if (free_tid_head == NULL) {
+        start = new_tid;
+    }
+
+    return;
+}
+
+int pop_tid() {
+    if (free_tid_head == NULL) {
+        return 0;
+    }
+    int tid = free_tid_head->tid;
+    free_tid_head = free_tid_head->next;
+    return tid;
+}
+
+
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
 
@@ -90,7 +117,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
     null_task->tid = 0;
     null_task->state = NEW;
-    null_task->psp = k_mem_alloc(0x200); // TODO: what size?
+    null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->msp = sp;
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
@@ -100,7 +127,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    for (i = 0; i < num_tasks; i++) {
+    for (i = 0; i < num_tasks; i++) { // TODO: check that num task less than max
         int j;
         TCB *p_tcb = &g_tcbs[i+1];
         p_tcb ->tid = i+1;
@@ -129,6 +156,10 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 				
         total_num_tasks++;
         p_taskinfo++;
+    }
+
+    for (; j < MAX_TASKS; j++) {
+        push_tid(j+1);
     }
 
     return RTX_OK;
@@ -260,28 +291,39 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     if (total_num_tasks >= MAX_TASKS)
         return -1;
 
-    TCB* new_task = &g_tcbs[total_num_tasks];
-    new_task->tid = total_num_tasks;
-    new_task->state = NEW;
-    new_task->psp = k_mem_alloc(stack_size);
-    new_task->prio = prio;
+    if (free_tid_head != NULL) {
+        int tid = pop_tid();
+        TCB* new_task = &g_tcbs[tid-1];
+        new_task->tid = tid;
+        new_task->state = NEW;
+        new_task->psp = k_mem_alloc(stack_size);
+        new_task->prio = prio;
 
-    U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
-    *(--sp) = INITIAL_xPSR;
-    *(--sp) = (U32)(task_entry);
-    for (int j = 0; j < 6; j++) {
-        *(--sp) = 0x0;
+        U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
+        *(--sp) = INITIAL_xPSR;
+        *(--sp) = (U32)(task_entry);
+        for (int j = 0; j < 6; j++) {
+            *(--sp) = 0x0;
+        }
+        new_task->msp = sp;
+
+        push(ready_queue, new_task);
+        if(gp_current_task->prio > new_task->prio)  {
+            //must run immediately
+            k_tsk_yield();
+        }
+        task = &new_task->tid;
+
+        total_num_tasks++;
+
+        return RTX_OK;
     }
-    new_task->msp = sp;
 
-    push(ready_queue, new_task);
-    if(gp_current_task->prio > new_task->prio)  {
-        //must run immediately
-        k_tsk_yield();
-    }
-    task = &new_task->tid;
-    return RTX_OK;
+#ifdef DEBUG_0
+    printf("k_tsk_create: No available tid\n\r");
+#endif /* DEBUG_0 */
 
+    return RTX_ERR;
 }
 
 void k_tsk_exit(void) 
@@ -292,12 +334,12 @@ void k_tsk_exit(void)
     //Keep track of task that was running and name it p_tcb_old
     //Get current running task
     TCB *p_tcb_old = gp_current_task;
-
-    k_tsk_yield();
-    //How do I stop and delete the current running task?
-
-    //Set the state to dormant
-    p_tcb_old->state=0;
+    if (p_tcb_old->prio != PRIO_NULL) {
+        gp_current_task->state = DORMANT;
+        push_tid(gp_current_task->tid);
+        gp_current_task = get_task_by_id(ready_queue, 0);
+        gp_current_task = dummy_scheduler();
+    }
 
     return;
 }
