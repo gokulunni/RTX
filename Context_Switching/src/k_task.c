@@ -112,6 +112,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     RTX_TASK_INFO *p_taskinfo = task_info;
   
     //Create queues
+    TCB kernal_task;
+    kernal_task.tid = MAX_TASKS + 1;
+    gp_current_task = &kernal_task;
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
 
     TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
@@ -123,8 +126,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
     total_num_tasks++;
-
-    push(ready_queue, null_task);
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
@@ -145,7 +146,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
             /* allocate user stack, not implemented */
             p_tcb->priv = 0;
             //allocate user stack and point psp to it
-            gp_current_task = p_tcb;
+            gp_current_task = p_tcb; // TODO: who owns user stack
             p_tcb -> psp = k_mem_alloc(p_taskinfo->u_stack_size);
         } else {
             p_tcb->psp = p_tcb->msp;
@@ -162,6 +163,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     for (; i < MAX_TASKS; i++) {
         push_tid(i+1);
     }
+
+    gp_current_task = null_task;
 
     return RTX_OK;
 }
