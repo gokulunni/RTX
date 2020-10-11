@@ -31,7 +31,7 @@ U32 total_num_tasks = 0;
 
 PriorityQueue *ready_queue;
 
-struct free_tid {
+typedef struct free_tid {
     int tid;
     struct free_tid* next;
 } FREE_TID_T;
@@ -39,10 +39,10 @@ struct free_tid {
 FREE_TID_T *free_tid_head = NULL;
 
 void push_tid(int tid) {
-    FREE_TID_T *new_tid = {tid, free_tid_head};
+    FREE_TID_T new_tid = {tid, free_tid_head};
 
     if (free_tid_head == NULL) {
-        start = new_tid;
+        free_tid_head = &new_tid;
     }
 
     return;
