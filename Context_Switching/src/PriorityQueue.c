@@ -24,25 +24,22 @@ TCB *pop(PriorityQueue *queue)
     return popped;
 } 
   
-void push(PriorityQueue *queue, TCB *task)
-{
-    TCB *head = queue->head;
-
-    if(head == NULL) {
-        head = task;
+void push(PriorityQueue *queue, TCB *task) {
+    if(queue->head == NULL) {
+        queue->head = task;
         task->next = NULL;
-    } else if (head->prio > task->prio) {  /* Edge Case: The head of list is lower priority then new node*/
+    } else if (queue->head->prio > task->prio) {  /* Edge Case: The head of list is lower priority then new node*/
         // Insert New Node before head 
-        task->next = head;
-        head = task;
+        task->next = queue->head;
+        queue->head = task;
     } else {
         /* Find position to insert new node */
-        while (head->next != NULL && head->next->prio < task->prio) {
-            head = head->next; 
+        while (queue->head->next != NULL && queue->head->next->prio > task->prio) {
+            queue->head = queue->head->next;
         } 
 
-        task->next = head->next;
-        head->next = task;
+        task->next = queue->head->next;
+        queue->head->next = task;
     } 
 }
 

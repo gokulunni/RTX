@@ -117,7 +117,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     gp_current_task = &kernal_task;
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
 
-    TCB* null_task = &g_tcbs[num_tasks]; // TODO: check index
+    TCB* null_task = &g_tcbs[0]; // TODO: check index
     null_task->tid = 0;
     gp_current_task = null_task;
     null_task->state = NEW;
@@ -297,7 +297,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     if (free_tid_head != NULL) {
         int tid = pop_tid();
-        TCB* new_task = &g_tcbs[tid-1];
+        TCB* new_task = &g_tcbs[tid];
         new_task->tid = tid;
         new_task->state = NEW;
         new_task->psp = k_mem_alloc(stack_size);
