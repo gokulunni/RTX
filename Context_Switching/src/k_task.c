@@ -158,8 +158,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_taskinfo++;
     }
 
-    for (; j < MAX_TASKS; j++) {
-        push_tid(j+1);
+    for (; i < MAX_TASKS; i++) {
+        push_tid(i+1);
     }
 
     return RTX_OK;
