@@ -41,10 +41,8 @@ FREE_TID_T *free_tid_head = NULL;
 void push_tid(int tid) {
     FREE_TID_T new_tid = {tid, free_tid_head};
 
-    if (free_tid_head == NULL) {
-        free_tid_head = &new_tid;
-    }
-
+    free_tid_head = &new_tid;
+    
     return;
 }
 
