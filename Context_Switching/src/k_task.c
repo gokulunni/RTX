@@ -27,7 +27,6 @@ TCB *gp_current_task = NULL;    /* always point to the current RUN process */
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
-U32 total_num_tasks = 0;
 
 PriorityQueue *ready_queue;
 
@@ -40,9 +39,7 @@ FREE_TID_T *free_tid_head = NULL;
 
 void push_tid(int tid) {
     FREE_TID_T new_tid = {tid, free_tid_head};
-
     free_tid_head = &new_tid;
-    
     return;
 }
 
@@ -116,14 +113,13 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
 
     TCB* null_task = &g_tcbs[0]; // TODO: check index
-    null_task->tid = 0;
+    null_task->tid = PID_NULL;
     gp_current_task = null_task;
     null_task->state = NEW;
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->msp = sp;
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
-    total_num_tasks++;
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
@@ -153,8 +149,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
 
         //Add task to the priority queue for NEW tasks
         push(ready_queue, p_tcb);
-				
-        total_num_tasks++;
+
         p_taskinfo++;
     }
 
@@ -163,6 +158,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     }
 
     gp_current_task = null_task;
+
+    print_priority_queue(ready_queue);
 
     return RTX_OK;
 }
@@ -178,7 +175,7 @@ TCB *dummy_scheduler(void) {
 	
 	//This should never be false
 	//except potentially if the null task is running
-    if(!isEmpty(ready_queue)) {
+    if(!is_empty(ready_queue)) {
         TCB *popped = pop(ready_queue);
 
 				//Push current task back on ready queue
@@ -291,7 +288,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     printf("task = 0x%x, task_entry = 0x%x, prio=%d, stack_size = %d\n\r", task, task_entry, prio, stack_size);
 #endif /* DEBUG_0 */
 
-    if (total_num_tasks >= MAX_TASKS)
+    if (free_tid_head == NULL)
         return -1;
 
     if (free_tid_head != NULL) {
@@ -302,7 +299,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         new_task->psp = k_mem_alloc(stack_size);
         new_task->prio = prio;
 
-        U32* sp = g_k_stacks[total_num_tasks + 1] + (KERN_STACK_SIZE >> 2);
+        U32 *sp = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
         *(--sp) = INITIAL_xPSR;
         *(--sp) = (U32)(task_entry);
         for (int j = 0; j < 6; j++) {
@@ -317,7 +314,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         }
         task = &new_task->tid;
 
-        total_num_tasks++;
+        print_priority_queue(ready_queue);
 
         return RTX_OK;
     }
@@ -378,6 +375,8 @@ int k_tsk_set_prio(task_t task_id, U8 prio)
             }
         }
     }
+
+    print_priority_queue(ready_queue);
 
     return RTX_OK;    
 }

@@ -7,4 +7,5 @@ typedef struct priorityQueue {
 TCB* get_task_by_id(PriorityQueue *queue, U8 tid);
 TCB* pop(PriorityQueue *queue);
 void push(PriorityQueue *queue, TCB* task);
-int isEmpty(PriorityQueue *queue);
+int is_empty(PriorityQueue *queue);
+void print_priority_queue(PriorityQueue *queue);

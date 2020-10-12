@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>DEBUG_0 SIM_TARGET</Define>
+              <Define>DEBUG_0 DEBUG_PRIO_Q SIM_TARGET</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
@@ -436,12 +436,12 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\printf.c</FilePath>
+              <FilePath>..\util\printf_uart\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\uart_polling.c</FilePath>
+              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
             </File>
             <File>
               <FileName>PriorityQueue.c</FileName>
@@ -898,12 +898,12 @@
             <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\printf.c</FilePath>
+              <FilePath>..\util\printf_uart\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\uart_polling.c</FilePath>
+              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
             </File>
             <File>
               <FileName>PriorityQueue.c</FileName>
