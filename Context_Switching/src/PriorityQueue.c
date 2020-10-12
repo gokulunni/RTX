@@ -82,7 +82,7 @@ void print_priority_queue(PriorityQueue *queue) {
                 break;
         }
 
-        // Should always be 1
+        // Should always be NEW or READY
         printf("Node %d: STATE = %d\r\n", counter, iterator->state);
 
         if (iterator->priv) {
