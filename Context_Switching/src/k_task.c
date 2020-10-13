@@ -38,8 +38,11 @@ typedef struct free_tid {
 FREE_TID_T *free_tid_head = NULL;
 
 void push_tid(int tid) {
-    FREE_TID_T new_tid = {tid, free_tid_head};
-    free_tid_head = &new_tid;
+
+    FREE_TID_T *new_tid = (FREE_TID_T *)k_mem_alloc(sizeof(FREE_TID_T));
+    new_tid -> next = free_tid_head;
+	  new_tid -> tid = tid;
+		free_tid_head = new_tid;
     return;
 }
 
@@ -52,6 +55,19 @@ int pop_tid() {
     return tid;
 }
 
+void print_tids()
+{
+	FREE_TID_T *temp = free_tid_head;
+	
+	printf("****************\n");
+	printf("TID List\n");
+	while(temp != NULL)
+	{
+		printf("%d\n", temp->tid);
+		temp = temp -> next;
+	}
+	printf("****************\n");
+}
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -153,10 +169,11 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_taskinfo++;
     }
 
-    for (; i < MAX_TASKS; i++) {
-        push_tid(i+1);
+    for (; i < MAX_TASKS-1; i++) {
+        push_tid(i);
     }
-
+		
+		print_tids();
     gp_current_task = null_task;
 
     print_priority_queue(ready_queue);
@@ -177,13 +194,13 @@ TCB *dummy_scheduler(void) {
 	//except potentially if the null task is running
     if(!is_empty(ready_queue)) {
         TCB *popped = pop(ready_queue);
-
 				//Push current task back on ready queue
         if (gp_current_task) {
             push(ready_queue, gp_current_task);
         }
 
         gp_current_task = popped;
+				print_priority_queue(ready_queue);
     }
 
     return gp_current_task;
@@ -312,7 +329,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
             //must run immediately
             k_tsk_yield();
         }
-        task = &new_task->tid;
+        *task = new_task->tid;
 
         print_priority_queue(ready_queue);
 

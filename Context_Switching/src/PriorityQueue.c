@@ -39,7 +39,7 @@ void push(PriorityQueue *queue, TCB *task) {
         queue->head = task;
     } else {
         /* Find position to insert new node */
-        while (iterator->next != NULL && iterator->next->prio > task->prio) {
+        while (iterator -> next != NULL && iterator->prio <= task->prio) {
             iterator = iterator->next;
         } 
 
