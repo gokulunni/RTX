@@ -23,6 +23,7 @@
 
 /* ----- Global Variables ----- */
 TCB *gp_current_task = NULL;    /* always point to the current RUN process */
+TCB kernal_task;
 
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
@@ -38,9 +39,10 @@ typedef struct free_tid {
 FREE_TID_T *free_tid_head = NULL;
 
 void push_tid(int tid) {
-    FREE_TID_T new_tid = {tid, free_tid_head};
-    free_tid_head = &new_tid;
-    return;
+    FREE_TID_T *new_tid = (FREE_TID_T *) k_mem_alloc(sizeof(FREE_TID_T));
+    new_tid -> next = free_tid_head;
+    new_tid -> tid = tid;
+    free_tid_head = new_tid;
 }
 
 int pop_tid() {
@@ -49,9 +51,23 @@ int pop_tid() {
     }
     int tid = free_tid_head->tid;
     free_tid_head = free_tid_head->next;
+    k_mem_dealloc(free_tid_head);
     return tid;
 }
 
+void print_tids()
+{
+	FREE_TID_T *temp = free_tid_head;
+
+	printf("****************\n");
+	printf("TID List\n");
+	while(temp != NULL)
+	{
+		printf("%d\n", temp->tid);
+		temp = temp -> next;
+	}
+	printf("****************\n");
+}
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -107,14 +123,12 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
     RTX_TASK_INFO *p_taskinfo = task_info;
   
     //Create queues
-    TCB kernal_task;
     kernal_task.tid = MAX_TASKS + 1;
     gp_current_task = &kernal_task;
     ready_queue = k_mem_alloc(sizeof(PriorityQueue));
 
     TCB* null_task = &g_tcbs[0]; // TODO: check index
     null_task->tid = PID_NULL;
-    gp_current_task = null_task;
     null_task->state = NEW;
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->msp = sp;
@@ -140,7 +154,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
             /* allocate user stack, not implemented */
             p_tcb->priv = 0;
             //allocate user stack and point psp to it
-            gp_current_task = p_tcb; // TODO: who owns user stack
             p_tcb -> psp = k_mem_alloc(p_taskinfo->u_stack_size);
         } else {
             p_tcb->psp = p_tcb->msp;
@@ -153,10 +166,15 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         p_taskinfo++;
     }
 
-    for (; i < MAX_TASKS; i++) {
+    for (int q = MAX_TASKS-1; q > i; q--) {
+        push_tid(q);
+    }
+
+    for (; i < MAX_TASKS-1; i++) {
         push_tid(i+1);
     }
 
+    print_tids();
     gp_current_task = null_task;
 
     print_priority_queue(ready_queue);
@@ -177,7 +195,6 @@ TCB *dummy_scheduler(void) {
 	//except potentially if the null task is running
     if(!is_empty(ready_queue)) {
         TCB *popped = pop(ready_queue);
-
 				//Push current task back on ready queue
         if (gp_current_task) {
             push(ready_queue, gp_current_task);
@@ -275,6 +292,7 @@ int k_tsk_yield(void)
         #endif /* DEBUG_0 */
         p_tcb_old = gp_current_task;
     }
+    print_priority_queue(ready_queue);
     task_switch(p_tcb_old);
 
     return RTX_OK;
@@ -291,7 +309,11 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     if (free_tid_head == NULL)
         return -1;
 
+    TCB *prev_current_task = gp_current_task;
+    gp_current_task = &kernal_task;
     int tid = pop_tid();
+    gp_current_task = prev_current_task;
+
     TCB* new_task = &g_tcbs[tid];
     new_task->tid = tid;
     new_task->state = NEW;
@@ -311,7 +333,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         //must run immediately
         k_tsk_yield();
     }
-    task = &new_task->tid;
+    *task = new_task->tid;
 
     print_priority_queue(ready_queue);
 
@@ -335,7 +357,12 @@ void k_tsk_exit(void)
     if (p_tcb_old->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
         k_mem_dealloc(gp_current_task->psp);
+
+        TCB *prev_current_task = gp_current_task;
+        gp_current_task = &kernal_task;
         push_tid(gp_current_task->tid);
+        gp_current_task = prev_current_task;
+
         gp_current_task = get_task_by_id(ready_queue, 0);
         gp_current_task = dummy_scheduler();
     }
