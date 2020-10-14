@@ -170,10 +170,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks)
         push_tid(q);
     }
 
-    for (; i < MAX_TASKS-1; i++) {
-        push_tid(i+1);
-    }
-
     print_tids();
     gp_current_task = null_task;
 
