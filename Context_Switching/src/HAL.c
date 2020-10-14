@@ -29,10 +29,17 @@ __asm void __rte(void)
 /* NOTE: We're assuming the exception stack frame is pushed onto PSP for user and kernel threads*/
 __asm void SVC_Handler (void) 
 {
-  PRESERVE8            ; 8 bytes alignement of the stack
-  CPSID I              ; disable interrupt
-  MRS  R0, MSP         ; Read PSP into R0
-  MSR MSP, R0         ; Set MSP = PSP
+  PRESERVE8             ; 8 bytes alignement of the stack
+  CPSID I               ; disable interrupt
+	
+  MRS  R0, PSP          ; Read PSP into R0
+	CMP  R0, #0 				  ; Check if this is the first invocation
+	BNE  normal_operation 
+	MRS  R0, MSP          ;since PSP = 0x0, load MSP address
+	MSR  PSP, R0
+	
+normal_operation
+  MSR MSP, R0          ; Set MSP = PSP
 	
   
   LDR  R1, [R0, #24]   ; Read Saved PC from SP (skip over 6 regs - R0-R3, R12, LR)
@@ -68,16 +75,16 @@ SVC_EXIT
   B user_thread                            ; if 0, handler was invoked by user thread
 
 kernel_thread
-  MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value, Thread mode, MSP
-	MOV R3, #1                 ; 
-	MSR CONTROL, R3            ; set control bit[0] to 1
+  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, MSP
+	MOV R3, #0                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 0 (unpriviledged)
   CPSIE I                    ; enable interrupt
   BX   LR
 
 user_thread
-  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value, Thread mode, PSP
+  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #1                 ; 
-	MSR CONTROL, R3            ; set control bit[0] to 1
+	MSR CONTROL, R3            ; set control bit[0] to 1 (priveledged)
   CPSIE I                    ;enable interrupt
   BX   LR
 }
