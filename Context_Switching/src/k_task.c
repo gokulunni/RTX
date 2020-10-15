@@ -69,6 +69,12 @@ void print_tids()
 	printf("****************\n");
 }
 
+__asm void __set_SP_to_PSP()
+{
+   MOV R3, #2                 ; priviledged, use PSP (01)
+	 MSR CONTROL, R3
+}
+
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
 
@@ -118,6 +124,11 @@ The memory map of the OS image may look like the following:
  */
 int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) 
 {
+	/* Default is MSP when calling tsk_init(), set to PSP */
+	  //__set_PSP((U32) __get_MSP());
+		//__set_CONTROL((U32)3);
+	 
+	  
     int i;
     U32 *sp;
     RTX_TASK_INFO *p_taskinfo = task_info;
@@ -215,12 +226,16 @@ int task_switch(TCB *p_tcb_old)
     state = gp_current_task->state;
 
     if (state == NEW) {
-        if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {
-            p_tcb_old->state = READY;
+        if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {    
+					  p_tcb_old->state = READY;
             p_tcb_old->msp = (U32 *) __get_MSP();
+						p_tcb_old->psp = (U32 *) __get_PSP(); 
         }
         gp_current_task->state = RUNNING;
         __set_MSP((U32) gp_current_task->msp);
+				
+				__set_PSP((U32)gp_current_task->psp);
+				
         __rte();  /* pop exception stack frame from the stack for a new task */
     } 
     
@@ -230,8 +245,10 @@ int task_switch(TCB *p_tcb_old)
         if (state == READY){         
             p_tcb_old->state = READY; 
             p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
+					  p_tcb_old->psp = (U32 *) __get_PSP(); 
             gp_current_task->state = RUNNING;
-            __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack    
+            __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack 
+						__set_PSP((U32)gp_current_task->psp);
         } else {
             gp_current_task = p_tcb_old; // revert back to the old proc on error
             return RTX_ERR;

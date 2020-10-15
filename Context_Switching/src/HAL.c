@@ -13,9 +13,9 @@ extern TCB *gp_current_task;
 /* pop off exception stack frame from the stack */
 __asm void __rte(void)
 {
-  PRESERVE8            ; 8 bytes alignement of the stack
-  MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value, Thread mode, MSP
-  CPSIE I              ; enable interrupt
+  PRESERVE8                  ; 8 bytes alignement of the stack
+  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value, Thread mode, PSP
+  CPSIE I                    ; enable interrupt
   BX   LR
 }
 
@@ -36,7 +36,7 @@ __asm void SVC_Handler (void)
 	CMP  R0, #0 				  ; Check if this is the first invocation
 	BNE  normal_operation 
 	MRS  R0, MSP          ;since PSP = 0x0, load MSP address
-	MSR  PSP, R0
+												
 	
 normal_operation
   MSR MSP, R0          ; Set MSP = PSP
@@ -75,16 +75,16 @@ SVC_EXIT
   B user_thread                            ; if 0, handler was invoked by user thread
 
 kernel_thread
-  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, MSP
+  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #0                 ; 
-	MSR CONTROL, R3            ; set control bit[0] to 0 (unpriviledged)
+	MSR CONTROL, R3            ; set control bit[0] to 0 (priviledged)
   CPSIE I                    ; enable interrupt
   BX   LR
 
 user_thread
   MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #1                 ; 
-	MSR CONTROL, R3            ; set control bit[0] to 1 (priveledged)
-  CPSIE I                    ;enable interrupt
+	MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
+  CPSIE I                    ; enable interrupt
   BX   LR
 }
