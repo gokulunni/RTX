@@ -35,10 +35,6 @@ TCB *null_task;
 TCB *ready_queue_head = NULL;
 FREE_TID_T *free_tid_head = NULL;
 
-__asm void __set_SP_to_PSP() {
-   MOV R3, #2                 ; priviledged, use PSP (01)
-   MSR CONTROL, R3
-}
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -107,10 +103,11 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->psp_size = 0x18;
 
+		int g = 0;
     sp = g_k_stacks[0] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
     *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
     *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
-    for ( j = 0; j < 6; j++ ) { /*R0-R3, R12, LR */
+    for ( g = 0; g < 6; g++ ) { /*R0-R3, R12, LR */
         *(--sp) = 0x0;
     }
     null_task->msp = sp;
