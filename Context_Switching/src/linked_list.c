@@ -24,7 +24,7 @@ FREE_TID_T *pop_tid(FREE_TID_T **free_tid_head) {
     }
 
     FREE_TID_T *popped = *free_tid_head;
-    *free_tid_head = *free_tid_head->next;
+    *free_tid_head = (*free_tid_head)->next;
     return popped;
 }
 

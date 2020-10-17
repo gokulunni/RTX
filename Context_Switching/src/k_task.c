@@ -96,18 +96,10 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     int i;
     U32 *sp;
     RTX_TASK_INFO *p_taskinfo = task_info;
-
-    for (int p = 0; p < MAX_TASKS; p++) {
-        g_tcbs[p] = NULL;
-    }
   
     // Create fake kernal task with ID = MAX_TASKS+1
     kernal_task.tid = MAX_TASKS + 1;
     gp_current_task = &kernal_task;
-
-
-    ready_queue_head = k_mem_alloc(sizeof(TCB));
-
 
     null_task = &g_tcbs[0]; // TODO: check index
     null_task->tid = PID_NULL;
@@ -152,7 +144,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         }
 
         //Add task to the priority queue for NEW tasks
-        push(&ready_queue, p_tcb);
+        push(&ready_queue_head, p_tcb);
 
         p_taskinfo++;
     }
@@ -164,7 +156,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     }
 
     print_free_tids(free_tid_head);
-    print_prio_queue(ready_queue);
+    print_prio_queue(ready_queue_head);
 
     gp_current_task = null_task;
 
@@ -193,7 +185,7 @@ TCB *dummy_scheduler(void) {
 
     if (gp_current_task == NULL) {
         #ifdef DEBUG_0
-        printf("[ERROR] dummy_scheduler: gp_current_task is NULL\n",p_tcb_old->tid);
+        printf("[ERROR] dummy_scheduler: gp_current_task is NULL\n");
         #endif /* DEBUG_0 */
     }
 
@@ -273,7 +265,7 @@ int k_tsk_yield(void) {
         #endif /* DEBUG_0 */
         p_tcb_old = gp_current_task;
     }
-    print_prio_queue(ready_queue);
+    print_prio_queue(ready_queue_head);
     task_switch(p_tcb_old);
 
     return RTX_OK;
@@ -411,7 +403,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         #endif /* DEBUG_0 */
     }
 
-    TCB *task = g_tcbs[task_id];
+    TCB *task = pop_task_by_id(&ready_queue_head, task_id);
 
     if (task == NULL) {
         #ifdef DEBUG_0
@@ -452,7 +444,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         }
     }
 
-    print_prio_queue(&ready_queue);
+    print_prio_queue(ready_queue_head);
 
     return RTX_OK;    
 }
@@ -475,7 +467,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
         #endif /* DEBUG_0 */
     }
 
-    TCB *task = g_tcbs[task_id];
+    TCB *task = &g_tcbs[task_id];
 
     if (task == NULL) {
         return RTX_ERR;
