@@ -106,7 +106,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task->state = NEW;
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
     null_task->psp_size = 0x18;
-    null_task->msp = sp; // TODO: assign a value to SP
+
+    sp = g_k_stacks[0] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
+    *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
+    *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
+    for ( j = 0; j < 6; j++ ) { /*R0-R3, R12, LR */
+        *(--sp) = 0x0;
+    }
+    null_task->msp = sp;
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
 
@@ -117,7 +124,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         int j;
         TCB *p_tcb = &g_tcbs[i+1];
 
-        // TODO: can we skip NULL_PRIO task?
+        // TODO: can we skip NULL_PRIO task? can we ignore user provided NULL TASK and use our own
         if (p_tcb->prio == PRIO_NULL) {
             continue;
         }
@@ -211,7 +218,7 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
         }
         gp_current_task->state = RUNNING;
         __set_MSP((U32) gp_current_task->msp);
-        __set_PSP((U32)gp_current_task->psp); // TODO: not implemented
+        __set_PSP((U32)gp_current_task->psp);
 				
         __rte();  /* pop exception stack frame from the stack for a new task */
     } 
@@ -269,7 +276,6 @@ int k_tsk_yield(void) {
     task_switch(p_tcb_old);
 
     return RTX_OK;
-
 }
 
 
