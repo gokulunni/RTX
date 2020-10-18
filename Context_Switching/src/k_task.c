@@ -87,7 +87,19 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	/* Default is MSP when calling tsk_init(), set to PSP */
 	  //__set_PSP((U32) __get_MSP());
 		//__set_CONTROL((U32)3);
-	 
+	
+		if (num_tasks <= 0) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_init: invalid num_tasks\n\r");
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
+    if (task_info == NULL) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_init: no initial kernel tasks to run\n\r");
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
 	  
     int i;
     U32 *sp;
@@ -298,6 +310,19 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+		else if (!(prio >= 0 && prio <= 4)) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_create: prio outside of task priority bounds\n\r");
+        #endif /* DEBUG_0 */
+				return RTX_ERR;
+		}
+		
+		if (stack_size < 0) {
+				#ifdef DEBUG_0
+        printf("[ERROR] k_tsk_create: invalid stack_size entered\n\r");
+        #endif /* DEBUG_0 */
+				return RTX_ERR;
+		}
 
     if (free_tid_head == NULL) {
         #ifdef DEBUG_0
@@ -395,6 +420,12 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+		else if (!(prio >= 0 && prio <= 4)) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_set_prio: prio outside of task priority bounds\n\r");
+        #endif /* DEBUG_0 */
+				return RTX_ERR;
+    }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
     if (task_id == 0) {
@@ -407,7 +438,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
 //    TCB *task = get_task_by_id(&ready_queue_head, task_id);
 // TODO: can i change PRIO of dormant task?
 
-    if (task_id >= MAX_TASKS) {
+    if (task_id >= MAX_TASKS || task_id < 0) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
         #endif /* DEBUG_0 */
@@ -471,7 +502,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 
     // TODO: can we get dormant task? what if task has been overwritten?
 
-    if (task_id >= MAX_TASKS) {
+    if (task_id >= MAX_TASKS || task_id < 0) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
         #endif /* DEBUG_0 */
