@@ -56,7 +56,7 @@ normal_operation
  
   LDM  R0, {R0-R3, R12}; Read R0-R3, R12 from stack (no writeback)
                        ; NOTE R0 contains the sp before this instruction
-
+                       ; ****Need to set MSP back to kernel stack before system call****
   PUSH {R4-R11, LR}    ; Save other registers
   BLX  R12             ; Call SVC C Function, 
                        ; R12 contains the corresponding 
@@ -69,11 +69,12 @@ normal_operation
 SVC_EXIT  
 
   LDR R3, =__cpp(&gp_current_task)    ; Load R3 with priv level of current task
-	STR R2, [R3, #120]                      ; 
+	STR R2, [R3, #32]                      ; 128 bits = 32 bytes
   CMP R2, #1                                 ; check if priv level is 1 or 0
   BEQ kernel_thread                          ; if 1, handler was invoked by kernel thread
   B user_thread                            ; if 0, handler was invoked by user thread
 
+	//TO DO: Make sure privilege level is set appropriately, currently user task is privileged?
 kernel_thread
   MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #0                 ; 

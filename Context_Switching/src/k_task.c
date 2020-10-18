@@ -128,23 +128,30 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         p_tcb->tid = i+1;
         p_tcb->state = NEW;
-        sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
-        *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
-        *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
-        for ( j = 0; j < 6; j++ ) { /*R0-R3, R12, LR */
-            *(--sp) = 0x0;
-        }
-        p_tcb->msp = sp;
 
-        if ( p_taskinfo->priv == 0 ) { /* unpriviledged task */ 
-            /* allocate user stack, not implemented */
-            p_tcb->priv = 0;
-            //allocate user stack and point psp to it
-            p_tcb->psp = k_mem_alloc(p_taskinfo->u_stack_size);
-            p_tcb->psp_size = p_taskinfo->u_stack_size;
-        } else {
-            p_tcb->priv = 1;
-            p_tcb->psp = p_tcb->msp; // TODO: double check
+        if ( p_taskinfo->priv == 0 ) { /* unprivileged task */ 
+							U32* sp = k_mem_alloc(p_taskinfo->u_stack_size);
+							*(--sp) = INITIAL_xPSR;
+							*(--sp) = (U32)(p_taskinfo->ptask);
+							for (int j = 0; j < 6; j++) {
+								*(--sp) = 0x0;
+							}
+							p_tcb->priv = 0;
+							p_tcb->psp = sp;
+							p_tcb->psp_size = p_taskinfo->u_stack_size;
+							p_tcb -> msp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+							
+        } else { /* privileged task */
+						sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
+						*(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
+						*(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */
+						for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
+							*(--sp) = 0x0;
+						}
+						p_tcb->priv = 1;
+						p_tcb -> msp = sp;
+            p_tcb->psp = p_tcb->msp;
+						p_tcb->psp_size = 0; 			/* To indicate that there is no user stack, perhaps should be renamed */
         }
 
         //Add task to the priority queue for NEW tasks
@@ -316,23 +323,23 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     // TODO: double check that kernal task owns all user stacks even if task created inside another task
     TCB *new_task = &g_tcbs[tid];
 
-    new_task->psp = k_mem_alloc(stack_size);
     new_task->psp_size = stack_size;
-    gp_current_task = prev_current_task;
+    gp_current_task = prev_current_task; 
+		
+		U32* sp = k_mem_alloc(stack_size);
+		*(--sp) = INITIAL_xPSR;
+    *(--sp) = (U32)(task_entry);
+    for (int j = 0; j < 6; j++) {
+        *(--sp) = 0x0;
+    }
+		new_task->psp = sp;
 
     new_task->next = NULL;
     new_task->tid = tid;
     new_task->state = NEW;
     new_task->prio = prio;
     new_task->priv = 0;
-
-    U32 *sp = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
-    *(--sp) = INITIAL_xPSR;
-    *(--sp) = (U32)(task_entry);
-    for (int j = 0; j < 6; j++) {
-        *(--sp) = 0x0;
-    }
-    new_task->msp = sp;
+    new_task->msp = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
 
     push(&ready_queue_head, new_task);
     print_prio_queue(ready_queue_head);

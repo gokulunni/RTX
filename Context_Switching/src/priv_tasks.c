@@ -71,9 +71,9 @@ void priv_task2(void)
     RTX_TASK_INFO task_info;
     task_t tid;
     
-    tsk_create(&tid, &task1, LOW, 0x200);  /*create a user task */
+    tsk_create(&tid, &task1, HIGH, 0x200);  /*create a user task */
     tsk_get(tid, &task_info);
-    tsk_set_prio(tid, LOWEST);
+    tsk_set_prio(tid, HIGH);
     
     for (int i=1;;i++) {
         char out_char = '0' + i%10;
