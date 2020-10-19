@@ -49,28 +49,6 @@ void print_free_tids(FREE_TID_T *free_tid_head) {
  */
 
 /**
- * @brief find TCB with requested tid in the priority queue
- * @return NULL if TCB with requested tid is not found
- * Otherwise, return TCB
- */
-TCB *get_task_by_id(TCB **prio_queue_head, U8 tid) {
-    TCB *iterator = *prio_queue_head;
-
-    // Iterate through priority queue until TCB with tid is found
-    while (iterator != NULL && iterator->tid != tid) {
-        iterator = iterator->next;
-    }
-
-    // If TCB with tid is not found, return NULL
-    if (iterator == NULL || iterator->tid != tid) {
-        return NULL;
-    }
-
-    return iterator;
-}
-
-
-/**
  * @brief pop TCB at the head of priority queue
  * @return NULL if priority queue is empty
  * Otherwise, return popped TCB

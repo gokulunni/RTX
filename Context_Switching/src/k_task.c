@@ -109,23 +109,23 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     kernal_task.tid = MAX_TASKS + 1;
     gp_current_task = &kernal_task;
 
-    null_task = &g_tcbs[0]; // TODO: check index
+    null_task = &g_tcbs[0];
     null_task->tid = PID_NULL;
     null_task->state = NEW;
     null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
-		if (null_task->psp == NULL) {
-				#ifdef DEBUG_0
+    if (null_task->psp == NULL) {
+        #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-		}
+    }
     null_task->psp_size = 0x18;
 
-		int g = 0;
+    int g = 0;
     sp = g_k_stacks[0] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
     *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
     *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
-    for ( g = 0; g < 6; g++ ) { /*R0-R3, R12, LR */
+    for (g = 0; g < 6; g++) { /*R0-R3, R12, LR */
         *(--sp) = 0x0;
     }
     null_task->msp = sp;
@@ -148,34 +148,33 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         p_tcb->state = NEW;
 
         if ( p_taskinfo->priv == 0 ) { /* unprivileged task */ 
-							U32* sp = k_mem_alloc(p_taskinfo->u_stack_size);
-							if (sp == NULL) {
-								#ifdef DEBUG_0
-								printf("[ERROR] k_tsk_init: failed to allocate init's task user stack\n\r");
-								#endif /* DEBUG_0 */
-								return RTX_ERR;
-							}
-							*(--sp) = INITIAL_xPSR;
-							*(--sp) = (U32)(p_taskinfo->ptask);
-							for (int j = 0; j < 6; j++) {
-								*(--sp) = 0x0;
-							}
-							p_tcb->priv = 0;
-							p_tcb->psp = sp;
-							p_tcb->psp_size = p_taskinfo->u_stack_size;
-							p_tcb -> msp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
-							
+            U32* sp = k_mem_alloc(p_taskinfo->u_stack_size);
+            if (sp == NULL) {
+                #ifdef DEBUG_0
+                printf("[ERROR] k_tsk_init: failed to allocate init's task user stack\n\r");
+                #endif /* DEBUG_0 */
+                return RTX_ERR;
+            }
+            *(--sp) = INITIAL_xPSR;
+            *(--sp) = (U32)(p_taskinfo->ptask);
+            for (int j = 0; j < 6; j++) {
+                *(--sp) = 0x0;
+            }
+            p_tcb->priv = 0;
+            p_tcb->psp = sp;
+            p_tcb->psp_size = p_taskinfo->u_stack_size;
+            p_tcb -> msp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
         } else { /* privileged task */
-						sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
-						*(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
-						*(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */
-						for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
-							*(--sp) = 0x0;
-						}
-						p_tcb->priv = 1;
-						p_tcb -> msp = sp;
+            sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
+            *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
+            *(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */
+            for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
+                *(--sp) = 0x0;
+            }
+            p_tcb->priv = 1;
+            p_tcb -> msp = sp;
             p_tcb->psp = p_tcb->msp;
-						p_tcb->psp_size = 0; 			/* To indicate that there is no user stack, perhaps should be renamed */
+            p_tcb->psp_size = 0; 			/* To indicate that there is no user stack, perhaps should be renamed */
         }
 
         //Add task to the priority queue for NEW tasks
@@ -186,12 +185,12 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
     for (int q = MAX_TASKS - 1; q > i; q--) {
         FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
-				if (new_tid == NULL) {
-					#ifdef DEBUG_0
-					printf("[ERROR] k_tsk_init: tid failed to allocate memory\n\r");
-					#endif /* DEBUG_0 */
-					return RTX_ERR;
-				}
+        if (new_tid == NULL) {
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_init: tid failed to allocate memory\n\r");
+            #endif /* DEBUG_0 */
+            return RTX_ERR;
+        }
         new_tid->tid = q;
         push_tid(&free_tid_head, new_tid);
     }
@@ -362,11 +361,11 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     int tid = popped_tid->tid;
     if (k_mem_dealloc(popped_tid) == RTX_ERR) {
-				#ifdef DEBUG_0
+        #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: error in deallocating tid\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-		}
+    }
 
     // TODO: double check that kernal task owns all user stacks even if task created inside another task
     TCB *new_task = &g_tcbs[tid];
@@ -374,19 +373,19 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->psp_size = stack_size;
     gp_current_task = prev_current_task; 
 		
-		U32* sp = k_mem_alloc(stack_size);
-		if (sp == NULL) {
-				#ifdef DEBUG_0
+    U32* sp = k_mem_alloc(stack_size);
+    if (sp == NULL) {
+        #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: could not allocate stack for new task\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-		}
-		*(--sp) = INITIAL_xPSR;
+    }
+    *(--sp) = INITIAL_xPSR;
     *(--sp) = (U32)(task_entry);
     for (int j = 0; j < 6; j++) {
         *(--sp) = 0x0;
     }
-		new_task->psp = sp;
+    new_task->psp = sp;
 
     new_task->next = NULL;
     new_task->tid = tid;
@@ -419,10 +418,10 @@ void k_tsk_exit(void) {
         // If its unpriviledged task, dealloc user stack
         if (gp_current_task->priv == 0) {
             if (k_mem_dealloc(gp_current_task->psp) == RTX_ERR) {
-							#ifdef DEBUG_0
-							printf("[ERROR] k_tsk_exit: no initial kernel tasks to run\n\r");
-							#endif /* DEBUG_0 */
-						}
+                #ifdef DEBUG_0
+                printf("[ERROR] k_tsk_exit: no initial kernel tasks to run\n\r");
+                #endif /* DEBUG_0 */
+            }
             gp_current_task->psp = NULL;
         }
 
@@ -430,11 +429,11 @@ void k_tsk_exit(void) {
         TCB *p_tcb_old = gp_current_task;
         gp_current_task = &kernal_task;
         FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
-				if (new_tid == NULL) {
-					#ifdef DEBUG_0
-					printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
-					#endif /* DEBUG_0 */
-				}
+        if (new_tid == NULL) {
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
+            #endif /* DEBUG_0 */
+        }
         new_tid->tid = p_tcb_old->tid;
         push_tid(&free_tid_head, new_tid);
 
@@ -473,7 +472,6 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         return RTX_ERR;
     }
 
-//    TCB *task = get_task_by_id(&ready_queue_head, task_id);
 // TODO: can i change PRIO of dormant task?
 
     if (task_id >= MAX_TASKS || task_id < 0) {
