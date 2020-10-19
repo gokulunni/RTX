@@ -473,7 +473,6 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         return RTX_ERR;
     }
 
-//    TCB *task = get_task_by_id(&ready_queue_head, task_id);
 // TODO: can i change PRIO of dormant task?
 
     if (task_id >= MAX_TASKS || task_id < 0) {
