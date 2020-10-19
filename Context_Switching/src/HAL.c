@@ -14,9 +14,7 @@ extern TCB *gp_current_task;
 __asm void __rte(void)
 {
   PRESERVE8                  ; 8 bytes alignement of the stack
-  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value, Thread mode, PSP
-  CPSIE I                    ; enable interrupt
-  BX   LR
+	B SVC_EXIT                 ; Exit SVC_Handler
 }
 
 /* Overview 
@@ -36,7 +34,7 @@ __asm void SVC_Handler (void)
 	CMP  R0, #0 				  ; Check if this is the first invocation
 	BNE  normal_operation 
 	MRS  R0, MSP          ;since PSP = 0x0, load MSP address
-												
+  										
 	
 normal_operation
   MSR MSP, R0          ; Set MSP = PSP
@@ -67,23 +65,24 @@ normal_operation
   STR  R0, [R12]       ; store C kernel function return value in R0
                        ; to R0 on the exception stack frame  
 SVC_EXIT  
-
-  LDR R3, =__cpp(&gp_current_task)    ; Load R3 with priv level of current task
-	STR R2, [R3, #32]                      ; 128 bits = 32 bytes
-  CMP R2, #1                                 ; check if priv level is 1 or 0
-  BEQ kernel_thread                          ; if 1, handler was invoked by kernel thread
-  B user_thread                            ; if 0, handler was invoked by user thread
+	
+	MVN  LR, #:NOT:0xFFFFFFFD           ; set EXC_RETURN value to Thread mode, PSP
+  LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
+	LDR R3, [R3]                        ; Get address of current task
+	MOV R2, #0                          ; clear R2
+	LDRB R2, [R3, #17]                  ; read priv member (136 bits = 17 byte offset)
+  CMP R2, #1                          ; check if priv level is 1 or 0
+  BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
+  B user_thread                       ; if 0, handler was invoked by user thread
 
 	//TO DO: Make sure privilege level is set appropriately, currently user task is privileged?
 kernel_thread
-  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #0                 ; 
 	MSR CONTROL, R3            ; set control bit[0] to 0 (priviledged)
   CPSIE I                    ; enable interrupt
   BX   LR
 
 user_thread
-  MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP
 	MOV R3, #1                 ; 
 	MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
   CPSIE I                    ; enable interrupt
