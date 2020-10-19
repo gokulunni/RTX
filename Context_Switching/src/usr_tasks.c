@@ -41,3 +41,163 @@ void task2(void)
     /* terminating */
     tsk_exit();
 }
+
+/**
+ * @brief: a dummy task3
+ */
+void task3(void)
+{
+    uart1_put_string ("task3: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task4
+ */
+void task4(void)
+{
+    uart1_put_string ("task4: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task5
+ */
+void task5(void)
+{
+    uart1_put_string ("task5: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task6
+ */
+void task6(void)
+{
+    uart1_put_string ("task6: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task7
+ */
+void task7(void)
+{
+    uart1_put_string ("task7: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task8
+ */
+void task8(void)
+{
+    uart1_put_string ("task8: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+/**
+ * @brief: a dummy task9
+ */
+void task9(void)
+{
+    uart1_put_string ("task9: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+/**
+ * @brief: a dummy task10
+ */
+void task10(void)
+{
+    uart1_put_string ("task10: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+
+/**
+ * @brief: a dummy task11
+ */
+void task11(void)
+{
+    uart1_put_string ("task11: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+
+/**
+ * @brief: a dummy task12
+ */
+void task12(void)
+{
+    uart1_put_string ("task12: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+
+/**
+ * @brief: a dummy task13
+ */
+void task13(void)
+{
+    uart1_put_string ("task13: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+
+/**
+ * @brief: a dummy task14
+ */
+void task14(void)
+{
+    uart1_put_string ("task14: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+
+
+
+/**
+ * @brief: a dummy task15
+ */
+void task15(void)
+{
+    uart1_put_string ("task15: entering \n\r");
+    /* do something */
+    /* terminating */
+    tsk_exit();
+}
+

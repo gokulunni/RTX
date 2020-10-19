@@ -16,5 +16,18 @@
 void set_test_procs(void);
 void task1(void);
 void task2(void);
+void task3(void);
+void task4(void);
+void task5(void);
+void task6(void);
+void task7(void);
+void task8(void);
+void task9(void);
+void task10(void);
+void task11(void);
+void task12(void);
+void task13(void);
+void task14(void);
+void task15(void);
 
 #endif /* USR_PROC_H_ */
