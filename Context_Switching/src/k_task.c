@@ -204,7 +204,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         } else { /* privileged task */
             p_tcb->priv = 1;
 
-            sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
+            p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            sp = p_tcb->msp_hi; /* stacks grows down, so get the high addr. */
             *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
             *(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */
             for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
@@ -213,6 +214,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
             p_tcb->msp = sp;
             p_tcb->psp = p_tcb->msp;
+            p_tcb->psp = NULL;
             p_tcb->psp_size = 0; 			/* TODO: To indicate that there is no user stack, perhaps should be renamed */
         }
 
