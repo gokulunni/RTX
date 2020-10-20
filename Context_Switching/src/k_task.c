@@ -315,7 +315,6 @@ int k_tsk_yield(void) {
 
 
 // TODO: DONT MAKE ASSUMPTION MALLOC WORKED
-// TODO: argv?
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size) {
     #ifdef DEBUG_0
     printf("k_tsk_create: entering...\n\r");
@@ -367,7 +366,6 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         return RTX_ERR;
     }
 
-    // TODO: double check that kernal task owns all user stacks even if task created inside another task
     TCB *new_task = &g_tcbs[tid];
 
     new_task->psp_size = stack_size;
@@ -473,8 +471,6 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
-
-// TODO: can i change PRIO of dormant task?
 
     if (task_id >= MAX_TASKS || task_id < 0) {
         #ifdef DEBUG_0
