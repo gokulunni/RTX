@@ -87,13 +87,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	/* Default is MSP when calling tsk_init(), set to PSP */
 	  //__set_PSP((U32) __get_MSP());
 		//__set_CONTROL((U32)3);
-	
-		if (num_tasks <= 0) {
+
+    if (num_tasks <= 0 || num_tasks > MAX_TASKS) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: invalid num_tasks\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+
     if (task_info == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: no initial kernel tasks to run\n\r");
@@ -147,7 +148,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         p_tcb->tid = i+1;
         p_tcb->state = NEW;
 
-        if ( p_taskinfo->priv == 0 ) { /* unprivileged task */ 
+        if ( p_taskinfo->priv == 0 ) { /* unprivileged task */
             U32* sp = k_mem_alloc(p_taskinfo->u_stack_size);
             if (sp == NULL) {
                 #ifdef DEBUG_0
@@ -326,20 +327,19 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         printf("[ERROR] k_tsk_create: attempted to create NULL task\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-    }
-		else if (!(prio >= 0 && prio <= 4)) {
+    } else if (!(prio >= 0 && prio <= 4)) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_0 */
-				return RTX_ERR;
-		}
+        return RTX_ERR;
+    }
 		
-		if (stack_size < 0) {
-				#ifdef DEBUG_0
+    if (stack_size <= 0) {
+        #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: invalid stack_size entered\n\r");
         #endif /* DEBUG_0 */
-				return RTX_ERR;
-		}
+        return RTX_ERR;
+    }
 
     if (free_tid_head == NULL) {
         #ifdef DEBUG_0
@@ -350,8 +350,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
-    FREE_TID_T *popped_tid = pop_tid(&free_tid_head);
 
+    FREE_TID_T *popped_tid = pop_tid(&free_tid_head);
     if (popped_tid == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: no available TID\n\r");
@@ -371,9 +371,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     TCB *new_task = &g_tcbs[tid];
 
     new_task->psp_size = stack_size;
-    gp_current_task = prev_current_task; 
-		
     U32* sp = k_mem_alloc(stack_size);
+    gp_current_task = prev_current_task;
     if (sp == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: could not allocate stack for new task\n\r");
@@ -417,11 +416,15 @@ void k_tsk_exit(void) {
 
         // If its unpriviledged task, dealloc user stack
         if (gp_current_task->priv == 0) {
-            if (k_mem_dealloc(gp_current_task->psp) == RTX_ERR) {
+
+            TCB *prev_current_task = gp_current_task;
+            gp_current_task = &kernal_task;
+            if (k_mem_dealloc(prev_current_task->psp) == RTX_ERR) {
                 #ifdef DEBUG_0
-                printf("[ERROR] k_tsk_exit: no initial kernel tasks to run\n\r");
+                printf("[ERROR] k_tsk_exit: failed to deallocate user stack for task %d\n\r", prev_current_task->tid);
                 #endif /* DEBUG_0 */
             }
+            gp_current_task = prev_current_task;
             gp_current_task->psp = NULL;
         }
 
