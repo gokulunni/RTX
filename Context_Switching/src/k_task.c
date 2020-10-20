@@ -490,7 +490,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     }
 
     //Ensure that we are only popping the task frmo the ready queue if it isn't already runing
-    TCB *task
+    TCB *task;
 
     if( task_id != gp_current_task->tid){
         task = pop_task_by_id(&ready_queue_head, task_id);
