@@ -537,7 +537,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     }
 
     // TODO: can we get dormant task? what if task has been overwritten?
-
+    // TODO: what if we try to access non-existent task
     if (task_id >= MAX_TASKS || task_id < 0) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
