@@ -40,7 +40,7 @@ typedef struct node {
 } node_t;
 
 typedef struct used_mem_node {
-    task_t owner_tid;
+    U32 owner_tid;
     int size;
 } used_mem_node_t;
 
