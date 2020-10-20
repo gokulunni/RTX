@@ -459,12 +459,11 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_NULL\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-    }
-		else if (!(prio >= 0 && prio <= 4)) {
+    } else if (!(prio >= 0 && prio <= 4)) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_set_prio: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_0 */
-				return RTX_ERR;
+        return RTX_ERR;
     }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
@@ -481,6 +480,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
         #endif /* DEBUG_0 */
+        return RTX_ERR;
     }
 
     TCB *task = pop_task_by_id(&ready_queue_head, task_id);
