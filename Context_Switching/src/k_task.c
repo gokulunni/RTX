@@ -214,7 +214,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
             p_tcb->msp = sp;
             p_tcb->psp = p_tcb->msp;
-            p_tcb->psp = NULL;
+            p_tcb->psp_hi = NULL;
             p_tcb->psp_size = 0; 			/* TODO: To indicate that there is no user stack, perhaps should be renamed */
         }
 
