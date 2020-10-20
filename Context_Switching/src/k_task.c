@@ -85,7 +85,6 @@ void *alloc_user_stack(size_t size) {
         return NULL;
     }
 
-    // TODO: align header
     return (char *) stack_low + size;
 }
 
@@ -448,34 +447,33 @@ void k_tsk_exit(void) {
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
 
-        // If its unpriviledged task, dealloc user stack
-        if (gp_current_task->priv == 0) {
+        TCB *prev_current_task = gp_current_task;
+        gp_current_task = &kernal_task;
 
-            TCB *prev_current_task = gp_current_task;
-            gp_current_task = &kernal_task;
+        // If its unpriviledged task, dealloc user stack
+        if (prev_current_task->priv == 0) {
             if (dealloc_user_stack(prev_current_task->psp_hi, prev_current_task->psp_size) == RTX_ERR) {
                 #ifdef DEBUG_0
                 printf("[ERROR] k_tsk_exit: failed to deallocate user stack for task %d\n\r", prev_current_task->tid);
                 #endif /* DEBUG_0 */
             }
-            gp_current_task = prev_current_task;
-            gp_current_task->psp = NULL;
+            prev_current_task->psp = NULL;
         }
 
-        // Temporarily set gp_current_task to malloc FREE_TID_T
-        TCB *p_tcb_old = gp_current_task;
-        gp_current_task = &kernal_task;
         FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0
             printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
             #endif /* DEBUG_0 */
         }
-        new_tid->tid = p_tcb_old->tid;
+        new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
         gp_current_task = NULL;
         gp_current_task = dummy_scheduler();
+
+        // TODO: check dummy scheduler returned value
+
     }
 
     return;
