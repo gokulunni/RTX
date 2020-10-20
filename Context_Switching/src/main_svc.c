@@ -27,11 +27,6 @@
 #define IROM_BASE  0x0
 #endif
 
-int total_tests = 0;
-int (*tests[1]) (void);
-char *test_names[1];
-
-
 int main_og() 
 {    
     RTX_TASK_INFO task_info[2];    
@@ -51,29 +46,9 @@ int main_og()
     printf("Read PSP = 0x%x\r\n", __get_PSP());
 #endif /*DEBUG_0*/    
     /* sets task information */
-    //set_task_info(task_info, 2);
+    set_task_info(task_info, 2);
     /* start the RTX and built-in tasks */
-    //rtx_init(32, FIRST_FIT, task_info, 2);  
-		
-		/*Run the tests */
-		int passed = 0;
-		printf("G04_test: START\n");  
-		for(int i = 0; i < total_tests; i++)
-		{
-			if((*tests[i])())
-			{
-				printf("G04_test: test %d (%s) OK\n", i+1, test_names[i]);
-				passed++;
-			}
-			else
-				printf("G04_test: test %d (%s) FAIL\n", i+1, test_names[i]);
-		}
-
-		printf("%d/%d OK\n", passed, total_tests);
-		printf("%d/%d FAIL\n", total_tests-passed, total_tests);
-		printf("G04_test: END\n");
-  
-		
+    rtx_init(32, FIRST_FIT, task_info, 2);  
     /* We should never reach here!!! */
     return RTX_ERR;  
 }
