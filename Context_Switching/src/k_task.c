@@ -286,28 +286,40 @@ int k_tsk_yield(void) {
     //Get the old task
     TCB *p_tcb_old = gp_current_task;
 
-    //Pop the next task in queue
-    gp_current_task = dummy_scheduler();
+    //Peek the head of the ready queue
+    TCB *peek_head = ready_queue_head;
+    // a prioritity with a smaller value equals a higher priority
+    if(peek_head->prio <= p_tcb_old->prio){ 
 
-    #ifdef DEBUG_0
-    printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
-    #endif /* DEBUG_0 */
+        //Pop the next task in queue
+        gp_current_task = dummy_scheduler();
 
-    if (gp_current_task == NULL){
         #ifdef DEBUG_0
-        printf("[ERROR] k_tsk_yield: No next task available");
+        printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
         #endif /* DEBUG_0 */
-        gp_current_task=p_tcb_old;
-        return RTX_ERR;
+
+        if (gp_current_task == NULL){
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_yield: No next task available");
+            #endif /* DEBUG_0 */
+            gp_current_task=p_tcb_old;
+            return RTX_ERR;
+        }
+        if (p_tcb_old == NULL){
+            #ifdef DEBUG_0
+            printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+            #endif /* DEBUG_0 */
+            p_tcb_old = gp_current_task;
+        }
+        print_prio_queue(ready_queue_head);
+        task_switch(p_tcb_old);
+
     }
-    if (p_tcb_old == NULL){
+    else{
         #ifdef DEBUG_0
-        printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+        printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
         #endif /* DEBUG_0 */
-        p_tcb_old = gp_current_task;
     }
-    print_prio_queue(ready_queue_head);
-    task_switch(p_tcb_old);
 
     return RTX_OK;
 }
