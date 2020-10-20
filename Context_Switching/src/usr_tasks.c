@@ -14,6 +14,10 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
+ /* global vars */
+int *pointer;
+int ownership_test_result;
+
 /**
  * @brief: a dummy task1
  */
@@ -200,4 +204,30 @@ void task15(void)
     /* terminating */
     tsk_exit();
 }
+
+
+void alloc_pointer_task(void)
+{
+    uart1_put_string ("alloc_pointer_task: entering \n\r");
+    /* do something */
+    /* terminating */
+		pointer = mem_alloc(sizeof(int));
+    tsk_exit();
+}
+
+/**
+ * @brief: a dummy task3
+ */
+void dealloc_pointer_task(void)
+{
+    uart1_put_string ("dealloc_pointer_task: entering \n\r");
+    /* do something */
+    /* terminating */
+		if(mem_dealloc(pointer) == RTX_OK)
+			ownership_test_result = RTX_ERR;
+		else
+			ownership_test_result = RTX_OK;
+    tsk_exit();
+}
+
 

@@ -30,4 +30,8 @@ void task13(void);
 void task14(void);
 void task15(void);
 
+void alloc_pointer_task(void);
+void dealloc_pointer_task(void);
+
+
 #endif /* USR_PROC_H_ */
