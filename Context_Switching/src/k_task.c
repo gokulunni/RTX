@@ -513,8 +513,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         //    the task id preempts the current running task. Otherwise, the current running task
         //    continues its execution.
 
-        // TODO: what about NEW state?
-        if (task->state == READY && task->prio < gp_current_task->prio) {
+        if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
             TCB *p_tcb_old = gp_current_task;
             push(&ready_queue_head, p_tcb_old);
             gp_current_task = task;
