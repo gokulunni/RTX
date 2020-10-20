@@ -27,16 +27,35 @@
 #define IROM_BASE  0x0
 #endif
 
-int total_tests = 0;
-int (*tests[1]) (void);
-char *test_names[1];
+int max_tasks_test()
+{
+	task_t tids[MAX_TASKS-1];
+	void (*task_functions[MAX_TASKS-1])(void) = {task2, task2, task3, task4, task5, task6,
+																				task7, task8, task9, task10, task11, task12,
+																				task14, task15};
 
+	RTX_TASK_INFO tasks[MAX_TASKS-1];
+																				
+	for(int i = 0; i < MAX_TASKS - 1; i++)
+	{
+		tasks[i].u_stack_size = 0x200;
+		tasks[i].prio = HIGH;
+		tasks[i].priv = 0;
+		tasks[i].ptask = task_functions[i];
+	}
+	
+	/* start the RTX and built-in tasks */
+	if(rtx_init(32, FIRST_FIT, tasks, 15) == RTX_ERR)
+		return 0;
+	
+	return 1;
+}
 
-int main_og() 
+int main() 
 {    
     RTX_TASK_INFO task_info[2];    
     /* CMSIS system initialization */
-    SystemInit();  /* initiaslize the system */
+    SystemInit();  /* initialize the system */
     __disable_irq();
     uart_init(1);  /* uart1 uses polling for output */
 #ifdef DEBUG_0
@@ -52,27 +71,13 @@ int main_og()
 #endif /*DEBUG_0*/    
     /* sets task information */
     //set_task_info(task_info, 2);
-    /* start the RTX and built-in tasks */
-    //rtx_init(32, FIRST_FIT, task_info, 2);  
 		
-		/*Run the tests */
-		int passed = 0;
 		printf("G04_test: START\n");  
-		for(int i = 0; i < total_tests; i++)
-		{
-			if((*tests[i])())
-			{
-				printf("G04_test: test %d (%s) OK\n", i+1, test_names[i]);
-				passed++;
-			}
-			else
-				printf("G04_test: test %d (%s) FAIL\n", i+1, test_names[i]);
-		}
 
-		printf("%d/%d OK\n", passed, total_tests);
-		printf("%d/%d FAIL\n", total_tests-passed, total_tests);
-		printf("G04_test: END\n");
-  
+		if(max_tasks_test())
+			printf("G04_test: test 1 (max_tasks_test) OK\n");
+		else
+			printf("G04_test: test 1 (max_tasks_test) FAIL\n");
 		
     /* We should never reach here!!! */
     return RTX_ERR;  
