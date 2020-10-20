@@ -528,12 +528,19 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         //    the task id preempts the current running task. Otherwise, the current running task
         //    continues its execution.
 
+
+        //Check if the task is ready to execute, switch tasks if the priority of new task is higher than priority of current task
         if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
             TCB *p_tcb_old = gp_current_task;
             push(&ready_queue_head, p_tcb_old);
             gp_current_task = task;
             task_switch(p_tcb_old);
         } else {
+            //Calling task yield in the event that the current task's priority has changed and needs to be reordered
+            //Case would be current task priority is intially high and get's set to low, and ready queue head has priority medium
+            //If no TCB i ready queue is higher than we will continue running current task
+            k_tsk_yield();
+            //Push the popped task back into ready queue earlier 
             push(&ready_queue_head, task);
         }
     }
