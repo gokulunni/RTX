@@ -441,7 +441,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
 void k_tsk_exit(void) {
 #ifdef DEBUG_0
-    printf("k_tsk_exit: entering...\n\r");
+    printf("k_tsk_exit: exiting...\n\r");
 #endif /* DEBUG_0 */
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
