@@ -485,6 +485,13 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
 
     TCB *task = pop_task_by_id(&ready_queue_head, task_id);
 
+    if (task->state == DORMANT) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_set_prio: task with tid %d is DORMANT\n\r", task_id);
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
+
     if (task == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_set_prio: task with tid %d not found\n\r", task_id);
