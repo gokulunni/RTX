@@ -87,13 +87,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	/* Default is MSP when calling tsk_init(), set to PSP */
 	  //__set_PSP((U32) __get_MSP());
 		//__set_CONTROL((U32)3);
-	
-		if (num_tasks <= 0) {
+
+    if (num_tasks <= 0 || num_tasks > MAX_TASKS) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: invalid num_tasks\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+
     if (task_info == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: no initial kernel tasks to run\n\r");
@@ -326,20 +327,19 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         printf("[ERROR] k_tsk_create: attempted to create NULL task\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
-    }
-		else if (!(prio >= 0 && prio <= 4)) {
+    } else if (!(prio >= 0 && prio <= 4)) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_0 */
-				return RTX_ERR;
-		}
+        return RTX_ERR;
+    }
 		
-		if (stack_size < 0) {
-				#ifdef DEBUG_0
+    if (stack_size <= 0) {
+        #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: invalid stack_size entered\n\r");
         #endif /* DEBUG_0 */
-				return RTX_ERR;
-		}
+        return RTX_ERR;
+    }
 
     if (free_tid_head == NULL) {
         #ifdef DEBUG_0
