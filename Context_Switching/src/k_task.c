@@ -286,10 +286,8 @@ int k_tsk_yield(void) {
     //Get the old task
     TCB *p_tcb_old = gp_current_task;
 
-    //Peek the head of the ready queue
-    TCB *peek_head = ready_queue_head;
     // a prioritity with a smaller value equals a higher priority
-    if(peek_head->prio <= p_tcb_old->prio){ 
+    if(ready_queue_head->prio <= p_tcb_old->prio){ 
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
@@ -491,7 +489,15 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         return RTX_ERR;
     }
 
-    TCB *task = pop_task_by_id(&ready_queue_head, task_id);
+    //Ensure that we are only popping the task frmo the ready queue if it isn't already runing
+    TCB *task
+
+    if( task_id != gp_current_task->tid){
+        task = pop_task_by_id(&ready_queue_head, task_id);
+    }
+    else{
+        task = gp_current_task;
+    }
 
     if (task->state == DORMANT) {
         #ifdef DEBUG_0
@@ -527,22 +533,30 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         //    and the task identified by task id is in ready state, then the task identified by
         //    the task id preempts the current running task. Otherwise, the current running task
         //    continues its execution.
-
-
-        //Check if the task is ready to execute, switch tasks if the priority of new task is higher than priority of current task
-        if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
-            TCB *p_tcb_old = gp_current_task;
-            push(&ready_queue_head, p_tcb_old);
-            gp_current_task = task;
-            task_switch(p_tcb_old);
-        } else {
-            //Calling task yield in the event that the current task's priority has changed and needs to be reordered
-            //Case would be current task priority is intially high and get's set to low, and ready queue head has priority medium
-            //If no TCB i ready queue is higher than we will continue running current task
-            k_tsk_yield();
-            //Push the popped task back into ready queue earlier 
-            push(&ready_queue_head, task);
+        
+        //changing priority for a task in ready Q
+        if (task_id != gp_current_task->tid){
+            //if priority for a task in ready Q is higher than running task
+            if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
+                TCB *p_tcb_old = gp_current_task;
+                push(&ready_queue_head, p_tcb_old);
+                gp_current_task = task;
+                task_switch(p_tcb_old);
+            }
+            else{
+                //Push the changed priority task back into ready Q
+                //Condition if setting task to equal or lower priority than running task
+                push(&ready_queue_head,task);
+            }
         }
+        //changing priority for current running task
+        else if (gp_current_task->prio > ready_queue_head->prio){
+            //Yielding the current running task only if ready_queue_head
+            //has a higher priority than the currently running task
+            k_tsk_yield();
+        }
+        //No changes made if running task prio is higher or equal to prio of ready Q head
+
     }
 
     print_prio_queue(ready_queue_head);
