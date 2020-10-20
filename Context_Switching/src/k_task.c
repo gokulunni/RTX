@@ -326,28 +326,38 @@ int k_tsk_yield(void) {
     //Get the old task
     TCB *p_tcb_old = gp_current_task;
 
-    //Pop the next task in queue
-    gp_current_task = dummy_scheduler();
+    // a prioritity with a smaller value equals a higher priority
+    if(ready_queue_head->prio <= p_tcb_old->prio){ 
 
-    #ifdef DEBUG_0
-    printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
-    #endif /* DEBUG_0 */
+        //Pop the next task in queue
+        gp_current_task = dummy_scheduler();
 
-    if (gp_current_task == NULL){
         #ifdef DEBUG_0
-        printf("[ERROR] k_tsk_yield: No next task available");
+        printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
         #endif /* DEBUG_0 */
-        gp_current_task=p_tcb_old;
-        return RTX_ERR;
+
+        if (gp_current_task == NULL){
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_yield: No next task available");
+            #endif /* DEBUG_0 */
+            gp_current_task=p_tcb_old;
+            return RTX_ERR;
+        }
+        if (p_tcb_old == NULL){
+            #ifdef DEBUG_0
+            printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+            #endif /* DEBUG_0 */
+            p_tcb_old = gp_current_task;
+        }
+        print_prio_queue(ready_queue_head);
+        task_switch(p_tcb_old);
+
     }
-    if (p_tcb_old == NULL){
+    else{
         #ifdef DEBUG_0
-        printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+        printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
         #endif /* DEBUG_0 */
-        p_tcb_old = gp_current_task;
     }
-    print_prio_queue(ready_queue_head);
-    task_switch(p_tcb_old);
 
     return RTX_OK;
 }
@@ -531,7 +541,15 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         return RTX_ERR;
     }
 
-    TCB *task = pop_task_by_id(&ready_queue_head, task_id);
+    //Ensure that we are only popping the task frmo the ready queue if it isn't already runing
+    TCB *task;
+
+    if( task_id != gp_current_task->tid){
+        task = pop_task_by_id(&ready_queue_head, task_id);
+    }
+    else{
+        task = gp_current_task;
+    }
 
     if (task->state == DORMANT) {
         #ifdef DEBUG_0
@@ -567,15 +585,30 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         //    and the task identified by task id is in ready state, then the task identified by
         //    the task id preempts the current running task. Otherwise, the current running task
         //    continues its execution.
-
-        if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
-            TCB *p_tcb_old = gp_current_task;
-            push(&ready_queue_head, p_tcb_old);
-            gp_current_task = task;
-            task_switch(p_tcb_old);
-        } else {
-            push(&ready_queue_head, task);
+        
+        //changing priority for a task in ready Q
+        if (task_id != gp_current_task->tid){
+            //if priority for a task in ready Q is higher than running task
+            if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
+                TCB *p_tcb_old = gp_current_task;
+                push(&ready_queue_head, p_tcb_old);
+                gp_current_task = task;
+                task_switch(p_tcb_old);
+            }
+            else{
+                //Push the changed priority task back into ready Q
+                //Condition if setting task to equal or lower priority than running task
+                push(&ready_queue_head,task);
+            }
         }
+        //changing priority for current running task
+        else if (gp_current_task->prio > ready_queue_head->prio){
+            //Yielding the current running task only if ready_queue_head
+            //has a higher priority than the currently running task
+            k_tsk_yield();
+        }
+        //No changes made if running task prio is higher or equal to prio of ready Q head
+
     }
 
     print_prio_queue(ready_queue_head);
