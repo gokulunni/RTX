@@ -480,6 +480,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
         #endif /* DEBUG_0 */
+        return RTX_ERR;
     }
 
     TCB *task = pop_task_by_id(&ready_queue_head, task_id);
