@@ -35,6 +35,8 @@ TCB *null_task;
 TCB *ready_queue_head = NULL;
 FREE_TID_T *free_tid_head = NULL;
 
+void *alloc_user_stack(size_t size);
+int dealloc_user_stack(U32 *ptr, size_t size);
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -75,7 +77,31 @@ The memory map of the OS image may look like the following:
                               |                           |     V
                     0x10000000+---------------------------+ Low Address
     
----------------------------------------------------------------------------*/ 
+---------------------------------------------------------------------------*/
+
+void *alloc_user_stack(size_t size) {
+    U32 *stack_low = k_mem_alloc(size);
+    if (stack_low == NULL) {
+        return NULL;
+    }
+
+    return (char *) stack_low + size;
+}
+
+int dealloc_user_stack(U32 *ptr, size_t size) {
+    if (ptr == NULL) {
+        return RTX_ERR;
+    }
+
+    return k_mem_dealloc((char *) ptr - size);
+}
+
+void null_task_func() {
+    while (1) {
+
+    }
+}
+
 /**
  * @biref: initialize all tasks in the system
  * @param: RTX_TASK_INFO *task_info, an array of initial tasks
@@ -113,23 +139,27 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task = &g_tcbs[0];
     null_task->tid = PID_NULL;
     null_task->state = NEW;
-    null_task->psp = k_mem_alloc(0x18); // TODO: double check with TA
-    if (null_task->psp == NULL) {
+
+    null_task->psp_hi = alloc_user_stack(0x44);
+    if (null_task->psp_hi == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
-    null_task->psp_size = 0x18;
+    null_task->psp_size = 0x44;
 
-    int g = 0;
-    sp = g_k_stacks[0] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
-    *(--sp)  = INITIAL_xPSR;    /* task initial xPSR (program status register) */
-    *(--sp)  = (U32)(p_taskinfo->ptask); /* PC contains the entry point of the task */
-    for (g = 0; g < 6; g++) { /*R0-R3, R12, LR */
+    sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
+    *(--sp) = INITIAL_xPSR;
+    *(--sp) = (U32)(null_task_func);
+    for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
         *(--sp) = 0x0;
     }
-    null_task->msp = sp;
+    null_task->psp = sp;
+
+    null_task->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
+    null_task->msp = null_task->msp_hi;
+
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
 
@@ -140,42 +170,52 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         int j;
         TCB *p_tcb = &g_tcbs[i+1];
 
+        p_tcb->tid = i+1;
+        p_tcb->state = NEW;
+
+        p_tcb->prio = p_taskinfo->prio;
         // TODO: can we skip NULL_PRIO task? can we ignore user provided NULL TASK and use our own
         if (p_tcb->prio == PRIO_NULL) {
             continue;
         }
 
-        p_tcb->tid = i+1;
-        p_tcb->state = NEW;
+        if (p_taskinfo->priv == 0) { /* unprivileged task */
+            p_tcb->priv = 0;
+            p_tcb->psp_hi = alloc_user_stack(p_taskinfo->u_stack_size);
 
-        if ( p_taskinfo->priv == 0 ) { /* unprivileged task */
-            U32* sp = k_mem_alloc(p_taskinfo->u_stack_size);
-            if (sp == NULL) {
+            if (p_tcb->psp_hi == NULL) {
                 #ifdef DEBUG_0
                 printf("[ERROR] k_tsk_init: failed to allocate init's task user stack\n\r");
                 #endif /* DEBUG_0 */
                 return RTX_ERR;
             }
+
+            sp = p_tcb->psp_hi;
             *(--sp) = INITIAL_xPSR;
             *(--sp) = (U32)(p_taskinfo->ptask);
             for (int j = 0; j < 6; j++) {
                 *(--sp) = 0x0;
             }
-            p_tcb->priv = 0;
+
             p_tcb->psp = sp;
             p_tcb->psp_size = p_taskinfo->u_stack_size;
-            p_tcb -> msp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            p_tcb->msp = p_tcb->msp_hi;
         } else { /* privileged task */
-            sp = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2) ; /* stacks grows down, so get the high addr. */
+            p_tcb->priv = 1;
+
+            p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            sp = p_tcb->msp_hi; /* stacks grows down, so get the high addr. */
             *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
             *(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */
             for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
                 *(--sp) = 0x0;
             }
-            p_tcb->priv = 1;
-            p_tcb -> msp = sp;
+
+            p_tcb->msp = sp;
             p_tcb->psp = p_tcb->msp;
-            p_tcb->psp_size = 0; 			/* To indicate that there is no user stack, perhaps should be renamed */
+            p_tcb->psp_hi = NULL;
+            p_tcb->psp_size = 0; 			/* TODO: To indicate that there is no user stack, perhaps should be renamed */
         }
 
         //Add task to the priority queue for NEW tasks
@@ -368,15 +408,24 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     TCB *new_task = &g_tcbs[tid];
 
+    new_task->tid = tid;
+    new_task->state = NEW;
+    new_task->next = NULL;
+    new_task->prio = prio;
+    new_task->priv = 0;
+
     new_task->psp_size = stack_size;
-    U32* sp = k_mem_alloc(stack_size);
-    gp_current_task = prev_current_task;
-    if (sp == NULL) {
+    new_task->psp_hi = alloc_user_stack(stack_size);
+    if (new_task->psp_hi == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: could not allocate stack for new task\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+
+    gp_current_task = prev_current_task;
+
+    U32* sp = new_task->psp_hi;
     *(--sp) = INITIAL_xPSR;
     *(--sp) = (U32)(task_entry);
     for (int j = 0; j < 6; j++) {
@@ -384,12 +433,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     }
     new_task->psp = sp;
 
-    new_task->next = NULL;
-    new_task->tid = tid;
-    new_task->state = NEW;
-    new_task->prio = prio;
-    new_task->priv = 0;
-    new_task->msp = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
+    new_task->msp_hi = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
+    new_task->msp = new_task->msp_hi;
 
     push(&ready_queue_head, new_task);
     print_prio_queue(ready_queue_head);
@@ -406,40 +451,47 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
 void k_tsk_exit(void) {
 #ifdef DEBUG_0
-    printf("k_tsk_exit: entering...\n\r");
+    printf("k_tsk_exit: exiting...\n\r");
 #endif /* DEBUG_0 */
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
 
-        // If its unpriviledged task, dealloc user stack
-        if (gp_current_task->priv == 0) {
+        TCB *prev_current_task = gp_current_task;
+        gp_current_task = &kernal_task;
 
-            TCB *prev_current_task = gp_current_task;
-            gp_current_task = &kernal_task;
-            if (k_mem_dealloc(prev_current_task->psp) == RTX_ERR) {
+        // If its unpriviledged task, dealloc user stack
+        if (prev_current_task->priv == 0) {
+            if (dealloc_user_stack(prev_current_task->psp_hi, prev_current_task->psp_size) == RTX_ERR) {
                 #ifdef DEBUG_0
                 printf("[ERROR] k_tsk_exit: failed to deallocate user stack for task %d\n\r", prev_current_task->tid);
                 #endif /* DEBUG_0 */
             }
-            gp_current_task = prev_current_task;
-            gp_current_task->psp = NULL;
+            prev_current_task->psp = NULL;
         }
 
-        // Temporarily set gp_current_task to malloc FREE_TID_T
-        TCB *p_tcb_old = gp_current_task;
-        gp_current_task = &kernal_task;
         FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0
             printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
             #endif /* DEBUG_0 */
         }
-        new_tid->tid = p_tcb_old->tid;
+        new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
         gp_current_task = NULL;
         gp_current_task = dummy_scheduler();
+
+        if (gp_current_task == NULL){
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_yield: No next task available");
+            #endif /* DEBUG_0 */
+            pop_task_by_id(&ready_queue_head, 0);
+            gp_current_task = &g_tcbs[0];;
+            return;
+        }
+
+        task_switch(NULL);
     }
 
     return;
@@ -559,11 +611,19 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->prio = task->prio;
     buffer->state = task->state;
     buffer->priv = task->priv;
-    buffer->ptask = (void *) task; //TODO: double check if its right or not
+    buffer->ptask = (void *) task; //TODO: double check if its right or not, what is task entry address
     buffer->k_sp = (U32) task->msp; // TODO: confirm this is indeed kernal stack, should i use get_MSP()
     buffer->k_stack_size = KERN_STACK_SIZE;
     buffer->u_sp = (U32) task->psp; // TODO: confirm this is indeed user stack, should i use get_PSP(), what if its priviliged task?
     buffer->u_stack_size = task->psp_size; // TODO: what is the size of privileged task
+
+
+//    U32    k_sp;         /* The task current kernel stack pointer   */
+//    U32    k_stack_hi;   /* The kernel stack starting addr. (high addr.)*/
+//    U32    u_sp;         /* The task current user stack pointer     */
+//    U32    u_stack_hi;   /* The user stack starting addr. (high addr.) */
+//    U16    k_stack_size; /* The task kernel total stack space in bytes */
+//    U16    u_stack_size; /* The task user total stack space in bytes*/
 
     return RTX_OK;     
 }

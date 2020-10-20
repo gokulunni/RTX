@@ -31,7 +31,9 @@ typedef struct tcb
 {
     struct tcb *next; /* next tcb, not used in this example */
     U32 *msp;    /* msp of the task */
+    U32 *msp_hi; /* The msp stack starting addr. (high addr.)*/
     U32 *psp;   /* psp of the task */
+    U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
     U16 psp_size;
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
