@@ -96,6 +96,12 @@ int dealloc_user_stack(U32 *ptr, size_t size) {
     return k_mem_dealloc((char *) ptr - size);
 }
 
+void null_task_func() {
+    while (1) {
+
+    }
+}
+
 /**
  * @biref: initialize all tasks in the system
  * @param: RTX_TASK_INFO *task_info, an array of initial tasks
@@ -134,16 +140,18 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task->tid = PID_NULL;
     null_task->state = NEW;
 
-    null_task->psp_hi = alloc_user_stack(0x18);  // TODO: double check with TA
+    null_task->psp_hi = alloc_user_stack(0x44);
     if (null_task->psp_hi == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
-    null_task->psp_size = 0x18;
+    null_task->psp_size = 0x44;
 
     sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
+    *(--sp) = INITIAL_xPSR;
+    *(--sp) = (U32)(null_task_func);
     for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
         *(--sp) = 0x0;
     }
@@ -472,8 +480,16 @@ void k_tsk_exit(void) {
         gp_current_task = NULL;
         gp_current_task = dummy_scheduler();
 
-        // TODO: check dummy scheduler returned value
+        if (gp_current_task == NULL){
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_yield: No next task available");
+            #endif /* DEBUG_0 */
+            pop_task_by_id(&ready_queue_head, 0);
+            gp_current_task = &g_tcbs[0];;
+            return;
+        }
 
+        task_switch(NULL);
     }
 
     return;
