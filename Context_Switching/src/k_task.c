@@ -35,8 +35,8 @@ TCB *null_task;
 TCB *ready_queue_head = NULL;
 FREE_TID_T *free_tid_head = NULL;
 
-U32 *alloc_user_stack(size_t size);
-int dealloc_user_stack(U32 *ptr);
+void *alloc_user_stack(size_t size);
+int dealloc_user_stack(U32 *ptr, size_t size);
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -79,7 +79,7 @@ The memory map of the OS image may look like the following:
     
 ---------------------------------------------------------------------------*/
 
-U32 *alloc_user_stack(size_t size) {
+void *alloc_user_stack(size_t size) {
     U32 *stack_low = k_mem_alloc(size);
     if (stack_low == NULL) {
         return NULL;
@@ -136,7 +136,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task->state = NEW;
 
     null_task->psp_hi = alloc_user_stack(0x18);  // TODO: double check with TA
-    if (p_tcb->psp_hi == NULL) {
+    if (null_task->psp_hi == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
         #endif /* DEBUG_0 */
@@ -151,7 +151,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     null_task->psp = sp;
 
     null_task->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
-    null_task->msp = p_tcb->msp_hi;
+    null_task->msp = null_task->msp_hi;
 
     null_task->prio = PRIO_NULL;
     null_task->priv = 0;
@@ -453,7 +453,7 @@ void k_tsk_exit(void) {
 
             TCB *prev_current_task = gp_current_task;
             gp_current_task = &kernal_task;
-            if (dealloc_user_stack(prev_current_task->psp_hi) == RTX_ERR) {
+            if (dealloc_user_stack(prev_current_task->psp_hi, prev_current_task->psp_size) == RTX_ERR) {
                 #ifdef DEBUG_0
                 printf("[ERROR] k_tsk_exit: failed to deallocate user stack for task %d\n\r", prev_current_task->tid);
                 #endif /* DEBUG_0 */
