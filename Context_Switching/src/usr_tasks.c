@@ -14,6 +14,7 @@
 
  /* Global vars */
 int *pointer;
+int schedule_incrementer = 0;
 int tests_completed = 0;
 int total_tests; /* set based on which suite is being run */
 int passed = 0;
@@ -236,6 +237,38 @@ void task15(void)
     tsk_exit();
 }
 
+void scheduling_policy_task_1(void)
+{
+	total_tests = 4;
+	print_test_start(4);
+    //uart1_put_string ("alloc_pointer_task: entering \n\r");
+    /* do something */
+    /* terminating */
+	schedule_incrementer++;
+	tsk_exit();
+}
+
+void scheduling_policy_task_2(void)
+{
+    //uart1_put_string ("alloc_pointer_task: entering \n\r");
+    /* do something */
+    /* terminating */
+	if (schedule_incrementer == 1)
+		schedule_incrementer++;
+	tsk_exit();
+}
+
+void scheduling_policy_task_3(void)
+{
+    //uart1_put_string ("alloc_pointer_task: entering \n\r");
+    /* do something */
+    /* terminating */
+	if (schedule_incrementer == 2)
+		print_test_result(4, RTX_OK, "Scheduling policy test");
+	else
+		print_test_result(4, RTX_ERR, "Scheduling policy test");
+	tsk_exit();
+}
 
 void alloc_pointer_task(void)
 {
