@@ -28,9 +28,9 @@
 #endif
 int suite_2()
 {
-	RTX_TASK_INFO tasks[3];
+	RTX_TASK_INFO tasks[5];
 																			
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		tasks[i].u_stack_size = 0x200;
 		tasks[i].priv = 0;
@@ -40,14 +40,18 @@ int suite_2()
 	tasks[0].ptask = alloc_pointer_task;
 	tasks[1].ptask = dealloc_pointer_task;
 	tasks[2].ptask = ctl_reg_verification_task;
+	tasks[3].ptask = invalid_tsk_create_task;
+	tasks[4].ptask = invalid_tsk_set_prio_task;
 	
 	/* This ensures proper order of execution */
 	tasks[0].prio = HIGH;
 	tasks[1].prio = LOW;
 	tasks[2].prio = LOW;
+	tasks[3].prio = LOW;
+	tasks[4].prio = LOW;
 	
 	/* start the RTX and built-in tasks */
-	if(rtx_init(32, FIRST_FIT, tasks, 3) == RTX_ERR)
+	if(rtx_init(32, FIRST_FIT, tasks, 5) == RTX_ERR)
 		return 0;
 	
 	return 1;

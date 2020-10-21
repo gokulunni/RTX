@@ -272,7 +272,7 @@ void scheduling_policy_task_3(void)
 
 void alloc_pointer_task(void)
 {
-	total_tests = 2;
+	total_tests = 4;
 	print_test_start(2);
     //uart1_put_string ("alloc_pointer_task: entering \n\r");
     /* do something */
@@ -305,7 +305,54 @@ void ctl_reg_verification_task(void)
 		print_test_result(2, RTX_ERR, "Control Register test");
 	
 	print_final_results();
+	tsk_exit();
 		
 }
 
-
+void invalid_tsk_create_task(void)
+{
+	task_t tid;
+	
+	/* Try invalid prio */
+	for(int i = 5; i < 20; i++)
+	{
+		if(tsk_create(&tid, should_never_run_task, (U8)i, 0x200) == RTX_OK)
+		{
+			print_test_result(3, RTX_ERR, "Invalid tsk create arg test");
+			tsk_exit();
+		}
+	}
+	
+	print_test_result(3, RTX_OK, "Invalid tsk create arg test");
+	tsk_exit();
+}
+void should_never_run_task()
+{
+	printf("There's something wrong cus I shouldn't have run!!\n");
+	tsk_exit();
+}
+void invalid_tsk_set_prio_task(void)
+{
+	task_t tid;
+	tsk_create(&tid, task13, LOW, 0x200);
+	
+	/* Try invalid prio */
+	for(int i = 5; i < 20; i++)
+	{
+		if(tsk_set_prio(tid, (U8)i) == RTX_OK)
+		{
+			print_test_result(4, RTX_ERR, "Invalid tsk set prio arg test");
+			tsk_exit();
+		}
+	}
+	
+	/* try to change null prio task */
+	if(tsk_set_prio(0, 2) == RTX_OK)
+		print_test_result(4, RTX_ERR, "Invalid tsk set prio arg test");
+	else
+		print_test_result(4, RTX_OK, "Invalid tsk set prio arg test");
+		
+	print_final_results();
+	
+	  tsk_exit();
+}

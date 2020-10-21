@@ -54,6 +54,11 @@ void ctl_reg_verification_task(void);
 void scheduling_policy_task_1(void);
 void scheduling_policy_task_2(void);
 void scheduling_policy_task_3(void);
+
+/*Invalid Args Test */
+void invalid_tsk_create_task(void);
+void invalid_tsk_set_prio_task(void);
+void should_never_run_task(void);
 /******************* SUITE 4 END *************************/
 
 
