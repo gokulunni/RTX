@@ -353,10 +353,10 @@ int k_tsk_yield(void) {
         }
         print_prio_queue(ready_queue_head);
         if (task_switch(p_tcb_old) == RTX_ERR) {
-					#ifdef DEBUG_0
-					printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
-					#endif
-				}
+            #ifdef DEBUG_0
+            printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
+            #endif
+        }
 
     }
     else{
@@ -583,8 +583,6 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1)) {
         task->prio = prio;
 
-        // TODO: insert before or after
-
         //    The caller of this primitive never blocks, but could be preempted.
         //    If the value of prio is higher than the priority of the current running task,
         //    and the task identified by task id is in ready state, then the task identified by
@@ -598,7 +596,12 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
                 TCB *p_tcb_old = gp_current_task;
                 push(&ready_queue_head, p_tcb_old);
                 gp_current_task = task;
-                task_switch(p_tcb_old);
+                if (task_switch(p_tcb_old) == RTX_ERR) {
+                    #ifdef DEBUG_0
+                    printf("[ERROR] k_tsk_set_prio: could not switch task, same task resuming");
+                    #endif
+                    return RTX_ERR;
+                }
             }
             else{
                 //Push the changed priority task back into ready Q
@@ -649,19 +652,21 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->prio = task->prio;
     buffer->state = task->state;
     buffer->priv = task->priv;
-    buffer->ptask = (void *) task; //TODO: double check if its right or not, what is task entry address
-    buffer->k_sp = (U32) task->msp; // TODO: confirm this is indeed kernal stack, should i use get_MSP()
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->u_sp = (U32) task->psp; // TODO: confirm this is indeed user stack, should i use get_PSP(), what if its priviliged task?
-    buffer->u_stack_size = task->psp_size; // TODO: what is the size of privileged task
+    buffer->k_sp = (U32 *) __get_MSP();
+    buffer->k_stack_hi = task->msp_hi;
 
-
-//    U32    k_sp;         /* The task current kernel stack pointer   */
-//    U32    k_stack_hi;   /* The kernel stack starting addr. (high addr.)*/
-//    U32    u_sp;         /* The task current user stack pointer     */
-//    U32    u_stack_hi;   /* The user stack starting addr. (high addr.) */
-//    U16    k_stack_size; /* The task kernel total stack space in bytes */
-//    U16    u_stack_size; /* The task user total stack space in bytes*/
+    if (task->priv = 0) {
+        buffer->u_stack_size = task->psp_size;
+        buffer->u_stack_hi = task->psp_hi;
+        buffer->u_sp = (U32 *) __get_PSP();
+        buffer->ptask = task->psp_hi - 2;
+    } else {
+        buffer->u_stack_size = 0;
+        buffer->u_stack_hi = NULL;
+        buffer->u_sp = NULL;
+        buffer->ptask = task->msp_hi - 2;
+    }
 
     return RTX_OK;     
 }
