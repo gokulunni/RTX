@@ -97,6 +97,10 @@ TCB *pop_task_by_id(TCB **prio_queue_head, U8 tid) {
         return NULL;
     }
 
+    if (iterator == *prio_queue_head) {
+        *prio_queue_head = (*prio_queue_head)->next;
+    }
+
     if (prev_node) {
         prev_node->next = iterator->next;
     }
