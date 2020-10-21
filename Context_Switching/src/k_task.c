@@ -657,13 +657,13 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
         buffer->u_stack_size = task->psp_size;
         buffer->u_stack_hi = task->psp_hi;
         buffer->u_sp = (U32 *) __get_PSP();
+        buffer->ptask = task->psp_hi - 2;
     } else {
         buffer->u_stack_size = 0;
         buffer->u_stack_hi = NULL;
         buffer->u_sp = NULL;
+        buffer->ptask = task->msp_hi - 2;
     }
-
-    buffer->ptask = task->psp_hi - 2;
 
     return RTX_OK;     
 }
