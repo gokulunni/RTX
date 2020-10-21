@@ -352,7 +352,11 @@ int k_tsk_yield(void) {
             p_tcb_old = gp_current_task;
         }
         print_prio_queue(ready_queue_head);
-        task_switch(p_tcb_old);
+        if (task_switch(p_tcb_old) == RTX_ERR) {
+					#ifdef DEBUG_0
+					printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
+					#endif
+				}
 
     }
     else{
