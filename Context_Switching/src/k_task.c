@@ -97,9 +97,7 @@ int dealloc_user_stack(U32 *ptr, size_t size) {
 }
 
 void null_task_func() {
-    while (1) {
-
-    }
+    while (1) {}
 }
 
 /**
@@ -236,7 +234,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
         *(--sp) = INITIAL_xPSR;
-        *(--sp) = (U32)(null_task_func);
+        *(--sp) = (U32)(&null_task_func);
         for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
             *(--sp) = 0x0;
         }
@@ -339,7 +337,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head->prio <= p_tcb_old->prio){
+    if (ready_queue_head != NULL && p_tcb_old != NULL && ready_queue_head->prio <= p_tcb_old->prio) {
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
@@ -368,8 +366,7 @@ int k_tsk_yield(void) {
             #endif
         }
 
-    }
-    else{
+    } else {
         #ifdef DEBUG_0
         printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
         #endif /* DEBUG_0 */
@@ -503,19 +500,10 @@ void k_tsk_exit(void) {
         new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
-        gp_current_task = NULL;
-        gp_current_task = dummy_scheduler();
+        pop_task_by_id(&ready_queue_head, 0);
+        gp_current_task = &g_tcbs[0];
 
-        if (gp_current_task == NULL){
-            #ifdef DEBUG_0
-            printf("[ERROR] k_tsk_yield: No next task available");
-            #endif /* DEBUG_0 */
-            pop_task_by_id(&ready_queue_head, 0);
-            gp_current_task = &g_tcbs[0];
-            return;
-        }
-
-        task_switch(NULL);
+        k_tsk_yield();
     }
 
     return;
@@ -668,19 +656,19 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->state = task->state;
     buffer->priv = task->priv;
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->k_sp = (U32 *) __get_MSP();
-    buffer->k_stack_hi = task->msp_hi;
+    buffer->k_sp = __get_MSP();
+    buffer->k_stack_hi = (U32) task->msp_hi;
 
-    if (task->priv = 0) {
+    if (task->priv == 0) {
         buffer->u_stack_size = task->psp_size;
-        buffer->u_stack_hi = task->psp_hi;
-        buffer->u_sp = (U32 *) __get_PSP();
-        buffer->ptask = task->psp_hi - 2;
+        buffer->u_stack_hi = (U32) task->psp_hi;
+        buffer->u_sp = __get_PSP();
+        buffer->ptask = (void (*)()) (task->psp_hi - 2);
     } else {
         buffer->u_stack_size = 0;
         buffer->u_stack_hi = NULL;
         buffer->u_sp = NULL;
-        buffer->ptask = task->msp_hi - 2;
+        buffer->ptask = (void (*)()) (task->msp_hi - 2);
     }
 
     return RTX_OK;     

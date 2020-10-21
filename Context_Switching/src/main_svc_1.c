@@ -32,7 +32,7 @@ int max_tasks_test()
 	task_t tids[MAX_TASKS-1];
 	void (*task_functions[MAX_TASKS-1])(void) = {task2, task2, task3, task4, task5, task6,
 																				task7, task8, task9, task10, task11, task12,
-																				task14, task15};
+																				task14, task15, task3};
 
 	RTX_TASK_INFO tasks[MAX_TASKS-1];
 																				
