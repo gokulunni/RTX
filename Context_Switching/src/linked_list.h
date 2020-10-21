@@ -15,6 +15,7 @@ typedef struct free_tid {
 void push_tid(FREE_TID_T **free_tid_head, FREE_TID_T *new_tid);
 FREE_TID_T *pop_tid(FREE_TID_T **free_tid_head);
 void print_free_tids(FREE_TID_T *free_tid_head);
+int tid_is_available(FREE_TID_T *free_tid_head, int tid);
 
 TCB *pop(TCB **prio_queue_head);
 TCB *pop_task_by_id(TCB **prio_queue_head, U8 tid);

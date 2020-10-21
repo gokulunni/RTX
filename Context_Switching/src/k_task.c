@@ -30,7 +30,7 @@ U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
 TCB kernal_task;
-TCB *null_task;
+TCB *null_task = NULL;
 
 TCB *ready_queue_head = NULL;
 FREE_TID_T *free_tid_head = NULL;
@@ -97,9 +97,7 @@ int dealloc_user_stack(U32 *ptr, size_t size) {
 }
 
 void null_task_func() {
-    while (1) {
-
-    }
+    while (1) {}
 }
 
 /**
@@ -127,6 +125,13 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
+
+    if (null_task != NULL) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_init: init has been run before\n\r");
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
 	  
     int i;
     U32 *sp;
@@ -135,33 +140,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     // Create fake kernal task with ID = MAX_TASKS+1
     kernal_task.tid = MAX_TASKS + 1;
     gp_current_task = &kernal_task;
-
-    null_task = &g_tcbs[0];
-    null_task->tid = PID_NULL;
-    null_task->state = NEW;
-
-    null_task->psp_hi = alloc_user_stack(0x44);
-    if (null_task->psp_hi == NULL) {
-        #ifdef DEBUG_0
-        printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
-        #endif /* DEBUG_0 */
-        return RTX_ERR;
-    }
-    null_task->psp_size = 0x44;
-
-    sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
-    *(--sp) = INITIAL_xPSR;
-    *(--sp) = (U32)(null_task_func);
-    for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
-        *(--sp) = 0x0;
-    }
-    null_task->psp = sp;
-
-    null_task->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
-    null_task->msp = null_task->msp_hi;
-
-    null_task->prio = PRIO_NULL;
-    null_task->priv = 0;
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
@@ -238,6 +216,36 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
     print_free_tids(free_tid_head);
     print_prio_queue(ready_queue_head);
+
+
+    if (null_task == NULL) {
+        null_task = &g_tcbs[0];
+        null_task->tid = PID_NULL;
+        null_task->state = NEW;
+
+        null_task->psp_hi = alloc_user_stack(0x44);
+        if (null_task->psp_hi == NULL) {
+            #ifdef DEBUG_0
+            printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
+            #endif /* DEBUG_0 */
+            return RTX_ERR;
+        }
+        null_task->psp_size = 0x44;
+
+        sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
+        *(--sp) = INITIAL_xPSR;
+        *(--sp) = (U32)(&null_task_func);
+        for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
+            *(--sp) = 0x0;
+        }
+        null_task->psp = sp;
+
+        null_task->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
+        null_task->msp = null_task->msp_hi;
+
+        null_task->prio = PRIO_NULL;
+        null_task->priv = 0;
+    }
 
     gp_current_task = null_task;
 
@@ -329,7 +337,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head->prio <= p_tcb_old->prio){
+    if (ready_queue_head != NULL && p_tcb_old != NULL && ready_queue_head->prio <= p_tcb_old->prio) {
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
@@ -358,8 +366,7 @@ int k_tsk_yield(void) {
             #endif
         }
 
-    }
-    else{
+    } else {
         #ifdef DEBUG_0
         printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
         #endif /* DEBUG_0 */
@@ -369,8 +376,6 @@ int k_tsk_yield(void) {
 }
 
 
-
-// TODO: DONT MAKE ASSUMPTION MALLOC WORKED
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size) {
     #ifdef DEBUG_0
     printf("k_tsk_create: entering...\n\r");
@@ -495,19 +500,10 @@ void k_tsk_exit(void) {
         new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
-        gp_current_task = NULL;
-        gp_current_task = dummy_scheduler();
+        pop_task_by_id(&ready_queue_head, 0);
+        gp_current_task = &g_tcbs[0];
 
-        if (gp_current_task == NULL){
-            #ifdef DEBUG_0
-            printf("[ERROR] k_tsk_yield: No next task available");
-            #endif /* DEBUG_0 */
-            pop_task_by_id(&ready_queue_head, 0);
-            gp_current_task = &g_tcbs[0];
-            return;
-        }
-
-        task_switch(NULL);
+        k_tsk_yield();
     }
 
     return;
@@ -625,21 +621,28 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
 }
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
-#ifdef DEBUG_0
+    #ifdef DEBUG_0
     printf("k_tsk_get: entering...\n\r");
     printf("task_id = %d, buffer = 0x%x.\n\r", task_id, buffer);
-#endif /* DEBUG_0 */
+    #endif /* DEBUG_0 */
 
     if (buffer == NULL) {
         return RTX_ERR;
     }
 
-    // TODO: can we get dormant task? what if task has been overwritten?
-    // TODO: what if we try to access non-existent task
+    // TODO: what if we try to access non-existent task, DORMANT
     if (task_id >= MAX_TASKS || task_id < 0) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
         #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
+
+    if (tid_is_available(free_tid_head, task_id) == 1) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
     }
 
     TCB *task = &g_tcbs[task_id];
@@ -653,19 +656,19 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->state = task->state;
     buffer->priv = task->priv;
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->k_sp = (U32 *) __get_MSP();
-    buffer->k_stack_hi = task->msp_hi;
+    buffer->k_sp = __get_MSP();
+    buffer->k_stack_hi = (U32) task->msp_hi;
 
-    if (task->priv = 0) {
+    if (task->priv == 0) {
         buffer->u_stack_size = task->psp_size;
-        buffer->u_stack_hi = task->psp_hi;
-        buffer->u_sp = (U32 *) __get_PSP();
-        buffer->ptask = task->psp_hi - 2;
+        buffer->u_stack_hi = (U32) task->psp_hi;
+        buffer->u_sp = __get_PSP();
+        buffer->ptask = (void (*)()) (task->psp_hi - 2);
     } else {
         buffer->u_stack_size = 0;
         buffer->u_stack_hi = NULL;
         buffer->u_sp = NULL;
-        buffer->ptask = task->msp_hi - 2;
+        buffer->ptask = (void (*)()) (task->msp_hi - 2);
     }
 
     return RTX_OK;     

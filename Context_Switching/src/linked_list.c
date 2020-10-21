@@ -42,7 +42,17 @@ void print_free_tids(FREE_TID_T *free_tid_head) {
 #endif /* DEBUG_TID_LL */
 }
 
+int tid_is_available(FREE_TID_T *free_tid_head, int tid) {
+    FREE_TID_T *temp = free_tid_head;
+    while(temp != NULL) {
+        if (temp->tid == tid) {
+            return 1;
+        }
+        temp = temp->next;
+    }
 
+    return 0;
+}
 
 /**
  * PRIORITY QUEUE
