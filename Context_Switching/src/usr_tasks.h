@@ -49,5 +49,12 @@ void dealloc_pointer_task(void);
 void ctl_reg_verification_task(void);
 /******************* SUITE 2 END *************************/
 
+/******************* SUITE 4 START *************************/
+/* Scheduling policy test tasks */
+void scheduling_policy_task_1(void);
+void scheduling_policy_task_2(void);
+void scheduling_policy_task_3(void);
+/******************* SUITE 4 END *************************/
+
 
 #endif /* USR_PROC_H_ */
