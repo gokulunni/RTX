@@ -239,7 +239,7 @@ void task15(void)
 
 void scheduling_policy_task_1(void)
 {
-	total_tests = 4;
+	total_tests = 1;
 	print_test_start(4);
     //uart1_put_string ("alloc_pointer_task: entering \n\r");
     /* do something */
