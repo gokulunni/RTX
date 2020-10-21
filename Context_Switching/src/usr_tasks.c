@@ -304,7 +304,6 @@ void ctl_reg_verification_task(void)
 	else
 		print_test_result(2, RTX_ERR, "Control Register test");
 	
-	print_final_results();
 	tsk_exit();
 		
 }
@@ -334,7 +333,7 @@ void should_never_run_task()
 void invalid_tsk_set_prio_task(void)
 {
 	task_t tid;
-	tsk_create(&tid, task13, LOW, 0x200);
+	tsk_create(&tid, task13, LOW, 0x200); 
 	
 	/* Try invalid prio */
 	for(int i = 5; i < 20; i++)
@@ -345,9 +344,13 @@ void invalid_tsk_set_prio_task(void)
 			tsk_exit();
 		}
 	}
+	/* Try to set DORMANT task's prio */
+	tsk_set_prio(tid, HIGH); //should switch and run to termination
+	if(tsk_set_prio(tid, LOW) == RTX_OK)
+		print_test_result(4, RTX_ERR, "Invalid tsk set prio arg test");
 	
 	/* try to change null prio task */
-	if(tsk_set_prio(0, 2) == RTX_OK)
+	else if(tsk_set_prio(0, 2) == RTX_OK)
 		print_test_result(4, RTX_ERR, "Invalid tsk set prio arg test");
 	else
 		print_test_result(4, RTX_OK, "Invalid tsk set prio arg test");
