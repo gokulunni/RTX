@@ -26,9 +26,7 @@
 #else
 #define IROM_BASE  0x0
 #endif
-extern int ownership_test_result;
-
-int ownership_test()
+int suite_2()
 {
 	RTX_TASK_INFO tasks[2];
 																			
@@ -38,8 +36,9 @@ int ownership_test()
 		tasks[i].priv = 0;
 	}
 	
-	tasks[0].ptask = task2;
-	tasks[1].ptask = task3;
+	//Ownership testing tasks
+	tasks[0].ptask = alloc_pointer_task;
+	tasks[1].ptask = dealloc_pointer_task;
 	
 	/* This ensures proper order of execution */
 	tasks[0].prio = HIGH;
@@ -47,9 +46,6 @@ int ownership_test()
 	
 	/* start the RTX and built-in tasks */
 	if(rtx_init(32, FIRST_FIT, tasks, 2) == RTX_ERR)
-		return 0;
-	
-	if(ownership_test_result == RTX_ERR)
 		return 0;
 	
 	return 1;
@@ -78,7 +74,7 @@ int main2()
 		
 		printf("G04_test: START\n");  
 
-		if(ownership_test())
+		if(suite_2())
 			printf("G04_test: test 1 (max_tasks_test) OK\n");
 		else
 			printf("G04_test: test 1 (max_tasks_test) FAIL\n");

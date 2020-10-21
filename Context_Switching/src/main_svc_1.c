@@ -17,9 +17,7 @@
 #include "priv_tasks.h"
 #include "uart_polling.h"
 #include "usr_tasks.h"
-#ifdef DEBUG_0
 #include "printf.h"
-#endif /* DEBUG_0 */
 
 #ifdef RAM_TARGET
 #define IROM_BASE  0x10000000
@@ -27,7 +25,7 @@
 #define IROM_BASE  0x0
 #endif
 
-int max_tasks_test()
+int suite_1()
 {
 	task_t tids[MAX_TASKS-1];
 	void (*task_functions[MAX_TASKS-1])(void) = {task2, task2, task3, task4, task5, task6,
@@ -74,7 +72,7 @@ int main()
 		
 		printf("G04_test: START\n");  
 
-		if(max_tasks_test())
+		if(suite_1())
 			printf("G04_test: test 1 (max_tasks_test) OK\n");
 		else
 			printf("G04_test: test 1 (max_tasks_test) FAIL\n");

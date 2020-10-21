@@ -9,17 +9,42 @@
 #include "rtx.h"
 #include "uart_polling.h"
 #include "usr_tasks.h"
-
-#ifdef DEBUG_0
 #include "printf.h"
-#endif /* DEBUG_0 */
 
- /* global vars */
+ /* Global vars */
 int *pointer;
-int ownership_test_result;
+int tests_completed = 0;
+int total_tests; /* set based on which suite is being run */
+int passed = 0;
+
+
+void print_test_result(int test_num, int result, char *test_name)
+{
+	if(result == RTX_OK)
+	{
+		passed++;
+		printf("G04_test: test %d (%s) OK\n", test_num, test_name);
+	}
+	else
+		printf("G04_test: test %d (%s) FAIL\n", test_num, test_name);
+	
+	tests_completed++;
+}
+
+void print_test_start(int suite_num)
+{
+	printf("G04_test - suite_%d: START\n", suite_num);  
+}
+
+void print_final_results()
+{
+	printf("%d/%d OK\n", passed, total_tests);
+  printf("%d/%d FAIL\n", total_tests-passed, total_tests);
+  printf("G04_test: END\n");
+}
 
 /**
- * @brief: a dummy task1
+ * @brief: a dummy task1 - starter code
  */
 void task1(void)
 {
@@ -40,7 +65,9 @@ void task1(void)
  */
 void task2(void)
 {
-    uart1_put_string ("task2: entering \n\r");
+	total_tests = 1;
+	print_test_start(1);
+    //uart1_put_string ("task2: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -51,7 +78,7 @@ void task2(void)
  */
 void task3(void)
 {
-    uart1_put_string ("task3: entering \n\r");
+    //uart1_put_string ("task3: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -63,7 +90,7 @@ void task3(void)
  */
 void task4(void)
 {
-    uart1_put_string ("task4: entering \n\r");
+    //uart1_put_string ("task4: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -75,7 +102,7 @@ void task4(void)
  */
 void task5(void)
 {
-    uart1_put_string ("task5: entering \n\r");
+    //uart1_put_string ("task5: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -87,7 +114,7 @@ void task5(void)
  */
 void task6(void)
 {
-    uart1_put_string ("task6: entering \n\r");
+    //uart1_put_string ("task6: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -99,7 +126,7 @@ void task6(void)
  */
 void task7(void)
 {
-    uart1_put_string ("task7: entering \n\r");
+    //uart1_put_string ("task7: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -111,7 +138,7 @@ void task7(void)
  */
 void task8(void)
 {
-    uart1_put_string ("task8: entering \n\r");
+    //uart1_put_string ("task8: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -123,7 +150,7 @@ void task8(void)
  */
 void task9(void)
 {
-    uart1_put_string ("task9: entering \n\r");
+    //uart1_put_string ("task9: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -134,7 +161,7 @@ void task9(void)
  */
 void task10(void)
 {
-    uart1_put_string ("task10: entering \n\r");
+    //uart1_put_string ("task10: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -147,7 +174,7 @@ void task10(void)
  */
 void task11(void)
 {
-    uart1_put_string ("task11: entering \n\r");
+    //uart1_put_string ("task11: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -160,7 +187,7 @@ void task11(void)
  */
 void task12(void)
 {
-    uart1_put_string ("task12: entering \n\r");
+    //uart1_put_string ("task12: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -173,7 +200,7 @@ void task12(void)
  */
 void task13(void)
 {
-    uart1_put_string ("task13: entering \n\r");
+    //uart1_put_string ("task13: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -186,7 +213,7 @@ void task13(void)
  */
 void task14(void)
 {
-    uart1_put_string ("task14: entering \n\r");
+    //uart1_put_string ("task14: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -199,7 +226,10 @@ void task14(void)
  */
 void task15(void)
 {
-    uart1_put_string ("task15: entering \n\r");
+		print_test_result(1, RTX_OK, "MAX_TASKS Test");
+		print_final_results();
+    
+		//uart1_put_string ("task15: entering \n\r");
     /* do something */
     /* terminating */
     tsk_exit();
@@ -208,6 +238,8 @@ void task15(void)
 
 void alloc_pointer_task(void)
 {
+	total_tests = 1;
+	print_test_start(2);
     uart1_put_string ("alloc_pointer_task: entering \n\r");
     /* do something */
     /* terminating */
@@ -224,9 +256,12 @@ void dealloc_pointer_task(void)
     /* do something */
     /* terminating */
 		if(mem_dealloc(pointer) == RTX_OK)
-			ownership_test_result = RTX_ERR;
+			print_test_result(1, RTX_ERR, "Memory ownership test\n");
 		else
-			ownership_test_result = RTX_OK;
+			print_test_result(1, RTX_OK, "Memory ownership test\n");
+		
+		print_final_results();
+		
     tsk_exit();
 }
 
