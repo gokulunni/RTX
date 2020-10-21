@@ -649,19 +649,21 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->prio = task->prio;
     buffer->state = task->state;
     buffer->priv = task->priv;
-    buffer->ptask = (void *) task; //TODO: double check if its right or not, what is task entry address
-    buffer->k_sp = (U32) task->msp; // TODO: confirm this is indeed kernal stack, should i use get_MSP()
     buffer->k_stack_size = KERN_STACK_SIZE;
-    buffer->u_sp = (U32) task->psp; // TODO: confirm this is indeed user stack, should i use get_PSP(), what if its priviliged task?
-    buffer->u_stack_size = task->psp_size; // TODO: what is the size of privileged task
+    buffer->k_sp = (U32 *) __get_MSP();
+    buffer->k_stack_hi = task->msp_hi;
 
+    if (task->priv = 0) {
+        buffer->u_stack_size = task->psp_size;
+        buffer->u_stack_hi = task->psp_hi;
+        buffer->u_sp = (U32 *) __get_PSP();
+    } else {
+        buffer->u_stack_size = 0;
+        buffer->u_stack_hi = NULL;
+        buffer->u_sp = NULL;
+    }
 
-//    U32    k_sp;         /* The task current kernel stack pointer   */
-//    U32    k_stack_hi;   /* The kernel stack starting addr. (high addr.)*/
-//    U32    u_sp;         /* The task current user stack pointer     */
-//    U32    u_stack_hi;   /* The user stack starting addr. (high addr.) */
-//    U16    k_stack_size; /* The task kernel total stack space in bytes */
-//    U16    u_stack_size; /* The task user total stack space in bytes*/
+    buffer->ptask = task->psp_hi - 2;
 
     return RTX_OK;     
 }
