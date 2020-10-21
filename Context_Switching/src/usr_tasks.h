@@ -61,5 +61,10 @@ void invalid_tsk_set_prio_task(void);
 void should_never_run_task(void);
 /******************* SUITE 4 END *************************/
 
+/******************* SUITE 5 START *************************/
+/* Get correct task information */
+void property_verification_task_1(void);
+/******************* SUITE 5 END *************************/
+
 
 #endif /* USR_PROC_H_ */
