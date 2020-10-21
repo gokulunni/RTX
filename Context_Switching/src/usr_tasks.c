@@ -15,6 +15,7 @@
  /* Global vars */
 int *pointer;
 int schedule_incrementer = 0;
+task_t task_property_id;
 int tests_completed = 0;
 int total_tests; /* set based on which suite is being run */
 int passed = 0;
@@ -235,6 +236,23 @@ void task15(void)
     /* do something */
     /* terminating */
     tsk_exit();
+}
+
+void property_verification_task_1(void)
+{
+	total_tests = 1;
+	print_test_start(5);
+	//uart1_put_string ("alloc_pointer_task: entering \n\r");
+	tsk_create(&task_property_id, task14, LOW, 0x250);
+	
+	RTX_TASK_INFO buf;
+	tsk_get(task_property_id, &buf);
+	
+	if (buf.prio == LOW && buf.state == NEW && buf.priv == 0 && buf.u_stack_size == 0x250)
+		print_test_result(5, RTX_OK, "Property verification test");
+	else
+		print_test_result(5, RTX_ERR, "Property verification test");
+	tsk_exit();
 }
 
 void scheduling_policy_task_1(void)

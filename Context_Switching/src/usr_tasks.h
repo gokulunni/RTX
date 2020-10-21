@@ -56,5 +56,10 @@ void scheduling_policy_task_2(void);
 void scheduling_policy_task_3(void);
 /******************* SUITE 4 END *************************/
 
+/******************* SUITE 5 START *************************/
+/* Get correct task information */
+void property_verification_task_1(void);
+/******************* SUITE 5 END *************************/
+
 
 #endif /* USR_PROC_H_ */
