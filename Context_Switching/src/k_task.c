@@ -353,10 +353,10 @@ int k_tsk_yield(void) {
         }
         print_prio_queue(ready_queue_head);
         if (task_switch(p_tcb_old) == RTX_ERR) {
-					#ifdef DEBUG_0
-					printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
-					#endif
-				}
+            #ifdef DEBUG_0
+            printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
+            #endif
+        }
 
     }
     else{
@@ -583,8 +583,6 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     if (((gp_current_task->priv == 0 && task->priv == 0) || gp_current_task->priv == 1)) {
         task->prio = prio;
 
-        // TODO: insert before or after
-
         //    The caller of this primitive never blocks, but could be preempted.
         //    If the value of prio is higher than the priority of the current running task,
         //    and the task identified by task id is in ready state, then the task identified by
@@ -598,7 +596,12 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
                 TCB *p_tcb_old = gp_current_task;
                 push(&ready_queue_head, p_tcb_old);
                 gp_current_task = task;
-                task_switch(p_tcb_old);
+                if (task_switch(p_tcb_old) == RTX_ERR) {
+                    #ifdef DEBUG_0
+                    printf("[ERROR] k_tsk_set_prio: could not switch task, same task resuming");
+                    #endif
+                    return RTX_ERR;
+                }
             }
             else{
                 //Push the changed priority task back into ready Q
