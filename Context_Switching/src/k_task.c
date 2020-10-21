@@ -215,7 +215,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             p_tcb->msp = sp;
             p_tcb->psp = p_tcb->msp;
             p_tcb->psp_hi = NULL;
-            p_tcb->psp_size = 0; 			/* TODO: To indicate that there is no user stack, perhaps should be renamed */
+            p_tcb->psp_size = 0;
         }
 
         //Add task to the priority queue for NEW tasks
@@ -247,7 +247,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 /*@brief: scheduler, pick the tid of the next to run task
  *@return: TCB pointer of the next to run task
  *         NULL if error happens
- *POST: if gp_current_task was NULL, then it gets set to tcb[1]. // TODO: why?
+ *POST: if gp_current_task was NULL, then it gets set to tcb[1].
  *      No other effect on other global variables.
  */
 
@@ -268,6 +268,8 @@ TCB *dummy_scheduler(void) {
         #ifdef DEBUG_0
         printf("[ERROR] dummy_scheduler: gp_current_task is NULL\n");
         #endif /* DEBUG_0 */
+        pop_task_by_id(&ready_queue_head, 0);
+        gp_current_task = &g_tcbs[0];
     }
 
     return gp_current_task;
@@ -327,7 +329,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if(ready_queue_head->prio <= p_tcb_old->prio){ 
+    if (ready_queue_head->prio <= p_tcb_old->prio){
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
@@ -460,9 +462,9 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
 
 void k_tsk_exit(void) {
-#ifdef DEBUG_0
+    #ifdef DEBUG_0
     printf("k_tsk_exit: exiting...\n\r");
-#endif /* DEBUG_0 */
+    #endif /* DEBUG_0 */
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
@@ -497,7 +499,7 @@ void k_tsk_exit(void) {
             printf("[ERROR] k_tsk_yield: No next task available");
             #endif /* DEBUG_0 */
             pop_task_by_id(&ready_queue_head, 0);
-            gp_current_task = &g_tcbs[0];;
+            gp_current_task = &g_tcbs[0];
             return;
         }
 
@@ -544,23 +546,22 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     //Ensure that we are only popping the task frmo the ready queue if it isn't already runing
     TCB *task;
 
-    if( task_id != gp_current_task->tid){
+    if (task_id != gp_current_task->tid){
         task = pop_task_by_id(&ready_queue_head, task_id);
-    }
-    else{
+    } else {
         task = gp_current_task;
-    }
-
-    if (task->state == DORMANT) {
-        #ifdef DEBUG_0
-        printf("[ERROR] k_tsk_set_prio: task with tid %d is DORMANT\n\r", task_id);
-        #endif /* DEBUG_0 */
-        return RTX_ERR;
     }
 
     if (task == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_set_prio: task with tid %d not found\n\r", task_id);
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
+
+    if (task->state == DORMANT) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_set_prio: task with tid %d is DORMANT\n\r", task_id);
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
