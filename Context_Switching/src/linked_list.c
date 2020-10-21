@@ -86,6 +86,10 @@ TCB *pop_task_by_id(TCB **prio_queue_head, U8 tid) {
     TCB *iterator = *prio_queue_head;
     TCB *prev_node = NULL;
 
+    if (*prio_queue_head == NULL) {
+        return NULL;
+    }
+
     // Iterate through priority queue until TCB with tid is found
     while (iterator != NULL && iterator->tid != tid) {
         prev_node = iterator;
