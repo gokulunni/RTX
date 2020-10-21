@@ -49,16 +49,16 @@ int suite_1()
 	return 1;
 }
 
-int main() 
+int main_1() 
 {    
     RTX_TASK_INFO task_info[2];    
     /* CMSIS system initialization */
     SystemInit();  /* initialize the system */
     __disable_irq();
     uart_init(1);  /* uart1 uses polling for output */
-#ifdef DEBUG_0
+
     init_printf(NULL, putc);
-#endif /* DEBUG_0 */
+
     __enable_irq();
 #ifdef DEBUG_0
     printf("Dereferencing Null to get inital SP = 0x%x\r\n", *(U32 *)(IROM_BASE));
@@ -69,14 +69,8 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     //set_task_info(task_info, 2);
-		
-		printf("G04_test: START\n");  
+		suite_1();
 
-		if(suite_1())
-			printf("G04_test: test 1 (max_tasks_test) OK\n");
-		else
-			printf("G04_test: test 1 (max_tasks_test) FAIL\n");
-		
     /* We should never reach here!!! */
     return RTX_ERR;  
 }

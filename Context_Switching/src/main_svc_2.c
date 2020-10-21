@@ -17,9 +17,9 @@
 #include "priv_tasks.h"
 #include "uart_polling.h"
 #include "usr_tasks.h"
-#ifdef DEBUG_0
+//#ifdef DEBUG_0
 #include "printf.h"
-#endif /* DEBUG_0 */
+//#endif /* DEBUG_0 */
 
 #ifdef RAM_TARGET
 #define IROM_BASE  0x10000000
@@ -28,9 +28,9 @@
 #endif
 int suite_2()
 {
-	RTX_TASK_INFO tasks[2];
+	RTX_TASK_INFO tasks[3];
 																			
-	for(int i = 0; i < 2; i++)
+	for(int i = 0; i < 3; i++)
 	{
 		tasks[i].u_stack_size = 0x200;
 		tasks[i].priv = 0;
@@ -39,28 +39,30 @@ int suite_2()
 	//Ownership testing tasks
 	tasks[0].ptask = alloc_pointer_task;
 	tasks[1].ptask = dealloc_pointer_task;
+	tasks[2].ptask = ctl_reg_verification_task;
 	
 	/* This ensures proper order of execution */
 	tasks[0].prio = HIGH;
 	tasks[1].prio = LOW;
+	tasks[2].prio = LOW;
 	
 	/* start the RTX and built-in tasks */
-	if(rtx_init(32, FIRST_FIT, tasks, 2) == RTX_ERR)
+	if(rtx_init(32, FIRST_FIT, tasks, 3) == RTX_ERR)
 		return 0;
 	
 	return 1;
 }
 
-int main2() 
+int main() 
 {    
     RTX_TASK_INFO task_info[2];    
     /* CMSIS system initialization */
     SystemInit();  /* initialize the system */
     __disable_irq();
     uart_init(1);  /* uart1 uses polling for output */
-#ifdef DEBUG_0
+//#ifdef DEBUG_0
     init_printf(NULL, putc);
-#endif /* DEBUG_0 */
+//#endif /* DEBUG_0 */
     __enable_irq();
 #ifdef DEBUG_0
     printf("Dereferencing Null to get inital SP = 0x%x\r\n", *(U32 *)(IROM_BASE));
@@ -71,14 +73,8 @@ int main2()
 #endif /*DEBUG_0*/    
     /* sets task information */
     //set_task_info(task_info, 2);
-		
-		printf("G04_test: START\n");  
 
-		if(suite_2())
-			printf("G04_test: test 1 (max_tasks_test) OK\n");
-		else
-			printf("G04_test: test 1 (max_tasks_test) FAIL\n");
-		
+		suite_2();
     /* We should never reach here!!! */
     return RTX_ERR;  
 }

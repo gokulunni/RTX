@@ -44,6 +44,9 @@ void task15(void);
 /* Memory ownership test tasks */
 void alloc_pointer_task(void);
 void dealloc_pointer_task(void);
+
+/* Processor mode, SP, Privilege Verification Test */
+void ctl_reg_verification_task(void);
 /******************* SUITE 2 END *************************/
 
 

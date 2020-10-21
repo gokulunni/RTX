@@ -10,6 +10,7 @@
 #include "uart_polling.h"
 #include "usr_tasks.h"
 #include "printf.h"
+#include <LPC17xx.h>
 
  /* Global vars */
 int *pointer;
@@ -238,9 +239,9 @@ void task15(void)
 
 void alloc_pointer_task(void)
 {
-	total_tests = 1;
+	total_tests = 2;
 	print_test_start(2);
-    uart1_put_string ("alloc_pointer_task: entering \n\r");
+    //uart1_put_string ("alloc_pointer_task: entering \n\r");
     /* do something */
     /* terminating */
 		pointer = mem_alloc(sizeof(int));
@@ -252,17 +253,26 @@ void alloc_pointer_task(void)
  */
 void dealloc_pointer_task(void)
 {
-    uart1_put_string ("dealloc_pointer_task: entering \n\r");
+    //uart1_put_string ("dealloc_pointer_task: entering \n\r");
     /* do something */
     /* terminating */
 		if(mem_dealloc(pointer) == RTX_OK)
-			print_test_result(1, RTX_ERR, "Memory ownership test\n");
+			print_test_result(1, RTX_ERR, "Memory ownership test");
 		else
-			print_test_result(1, RTX_OK, "Memory ownership test\n");
-		
-		print_final_results();
+			print_test_result(1, RTX_OK, "Memory ownership test");
 		
     tsk_exit();
+}
+
+void ctl_reg_verification_task(void)
+{
+	if(__get_CONTROL() == 3)
+		print_test_result(2, RTX_OK, "Control Register test");
+	else
+		print_test_result(2, RTX_ERR, "Control Register test");
+	
+	print_final_results();
+		
 }
 
 
