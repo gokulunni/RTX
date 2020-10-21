@@ -640,7 +640,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 
     if (tid_is_available(free_tid_head, task_id) == 1) {
         #ifdef DEBUG_0
-        printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
+        printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
         #endif /* DEBUG_0 */
         return RTX_ERR;
     }
