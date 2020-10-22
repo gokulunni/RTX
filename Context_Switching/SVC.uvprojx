@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>DEBUG_0 DEBUG_PRIO_Q SIM_TARGET</Define>
+              <Define>SIM_TARGET</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
@@ -434,19 +434,29 @@
               <FilePath>.\src\main_svc.c</FilePath>
             </File>
             <File>
+              <FileName>main_svc_2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\main_svc_2.c</FilePath>
+            </File>
+            <File>
+              <FileName>linked_list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\linked_list.c</FilePath>
+            </File>
+            <File>
+              <FileName>main_svc_4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\main_svc_4.c</FilePath>
+            </File>
+            <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
-            </File>
-            <File>
-              <FileName>PriorityQueue.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\PriorityQueue.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -896,19 +906,29 @@
               <FilePath>.\src\main_svc.c</FilePath>
             </File>
             <File>
+              <FileName>main_svc_2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\main_svc_2.c</FilePath>
+            </File>
+            <File>
+              <FileName>linked_list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\linked_list.c</FilePath>
+            </File>
+            <File>
+              <FileName>main_svc_4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\main_svc_4.c</FilePath>
+            </File>
+            <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\printf.c</FilePath>
+              <FilePath>.\src\printf.c</FilePath>
             </File>
             <File>
               <FileName>uart_polling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\util\printf_uart\uart_polling.c</FilePath>
-            </File>
-            <File>
-              <FileName>PriorityQueue.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\PriorityQueue.c</FilePath>
+              <FilePath>.\src\uart_polling.c</FilePath>
             </File>
           </Files>
         </Group>
