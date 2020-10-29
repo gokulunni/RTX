@@ -11,7 +11,13 @@
 #include "common.h"
 
 /*----- Definitations -----*/
+#define NUM_TEST_PROCS 2
 
+#ifdef DEBUG_0
+#define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
+#else
+#define USR_SZ_STACK 0x100         /* user proc stack size 256B  */
+#endif /* DEBUG_0 */
 
 /*----- Types -----*/
 
@@ -23,8 +29,12 @@
 
 typedef struct tcb
 {
-    /*struct tcb *next;*/ /* next tcb, not used in this example */  
+    struct tcb *next; /* next tcb, not used in this example */
     U32 *msp;    /* msp of the task */
+    U32 *msp_hi; /* The msp stack starting addr. (high addr.)*/
+    U32 *psp;   /* psp of the task */
+    U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
+    U16 psp_size;
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
     U8  state;   /* task state */  
