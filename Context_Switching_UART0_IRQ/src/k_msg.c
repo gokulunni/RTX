@@ -6,6 +6,7 @@
  */
 
 #include "k_msg.h"
+#include "k_mem.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
