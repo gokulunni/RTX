@@ -33,7 +33,7 @@ TCB kernal_task;
 TCB *null_task = NULL;
 
 TCB *ready_queue_head = NULL;
-FREE_TID_T *free_tid_head = NULL;
+INT_LL_NODE_T *free_tid_head = NULL;
 
 void *alloc_user_stack(size_t size);
 int dealloc_user_stack(U32 *ptr, size_t size);
@@ -205,7 +205,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     }
 
     for (int q = MAX_TASKS - 1; q > i; q--) {
-        FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
+        INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0
             printf("[ERROR] k_tsk_init: tid failed to allocate memory\n\r");
@@ -413,7 +413,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
 
-    FREE_TID_T *popped_tid = pop_tid(&free_tid_head);
+    INT_LL_NODE_T *popped_tid = pop_tid(&free_tid_head);
     if (popped_tid == NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_create: no available TID\n\r");
@@ -495,7 +495,7 @@ void k_tsk_exit(void) {
             prev_current_task->psp = NULL;
         }
 
-        FREE_TID_T *new_tid = k_mem_alloc(sizeof(FREE_TID_T));
+        INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0
             printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
