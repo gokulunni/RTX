@@ -17,27 +17,27 @@
  * Free TID Linked List
  */
 
-void push_tid(FREE_TID_T **free_tid_head, FREE_TID_T *new_tid) {
+void push_tid(INT_LL_NODE_T **free_tid_head, INT_LL_NODE_T *new_tid) {
     new_tid->next = *free_tid_head;
     *free_tid_head = new_tid;
 }
 
-FREE_TID_T *pop_tid(FREE_TID_T **free_tid_head) {
+INT_LL_NODE_T *pop_tid(INT_LL_NODE_T **free_tid_head) {
     if (*free_tid_head == NULL) {
         return NULL;
     }
 
-    FREE_TID_T *popped = *free_tid_head;
+    INT_LL_NODE_T *popped = *free_tid_head;
     *free_tid_head = (*free_tid_head)->next;
     return popped;
 }
 
-void print_free_tids(FREE_TID_T *free_tid_head) {
+void print_free_tids(INT_LL_NODE_T *free_tid_head) {
 #ifdef DEBUG_TID_LL
     printf("****************\n");
     printf("Free TID List\n");
 
-    FREE_TID_T *temp = free_tid_head;
+    INT_LL_NODE_T *temp = free_tid_head;
     while(temp != NULL) {
         printf("%d\n", temp->tid);
         temp = temp->next;
@@ -46,8 +46,8 @@ void print_free_tids(FREE_TID_T *free_tid_head) {
 #endif /* DEBUG_TID_LL */
 }
 
-int tid_is_available(FREE_TID_T *free_tid_head, int tid) {
-    FREE_TID_T *temp = free_tid_head;
+int tid_is_available(INT_LL_NODE_T *free_tid_head, int tid) {
+    INT_LL_NODE_T *temp = free_tid_head;
     while(temp != NULL) {
         if (temp->tid == tid) {
             return 1;

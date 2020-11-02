@@ -10,12 +10,12 @@
 typedef struct free_tid {
     int tid;
     struct free_tid *next;
-} FREE_TID_T;
+} INT_LL_NODE_T;
 
-void push_tid(FREE_TID_T **free_tid_head, FREE_TID_T *new_tid);
-FREE_TID_T *pop_tid(FREE_TID_T **free_tid_head);
-void print_free_tids(FREE_TID_T *free_tid_head);
-int tid_is_available(FREE_TID_T *free_tid_head, int tid);
+void push_tid(INT_LL_NODE_T **free_tid_head, INT_LL_NODE_T *new_tid);
+INT_LL_NODE_T *pop_tid(INT_LL_NODE_T **free_tid_head);
+void print_free_tids(INT_LL_NODE_T *free_tid_head);
+int tid_is_available(INT_LL_NODE_T *free_tid_head, int tid);
 
 TCB *pop(TCB **prio_queue_head);
 TCB *pop_task_by_id(TCB **prio_queue_head, U8 tid);
