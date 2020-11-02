@@ -6,10 +6,13 @@
  */
 
 #include "k_msg.h"
+#include "k_mem.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
+
+CIRCULAR_BUFFER_T *circular_buffer_init(size_t size);
 
 int k_mbx_create(size_t size) {
 #ifdef DEBUG_0
@@ -37,4 +40,11 @@ int k_mbx_ls(task_t *buf, int count) {
     printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
 #endif /* DEBUG_0 */
     return 0;
+}
+
+// ===============================================
+
+CIRCULAR_BUFFER_T circular_buffer_init(size_t size) {
+    void *ptr = k_mem_alloc(size);
+
 }
