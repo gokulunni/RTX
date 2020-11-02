@@ -486,3 +486,22 @@ void print_linked_list(char *prefix) {
     }
 #endif /* DEBUG_MEM */
 }
+
+
+int k_mem_cpy(void *destination, void *source, size_t size) {
+    if (destination == NULL || source == NULL) {
+        return RTX_ERR;
+    }
+
+    if (size <= 0) {
+        return RTX_ERR;
+    }
+
+    char* dest = destination;
+    char* src = source;
+    for (int i = 0; i < n; i++) {
+        dest[i] = src[i];
+    }
+
+    return RTX_OK;
+}
