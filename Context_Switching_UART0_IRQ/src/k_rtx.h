@@ -34,6 +34,7 @@ typedef struct tcb
     U32 *msp_hi; /* The msp stack starting addr. (high addr.)*/
     U32 *psp;   /* psp of the task */
     U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
+    CIRCULAR_BUFFER_T mailbox;
     U16 psp_size;
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
