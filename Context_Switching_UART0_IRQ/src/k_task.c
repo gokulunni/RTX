@@ -150,6 +150,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         p_tcb->tid = i+1;
         p_tcb->state = NEW;
+        p_tcb->mailbox=NULL;
+        //CHECK CREATE FUNCTION
 
         p_tcb->prio = p_taskinfo->prio;
         // TODO: can we skip NULL_PRIO task? can we ignore user provided NULL TASK and use our own
@@ -434,6 +436,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->next = NULL;
     new_task->prio = prio;
     new_task->priv = 0;
+    new_task->mailbox=NULL;
+    //ADD SETTING MAILBOX TO NULL
 
     new_task->psp_size = stack_size;
     new_task->psp_hi = alloc_user_stack(stack_size);
