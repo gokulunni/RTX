@@ -40,7 +40,10 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     TCB* curr_task = gp_current_task;
 
     if (!curr_task->mailbox)
+    {
+        __enable_irq();
         return RTX_ERR;
+    }
     
     while(is_empty(curr_task->mailbox))
     {
@@ -54,12 +57,18 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     dequeue_msg(curr_task->mailbox, ptr);
 
     if (ptr == NULL)
+    {
+        __enable_irq();
         return RTX_ERR;
+    }
     //check if len < size of the message - length field should be first 4 bytes of the message (in the header)
     int actual_len;
     memcpy(&actual_len, ptr, 4);
     if (len < actual_len)
+    {
+        __enable_irq();
         return RTX_ERR;
+    }
 
     memcpy(buf, ptr, len);
     //*sender_tid = ; //??
