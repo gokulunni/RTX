@@ -210,6 +210,18 @@ void c_UART0_IRQHandler(void)
         } else {
             g_switch_flag = 0;
         }
+				
+				// Send char to the mailbox of KCD Task
+        size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
+        U8 buf[msg_hdr_size + 1];
+        RTX_MSG_HDR *header = (void*)buf;
+        header->length = msg_hdr_size + 1;
+        header->type = KEY_IN;
+        buf[msg_hdr_size - 1] = g_char_in;
+        
+       //TO DO: Do we need to add sender_tid (TID_UART0_IRQ) with the message?
+       send_msg(TID_KCD, buf);
+				
     } else if (IIR_IntId & IIR_THRE) {
     /* THRE Interrupt, transmit holding register becomes empty */
 
