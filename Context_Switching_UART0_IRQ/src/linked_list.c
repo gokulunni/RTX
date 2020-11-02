@@ -12,6 +12,23 @@
  * Linked List (push into head
  */
 
+//void push_int(INT_LL_T *linked_list, INT_LL_NODE_T *new_tid) {
+//    new_tid->next = linked_list->head;
+//    linked_list->head = new_tid;
+//}
+//
+//int pop_int(INT_LL_T *linked_list) {
+//    if (linked_list->tail == NULL) {
+//        return -1;
+//    }
+//
+//    if (linked_list->head == linked_list->tail) {
+//        linked_list->head = NULL;
+//    }
+//
+//
+//}
+
 
 /**
  * Free TID Linked List
