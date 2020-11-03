@@ -35,11 +35,13 @@ typedef struct tcb
     U32 *psp;   /* psp of the task */
     U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
     CIRCULAR_BUFFER_T mailbox;
+    INT_LL_T tid_list;
     U16 psp_size;
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
     U8  state;   /* task state */  
     U8  priv;    /* = 0 unprivileged, =1 priviliged */
+    U8  has_mailbox;
 } TCB;
 
 #endif // ! K_RTX_H_
