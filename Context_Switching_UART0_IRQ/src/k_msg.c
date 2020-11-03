@@ -133,7 +133,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
         return RTX_ERR;
     }
     
-    while(is_circ_buf_empty(curr_task->mailbox))
+    while(is_circ_buf_empty( &(curr_task->mailbox)))
     {
         curr_task->state = BLK_MSG;
         k_tsk_yield();
@@ -141,7 +141,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     buf = k_mem_alloc(len);
 
-    if (!dequeue_msg(curr_task->mailbox, ptr, len))
+    if (!dequeue_msg( &(curr_task->mailbox), ptr, len))
     {
         __enable_irq();
         return RTX_ERR;
@@ -168,7 +168,7 @@ int k_mbx_ls(task_t *buf, int count) {
 	int actual_count = 0;
 	int buf_index = 0;
 	
-	for (int i = MAX_TASKS; i > 0; i--)
+	for (int i = MAX_TASKS-1; i >= 0; i--)
 	{
 		if (g_tcbs[i].state != DORMANT && g_tcbs[i].has_mailbox) {
 			actual_count++;

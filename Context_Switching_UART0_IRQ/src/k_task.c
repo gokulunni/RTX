@@ -687,7 +687,7 @@ int k_tsk_ls(task_t *buf, int count){
 	int actual_count = 0;
 	int buf_index = 0;
 	
-	for (int i = MAX_TASKS; i > 0; i--)
+	for (int i = MAX_TASKS-1; i >= 0; i--)
 	{
 		if (g_tcbs[i].state != DORMANT) {
 			actual_count++;
