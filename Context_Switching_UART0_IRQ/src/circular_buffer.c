@@ -22,16 +22,16 @@ int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
 
 int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
     if (mailbox->tail < mailbox->head && mailbox->tail + length < mailbox->head) {
-        return 0;
+        return RTX_ERR;
     } else if (mailbox->tail > mailbox->head) {
         if (mailbox->tail + length <= mailbox->buffer_end) {
-            return 0;
+            return RTX_ERR;
         } else if (mailbox->buffer_start + length - (mailbox->buffer_end - mailbox->tail) < mailbox->head) {
-            return 0;
+            return RTX_ERR;
         }
     }
 
-    return 1;
+    return RTX_OK;
 }
 
 
@@ -78,17 +78,17 @@ U32 peek_msg_type(CIRCULAR_BUFFER_T *mailbox) {
 
 int dequeue_msg(CIRCULAR_BUFFER_T *mailbox, void *buf, size_t buf_len) {
     if (mailbox->tail == mailbox->head) {
-        return 0;
+        return RTX_ERR;
     }
 
     U32 length = peek_msg_len(mailbox);
 
     if (length <= 0) {
-        return 0;
+        return RTX_ERR;
     }
 
     if (buf_len < length) {
-        return 0;
+        return RTX_ERR;
     }
 
     for (int i = 0; i < length; i++) {
@@ -101,14 +101,14 @@ int dequeue_msg(CIRCULAR_BUFFER_T *mailbox, void *buf, size_t buf_len) {
         }
     }
 
-    return 1;
+    return RTX_OK;
 }
 
 int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void *msg) {
     U32 length = *((U32 *) msg);
 
     if (length <= 0) {
-        return 0;
+        return RTX_ERR;
     }
 
     for (int i = 0; i < length; i++) {
@@ -121,5 +121,5 @@ int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void *msg) {
         }
     }
 
-    return 1;
+    return RTX_OK;
 }
