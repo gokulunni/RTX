@@ -9,11 +9,17 @@
 #endif /* ! DEBUG_CIRC_BUFF */
 
 
-CIRCULAR_BUFFER_T *circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, size_t size) {
+int circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, size_t size) {
+    if (size < 1) {
+        return RTX_ERR;
+    }
+	
     mailbox->buffer_start = ptr;
-    mailbox->buffer_end = ptr + size;
+    mailbox->buffer_end = (char *) ptr + size;
     mailbox->head = ptr;
     mailbox->tail = ptr;
+	
+    return RTX_OK;
 }
 
 int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
@@ -36,7 +42,6 @@ int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
 
 
 U32 peek_msg_len(CIRCULAR_BUFFER_T *mailbox) {
-    U32 len = 0;
     U32 res = 0;
     void *iterator = mailbox->head;
 
@@ -92,9 +97,9 @@ int dequeue_msg(CIRCULAR_BUFFER_T *mailbox, void *buf, size_t buf_len) {
     }
 
     for (int i = 0; i < length; i++) {
-        *(buf + i) = *(mailbox->head);
+        *((char *) buf + i) = *((char *) mailbox->head);
 
-        mailbox->head = mailbox->head + 1;
+        mailbox->head = (char *) mailbox->head + 1;
 
         if (mailbox->head > mailbox->buffer_end) {
             mailbox->head = mailbox->buffer_start;
@@ -112,9 +117,9 @@ int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void *msg) {
     }
 
     for (int i = 0; i < length; i++) {
-        *(mailbox->tail) = msg + i;
+        *(mailbox->tail) = (char *) msg + i;
 
-        mailbox->tail = mailbox->tail + 1;
+        mailbox->tail = (char *) mailbox->tail + 1;
 
         if (mailbox->tail > mailbox->buffer_end) {
             mailbox->tail = mailbox->buffer_start;
