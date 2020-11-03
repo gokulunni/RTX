@@ -2,6 +2,7 @@
 // Created by Boris Nguyen on 2020-10-29.
 //
 
+#include "common.h"
 #include "circular_buffer.h"
 #ifdef DEBUG_CIRC_BUFF
 #include "printf.h"
@@ -15,11 +16,11 @@ CIRCULAR_BUFFER_T *circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, s
     mailbox->tail = ptr;
 }
 
-int is_empty(CIRCULAR_BUFFER_T *mailbox) {
+int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
     return mailbox->head == mailbox->tail;
 }
 
-int is_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
+int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
     if (mailbox->tail < mailbox->head && mailbox->tail + length < mailbox->head) {
         return 0;
     } else if (mailbox->tail > mailbox->head) {
