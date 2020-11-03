@@ -10,7 +10,7 @@
 #include "common.h"
 #include "k_mem.h"
 extern TCB *gp_current_task;
-
+extern TCB *ready_queue_head;
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
@@ -117,7 +117,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     if(task->state ==BLK_MSG){
         task->state== READY;
         //Add state back to ready_queue
-        push(pop_task_by_id,task->tid);
+        push(ready_queue_head,task->tid);
     }
 
     if (!enqueue_msg(task->mailbox,buf)){
