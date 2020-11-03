@@ -125,42 +125,35 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     //trap into kernel- atomicity on / disable interrupts
     __disable_irq();
     TCB* curr_task = gp_current_task;
+		void* ptr;
 
-    if (!curr_task->mailbox)
+    if (!curr_task->has_mailbox)
     {
         __enable_irq();
         return RTX_ERR;
     }
     
-    while(is_empty(curr_task->mailbox))
+    while(is_circ_buf_empty(curr_task->mailbox))
     {
         curr_task->state = BLK_MSG;
         k_tsk_yield();
     }
 
     buf = k_mem_alloc(len);
-    void* ptr;
-    //unsure how dequeueing will be implemented for cicurlar queue
-    dequeue_msg(curr_task->mailbox, ptr);
 
-    if (ptr == NULL)
-    {
-        __enable_irq();
-        return RTX_ERR;
-    }
-    //check if len < size of the message - length field should be first 4 bytes of the message (in the header)
-    int actual_len;
-    memcpy(&actual_len, ptr, 4);
-    if (len < actual_len)
+    if (!dequeue_msg(curr_task->mailbox, ptr, len))
     {
         __enable_irq();
         return RTX_ERR;
     }
 
-    memcpy(buf, ptr, len);
+    if (!mem_cpy(buf, ptr, len))
+		{
+			__enable_irq();
+			return RTX_ERR;
+		}
     //*sender_tid = ; //??
     //^---SENDER TID NEEDS TO BE SAVED SOMEWHERE IN THE MESSAGE, can't change message header, put it right after header??
-
     //atomicity off / enable interrupts
     __enable_irq();
 
@@ -171,5 +164,17 @@ int k_mbx_ls(task_t *buf, int count) {
 #ifdef DEBUG_0
     printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
 #endif /* DEBUG_0 */
+	
+	int actual_count = 0;
+	
+	for (int i = 0; i < count; i++)
+	{
+		if (buf[i] == NULL)
+			break;
+		
+		if (g_tcbs[buf[i]].state != DORMANT && g_tcbs[buf[i]].has_mailbox)
+			actual_count++;
+	}
+    return actual_count;
     return 0;
 }
