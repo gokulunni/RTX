@@ -23,6 +23,6 @@ void *k_mem_alloc(size_t size);
 int k_mem_dealloc(void *ptr);
 int k_mem_count_extfrag(size_t size);
 
-int k_mem_cpy(void *destination, void *source, size_t size);
+int mem_cpy(void *destination, void *source, size_t size);
 
 #endif /* ! K_MEM_H_ */

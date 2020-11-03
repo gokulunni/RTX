@@ -488,7 +488,7 @@ void print_linked_list(char *prefix) {
 }
 
 
-int k_mem_cpy(void *destination, void *source, size_t size) {
+int mem_cpy(void *destination, void *source, size_t size) {
     if (destination == NULL || source == NULL) {
         return RTX_ERR;
     }
