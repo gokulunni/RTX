@@ -129,7 +129,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     }
 
     //Pass TID onto the lined list of the task
-    push_tid(task->tid_list,gp_current_task->tid);
+    push_tid(task.msg_sender_head, gp_current_task->tid);
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)
