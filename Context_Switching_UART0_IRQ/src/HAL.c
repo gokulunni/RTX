@@ -78,7 +78,7 @@ SVC_EXIT
 	//TO DO: Make sure privilege level is set appropriately, currently user task is privileged?
 kernel_thread
 	MOV R3, #0                 ; 
-	MSR CONTROL, R3            ; set control bit[0] to 0 (priviledged)
+	MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
   CPSIE I                    ; enable interrupt
   BX   LR
 
