@@ -9,8 +9,10 @@
 #include "k_task.h"
 #include "common.h"
 #include "k_mem.h"
+#include "linked_list.h"
 extern TCB *gp_current_task;
 extern TCB *ready_queue_head;
+extern TCB g_tcbs[MAX_TASKS];
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
@@ -46,7 +48,7 @@ int k_mbx_create(size_t size) {
     //OTHERWISE THERE MIGHT BE GARBAGE DATA
 
     //Call circular buffer init and pass in buffer and size
-    circular_buffer_init(gp_current_task->mailbox, mailbox_buffer, size);
+    circular_buffer_init(&gp_current_task->mailbox, mailbox_buffer, size);
 
     return RTX_OK;
 }
@@ -58,7 +60,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //Trap kernel
     //No interrupts
-    __disable_irq()
+    __disable_irq();
 
     if (!buf){
         #ifdef DEBUG_0
@@ -78,8 +80,8 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         return RTX_ERR;
     }
     
-
-    TCB *task = &g_tcbs[recieved_tid];
+		int recieved_tid_int = (int) receiver_tid;
+    TCB *task = &g_tcbs[recieved_tid_int];
 
     //DOUBLE CHECK WHAT STATE IT SHOULD BE IN (RECIVEING TASK)
     if(task->state == DORMANT){
@@ -103,19 +105,19 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Try this U32 length = *((U32 *) msg); struct rtx_msg_hdr *ptr = (void *)buf;
     //Check example of casting 
 
-    if (header->length < MIN_MSG_SIZE){
+    if (length < MIN_MSG_SIZE){
         __enable_irq();
         return RTX_ERR;
     }
 
-    if(is_circ_buf_full(task->mailbox,header->length)){
+    if(is_circ_buf_full(&task->mailbox,length)){
         __enable_irq();
         return RTX_ERR;
     }
 
     //check that this doesn't conflict with pre emption
     if(task->state ==BLK_MSG){
-        task->state== READY;
+        task->state = READY;
         //Add state back to ready_queue
         push(ready_queue_head,task->tid);
     }
