@@ -9,6 +9,7 @@
 #include "k_task.h"
 #include "common.h"
 #include "k_mem.h"
+extern TCB *gp_current_task;
 
 #ifdef DEBUG_0
 #include "printf.h"
@@ -24,7 +25,7 @@ int k_mbx_create(size_t size) {
     }
 
     //Assume it is not the NULL task running
-    if (!gp_current_task.has_mailbox ){ //MailBox already Exists
+    if (!gp_current_task->has_mailbox ){ //MailBox already Exists
         return RTX_ERR;    
     }
 
@@ -46,9 +47,6 @@ int k_mbx_create(size_t size) {
 
     //Call circular buffer init and pass in buffer and size
     circular_buffer_init(gp_current_task->mailbox, mailbox_buffer, size);
-
-    //Intialize linked list for task
-    //gp_current_task->tid_list;
 
     return RTX_OK;
 }
@@ -94,14 +92,14 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     }
      
      //Change to variable
-    if(!task->mailbox){
+    if(!task->has_mailbox){
         //No mailbox for task
         __enable_irq();
         return RTX_ERR;
     }
 
     //Can i cast like this lmfao???
-    RTX_MSG_HDR header = (RTX_MSG_HDR) buf;
+    U32 length = *((U32 *) buf);
     //Try this U32 length = *((U32 *) msg); struct rtx_msg_hdr *ptr = (void *)buf;
     //Check example of casting 
 
@@ -110,7 +108,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         return RTX_ERR;
     }
 
-    if(is_full(task->mailbox,header->length)){
+    if(is_circ_buf_full(task->mailbox,header->length)){
         __enable_irq();
         return RTX_ERR;
     }
@@ -119,25 +117,24 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     if(task->state ==BLK_MSG){
         task->state== READY;
         //Add state back to ready_queue
+        push(pop_task_by_id,task->tid);
+    }
 
-        if (!enqueue_msg(task->mailbox,buf)){
-            //Does enqueue_msg read the header from the buffer?
-            //Assuming i can just do deep copy and have logic
-            //Inside of enqueue calculate length
-            __enable_irq();
-            return RTX_ERR;
-        }
+    if (!enqueue_msg(task->mailbox,buf)){
+        //Does enqueue_msg read the header from the buffer?
+        //Assuming i can just do deep copy and have logic
+        //Inside of enqueue calculate length
+        __enable_irq();
+        return RTX_ERR;
     }
 
     //Pass TID onto the lined list of the task
-
+    push_tid(task->tid_list,gp_current_task->tid);
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)
     k_tsk_yield();
   
-
-
     return RTX_OK;
 }
 
