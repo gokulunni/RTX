@@ -12,14 +12,6 @@ typedef struct free_tid {
     struct free_tid *next;
 } INT_LL_NODE_T;
 
-typedef struct free_tid {
-    INT_LL_NODE_T *head;
-    INT_LL_NODE_T *tail;
-} INT_LL_T;
-
-//void push_int(INT_LL_T *linked_list, INT_LL_NODE_T *new_tid);
-//int pop_int(INT_LL_T *linked_list)
-
 void push_tid(INT_LL_NODE_T **free_tid_head, INT_LL_NODE_T *new_tid);
 INT_LL_NODE_T *pop_tid(INT_LL_NODE_T **free_tid_head);
 void print_free_tids(INT_LL_NODE_T *free_tid_head);
