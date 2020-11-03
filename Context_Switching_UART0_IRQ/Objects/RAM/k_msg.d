@@ -1,0 +1,9 @@
+.\objects\ram\k_msg.o: src\k_msg.c
+.\objects\ram\k_msg.o: src\k_msg.h
+.\objects\ram\k_msg.o: src\k_rtx.h
+.\objects\ram\k_msg.o: src\common.h
+.\objects\ram\k_msg.o: src\circular_buffer.h
+.\objects\ram\k_msg.o: src\k_task.h
+.\objects\ram\k_msg.o: src\k_mem.h
+.\objects\ram\k_msg.o: src\printf.h
+.\objects\ram\k_msg.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
