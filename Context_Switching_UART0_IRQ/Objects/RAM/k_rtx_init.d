@@ -1,0 +1,11 @@
+.\objects\ram\k_rtx_init.o: src\k_rtx_init.c
+.\objects\ram\k_rtx_init.o: src\k_rtx_init.h
+.\objects\ram\k_rtx_init.o: src\k_rtx.h
+.\objects\ram\k_rtx_init.o: src\common.h
+.\objects\ram\k_rtx_init.o: src\circular_buffer.h
+.\objects\ram\k_rtx_init.o: src\uart_polling.h
+.\objects\ram\k_rtx_init.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\ram\k_rtx_init.o: src\uart_def.h
+.\objects\ram\k_rtx_init.o: src\uart_irq.h
+.\objects\ram\k_rtx_init.o: src\k_mem.h
+.\objects\ram\k_rtx_init.o: src\k_task.h
