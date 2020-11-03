@@ -22,14 +22,14 @@
 #endif /* DEBUG_0 */
 
 /* ----- Global Variables ----- */
-TCB *gp_current_task = NULL;    /* always point to the current RUN process */
+extern TCB *gp_current_task;    /* always point to the current RUN process */
 
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
-TCB g_tcbs[MAX_TASKS];
+extern TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
-TCB kernal_task;
+extern TCB kernal_task;
 TCB *null_task = NULL;
 
 TCB *ready_queue_head = NULL;
@@ -108,6 +108,7 @@ void null_task_func() {
  * PRE: memory has been properly initialized
  */
 int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
+	gp_current_task = NULL;
 	/* Default is MSP when calling tsk_init(), set to PSP */
 	  //__set_PSP((U32) __get_MSP());
 		//__set_CONTROL((U32)3);
@@ -676,4 +677,25 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     }
 
     return RTX_OK;     
+}
+
+int k_tsk_ls(task_t *buf, int count){
+    #ifdef DEBUG_0
+    printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
+#endif /* DEBUG_0 */
+	
+	int actual_count = 0;
+	int buf_index = 0;
+	
+	for (int i = MAX_TASKS-1; i >= 0; i--)
+	{
+		if (g_tcbs[i].state != DORMANT) {
+			actual_count++;
+			buf[buf_index++] = g_tcbs[i].tid;
+		}
+		
+		if (actual_count == count)
+			break;
+	}
+    return actual_count;
 }
