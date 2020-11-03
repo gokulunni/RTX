@@ -124,24 +124,24 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     //trap into kernel- atomicity on / disable interrupts
     __disable_irq();
-    TCB* curr_task = gp_current_task;
+    //TCB* curr_task = gp_current_task;
 		void* ptr;
 
-    if (!curr_task->has_mailbox)
+    if (!gp_current_task->has_mailbox)
     {
         __enable_irq();
         return RTX_ERR;
     }
     
-    while(is_circ_buf_empty( &(curr_task->mailbox)))
+    while(is_circ_buf_empty( &(gp_current_task->mailbox)))
     {
-        curr_task->state = BLK_MSG;
+        gp_current_task->state = BLK_MSG;
         k_tsk_yield();
     }
 
     buf = k_mem_alloc(len);
 
-    if (!dequeue_msg( &(curr_task->mailbox), ptr, len))
+    if (!dequeue_msg( &(gp_current_task->mailbox), ptr, len))
     {
         __enable_irq();
         return RTX_ERR;
@@ -152,9 +152,15 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			__enable_irq();
 			return RTX_ERR;
 		}
-    //*sender_tid = ; //??
-    //^---SENDER TID NEEDS TO BE SAVED SOMEWHERE IN THE MESSAGE, can't change message header, put it right after header??
+		
+		TCB *prev_current_task = gp_current_task;
+    gp_current_task = &kernal_task;
+		
+		INT_LL_NODE_T* sender = pop_tid(gp_current_task->msg_sender_head);
+		*sender_tid = sender->tid;
+		k_mem_dealloc(sender);
     //atomicity off / enable interrupts
+		gp_current_task = prev_current_task;
     __enable_irq();
 
     return 0;

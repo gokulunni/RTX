@@ -29,7 +29,7 @@ extern TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
-TCB kernal_task;
+extern TCB kernal_task;
 TCB *null_task = NULL;
 
 TCB *ready_queue_head = NULL;
