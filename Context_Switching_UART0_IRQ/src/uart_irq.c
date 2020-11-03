@@ -218,7 +218,7 @@ void c_UART0_IRQHandler(void)
         RTX_MSG_HDR *header = (void*)buf;
         header->length = msg_hdr_size + 1;
         header->type = KEY_IN;
-        buf[msg_hdr_size - 1] = g_char_in;
+        buf[msg_hdr_size] = g_char_in;
         
        //TO DO: Do we need to add sender_tid (TID_UART0_IRQ) with the message?
        send_msg(TID_KCD, buf);
