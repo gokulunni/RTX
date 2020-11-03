@@ -41,7 +41,7 @@ typedef struct tcb
     U8  prio;    /* Execution priority */
     U8  state;   /* task state */  
     U8  priv;    /* = 0 unprivileged, =1 priviliged */
-    U8  has_mailbox;
+    U8  has_mailbox; /* 0 = no mailbox. 1 = has mailbox */
 } TCB;
 
 #endif // ! K_RTX_H_
