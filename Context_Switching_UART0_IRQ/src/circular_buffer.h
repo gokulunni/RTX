@@ -12,7 +12,7 @@ typedef struct circular_buffer {
     void *tail;
 } CIRCULAR_BUFFER_T;
 
-CIRCULAR_BUFFER_T *circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, size_t size);
+int circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, size_t size);
 int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox);
 int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length);
 U32 peek_msg_len(CIRCULAR_BUFFER_T *mailbox);

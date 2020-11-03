@@ -499,7 +499,7 @@ int mem_cpy(void *destination, void *source, size_t size) {
 
     char* dest = destination;
     char* src = source;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < size; i++) {
         dest[i] = src[i];
     }
 
