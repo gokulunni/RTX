@@ -9,28 +9,6 @@
 #endif /* ! DEBUG_PRIO_Q */
 
 /**
- * Linked List (push into head
- */
-
-//void push_int(INT_LL_T *linked_list, INT_LL_NODE_T *new_tid) {
-//    new_tid->next = linked_list->head;
-//    linked_list->head = new_tid;
-//}
-//
-//int pop_int(INT_LL_T *linked_list) {
-//    if (linked_list->tail == NULL) {
-//        return -1;
-//    }
-//
-//    if (linked_list->head == linked_list->tail) {
-//        linked_list->head = NULL;
-//    }
-//
-//
-//}
-
-
-/**
  * Free TID Linked List
  */
 
@@ -44,7 +22,18 @@ INT_LL_NODE_T *pop_tid(INT_LL_NODE_T **free_tid_head) {
         return NULL;
     }
 
-    INT_LL_NODE_T *popped = *free_tid_head;
+    INT_LL_NODE_T *temp_prev = NULL;
+    INT_LL_NODE_T *temp = *free_tid_head;
+    while ((*temp)->next != NULL) {
+        temp_prev = temp;
+        temp = temp->next;
+    }
+
+    if (temp_prev != NULL) {
+        temp_prev->next = NULL;
+    }
+
+    INT_LL_NODE_T *popped = *temp;
     *free_tid_head = (*free_tid_head)->next;
     return popped;
 }
