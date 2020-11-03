@@ -166,15 +166,17 @@ int k_mbx_ls(task_t *buf, int count) {
 #endif /* DEBUG_0 */
 	
 	int actual_count = 0;
+	int buf_index = 0;
 	
-	for (int i = 0; i < count; i++)
+	for (int i = MAX_TASKS; i > 0; i--)
 	{
-		if (buf[i] == NULL)
-			break;
-		
-		if (g_tcbs[buf[i]].state != DORMANT && g_tcbs[buf[i]].has_mailbox)
+		if (g_tcbs[i].state != DORMANT && g_tcbs[i].has_mailbox) {
 			actual_count++;
+			buf[buf_index++] = g_tcbs[i].tid;
+		}
+		
+		if (actual_count == count)
+			break;
 	}
     return actual_count;
-    return 0;
 }
