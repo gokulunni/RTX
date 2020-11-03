@@ -14,7 +14,7 @@ void lcd_task(void)
 
     while(1)
     {
-			U8 temp_buffer[sizeof(RTX_MSG_HDR) + 32]; //TODO: 8 + 32 bytes big enough?
+			U8 temp_buffer[sizeof(RTX_MSG_HDR) + 32]; //TODO: is 32 bytes for msg big enough?
         //copy contents to internal kernel buffer so UART can transmit
         if(recv_msg(&sender_tid, &temp_buffer , 64) == 0)
         {
@@ -22,7 +22,6 @@ void lcd_task(void)
             if((U32)temp_buffer[4] == DISPLAY)
             {
                 //copy contents of buffer to internal kernel buffer for UART
-							//TO DO: Implement mem_copy
                 mem_cpy(UART_buffer, &temp_buffer, (U32)temp_buffer);
 
                 //Enable UART Transmit interrupt

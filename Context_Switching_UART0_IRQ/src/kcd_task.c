@@ -107,7 +107,6 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, message, 3);
 
-                //TO DO: define TID_LCD
                 send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
 
                 //2. Send list of tids to LCD task
@@ -124,7 +123,6 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, message, 3);
 
-                //TO DO: define TID_LCD
                 send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
 
                 //2. Send list of tids to LCD task
@@ -143,7 +141,6 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, current_command, string_length);
 
-                //TO DO: define TID_LCD
                 send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
                 
                 //2. Send to mailbox of registered task
@@ -161,7 +158,6 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, current_command, string_length);
                 
-                //TO DO: define TID_LCD
                 send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
               }
             }
