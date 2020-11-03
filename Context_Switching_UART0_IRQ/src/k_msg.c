@@ -13,6 +13,7 @@
 extern TCB *gp_current_task;
 extern TCB *ready_queue_head;
 extern TCB g_tcbs[MAX_TASKS];
+extern TCB kernal_task;
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
@@ -72,7 +73,10 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //Check all tid's in task through g_tcbs, ensure one exists
     //Recycle code from lab 2 
-    if (!g_tcbs[receiver_tid]){
+		int recieved_tid_int = (int) receiver_tid;
+    TCB *task = &g_tcbs[recieved_tid_int];
+		
+    if (!task){
         #ifdef DEBUG_0
             printf("k_send_msg: recieved ID in g_tcb is null\r\n");
         #endif /* DEBUG_0 */
@@ -80,8 +84,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         return RTX_ERR;
     }
     
-		int recieved_tid_int = (int) receiver_tid;
-    TCB *task = &g_tcbs[recieved_tid_int];
+		
 
     //DOUBLE CHECK WHAT STATE IT SHOULD BE IN (RECIVEING TASK)
     if(task->state == DORMANT){
@@ -119,10 +122,10 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     if(task->state ==BLK_MSG){
         task->state = READY;
         //Add state back to ready_queue
-        push(ready_queue_head,task->tid);
+        push(&ready_queue_head, task->tid);
     }
 
-    if (!enqueue_msg(task->mailbox,buf)){
+    if (!enqueue_msg(&task->mailbox,buf)){
         //Does enqueue_msg read the header from the buffer?
         //Assuming i can just do deep copy and have logic
         //Inside of enqueue calculate length
