@@ -103,7 +103,7 @@ int dequeue_msg(CIRCULAR_BUFFER_T *mailbox, void *buf, size_t buf_len) {
     return 1;
 }
 
-int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void* msg) {
+int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void *msg) {
     U32 length = *((U32 *) msg);
 
     if (length <= 0) {
