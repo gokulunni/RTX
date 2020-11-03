@@ -428,6 +428,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\k_task.c</FilePath>
             </File>
+            <File>
+              <FileName>circular_buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\circular_buffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>linked_list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\linked_list.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -497,7 +507,7 @@
       <TargetName>CS RAM</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::.\ARMCC</pCCUsed>
+      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -914,6 +924,16 @@
               <FileName>k_task.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\k_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>circular_buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\circular_buffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>linked_list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\linked_list.c</FilePath>
             </File>
           </Files>
         </Group>

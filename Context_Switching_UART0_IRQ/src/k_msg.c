@@ -9,8 +9,11 @@
 #include "k_task.h"
 #include "common.h"
 #include "k_mem.h"
+#include "linked_list.h"
 extern TCB *gp_current_task;
 extern TCB *ready_queue_head;
+extern TCB g_tcbs[MAX_TASKS];
+extern TCB kernal_task;
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
@@ -44,9 +47,9 @@ int k_mbx_create(size_t size) {
     //ENSURE THAT MAILBOX IS SET TO NULL DURING TASK CREATE
     //Can you even set this to null? since it's not a pointer
     //OTHERWISE THERE MIGHT BE GARBAGE DATA
-
+    
     //Call circular buffer init and pass in buffer and size
-    circular_buffer_init(gp_current_task->mailbox, mailbox_buffer, size);
+    circular_buffer_init(&gp_current_task->mailbox, mailbox_buffer, size);
 
     return RTX_OK;
 }
@@ -58,7 +61,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //Trap kernel
     //No interrupts
-    __disable_irq()
+    __disable_irq();
 
     if (!buf){
         #ifdef DEBUG_0
@@ -70,7 +73,10 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //Check all tid's in task through g_tcbs, ensure one exists
     //Recycle code from lab 2 
-    if (!g_tcbs[receiver_tid]){
+		int recieved_tid_int = (int) receiver_tid;
+    TCB *task = &g_tcbs[recieved_tid_int];
+		
+    if (!task){
         #ifdef DEBUG_0
             printf("k_send_msg: recieved ID in g_tcb is null\r\n");
         #endif /* DEBUG_0 */
@@ -78,8 +84,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         return RTX_ERR;
     }
     
-
-    TCB *task = &g_tcbs[recieved_tid];
+		
 
     //DOUBLE CHECK WHAT STATE IT SHOULD BE IN (RECIVEING TASK)
     if(task->state == DORMANT){
@@ -103,33 +108,40 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Try this U32 length = *((U32 *) msg); struct rtx_msg_hdr *ptr = (void *)buf;
     //Check example of casting 
 
-    if (header->length < MIN_MSG_SIZE){
+    if (length < MIN_MSG_SIZE){
         __enable_irq();
         return RTX_ERR;
     }
 
-    if(is_circ_buf_full(task->mailbox,header->length)){
+    if(is_circ_buf_full(&task->mailbox,length)){
         __enable_irq();
         return RTX_ERR;
     }
 
     //check that this doesn't conflict with pre emption
     if(task->state ==BLK_MSG){
-        task->state== READY;
+        task->state = READY;
         //Add state back to ready_queue
-        push(ready_queue_head,task->tid);
+        push(&ready_queue_head, task->tid);
     }
 
-    if (!enqueue_msg(task->mailbox,buf)){
+    if (!enqueue_msg(&task->mailbox,buf)){
         //Does enqueue_msg read the header from the buffer?
         //Assuming i can just do deep copy and have logic
         //Inside of enqueue calculate length
         __enable_irq();
         return RTX_ERR;
     }
+    TCB *sendingTask= gp_current_task;
+    gp_current_task =&kernal_task;
 
-    //Pass TID onto the lined list of the task
-    push_tid(task->msg_sender_head, gp_current_task->tid);
+    INT_LL_NODE_T* tid_node = k_mem_alloc(sizeof(INT_LL_NODE_T));
+
+    tid_node->tid =sendingTask->tid;
+    //Pass TID onto the linked list of the task
+    push_tid(task->msg_sender_head, tid_node);
+    
+    gp_current_task =&sendingTask;
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)

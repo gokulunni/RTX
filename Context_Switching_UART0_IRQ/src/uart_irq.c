@@ -164,6 +164,14 @@ int uart_irq_init(int n_uart) {
  */
 __asm void UART0_IRQHandler(void)
 {
+    ;This part is probably unecessary (only needed in SVC_Handler), but no harm
+    MRS  R0, PSP                  ; Read PSP into R0
+	CMP  R0, #0 				  ; Check if this is the first invocation
+	BNE  normal_operation 
+	MRS  R0, MSP                  ;since PSP = 0x0, load MSP address
+  										
+normal_operation
+    MSR MSP, R0          ; Set MSP = PSP (Both kernel and user tasks use PSP)
     PRESERVE8
     IMPORT c_UART0_IRQHandler
     IMPORT k_tsk_yield
@@ -176,9 +184,31 @@ __asm void UART0_IRQHandler(void)
     CMP R4, R5
     BEQ  RESTORE    ; if g_switch_flag == 0, then restore the task that was interrupted
     BL k_tsk_yield  ; otherwise (i.e g_switch_flag == 1, then switch to the other task)
+
 RESTORE
-    CPSIE I
+    ;CPSIE I -> dont think we should be enabling interrupts before restoring?
     POP{r4-r11, pc}
+    MVN  LR, #:NOT:0xFFFFFFFD           ; set EXC_RETURN value to Thread mode, PSP
+    LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
+	LDR R3, [R3]                        ; Get address of current task
+	MOV R2, #0                          ; clear R2
+	LDRB R2, [R3, #25]                  ; read priv member (136 bits = 17 byte offset)
+    CMP R2, #1                          ; check if priv level is 1 or 0
+    BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
+    B user_thread                       ; if 0, handler was invoked by user thread
+
+kernel_thread
+	MOV R3, #0                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
+
+user_thread
+	MOV R3, #1                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 1 (unprivileged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
+
 } 
 /**
  * @brief: c UART0 IRQ Handler
@@ -212,7 +242,7 @@ void c_UART0_IRQHandler(void)
             g_switch_flag = 0;
         }
 				
-				// Send char to the mailbox of KCD Task
+		// Send char to the mailbox of KCD Task
         size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
         U8 buf[msg_hdr_size + 1];
         RTX_MSG_HDR *header = (void*)buf;
@@ -220,8 +250,7 @@ void c_UART0_IRQHandler(void)
         header->type = KEY_IN;
         buf[msg_hdr_size] = g_char_in;
         
-       //TO DO: Do we need to add sender_tid (TID_UART0_IRQ) with the message?
-       send_msg(TID_KCD, buf);
+        send_msg(TID_KCD, buf);
 				
     } else if (IIR_IntId & IIR_THRE) {
     /* THRE Interrupt, transmit holding register becomes empty */
