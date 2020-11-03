@@ -47,7 +47,7 @@ int k_mbx_create(size_t size) {
     //ENSURE THAT MAILBOX IS SET TO NULL DURING TASK CREATE
     //Can you even set this to null? since it's not a pointer
     //OTHERWISE THERE MIGHT BE GARBAGE DATA
-
+    
     //Call circular buffer init and pass in buffer and size
     circular_buffer_init(&gp_current_task->mailbox, mailbox_buffer, size);
 
@@ -132,9 +132,16 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         __enable_irq();
         return RTX_ERR;
     }
+    TCB *sendingTask= gp_current_task;
+    gp_current_task =&kernal_task;
 
-    //Pass TID onto the lined list of the task
-    push_tid(task->msg_sender_head, gp_current_task->tid);
+    INT_LL_NODE_T* tid_node = k_mem_alloc(sizeof(INT_LL_NODE_T));
+
+    tid_node->tid =sendingTask->tid;
+    //Pass TID onto the linked list of the task
+    push_tid(task->msg_sender_head, tid_node);
+    
+    gp_current_task =&sendingTask;
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)
