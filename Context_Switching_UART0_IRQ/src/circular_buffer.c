@@ -10,16 +10,16 @@
 
 
 int circular_buffer_init(CIRCULAR_BUFFER_T *mailbox, void *ptr, size_t size) {
-    if (size < 1) {
-        return RTX_ERR;
-    }
+		if (size < 1) {
+			return RTX_ERR;
+		}
 	
     mailbox->buffer_start = ptr;
     mailbox->buffer_end = (char *) ptr + size;
     mailbox->head = ptr;
     mailbox->tail = ptr;
 	
-    return RTX_OK;
+		return RTX_OK;
 }
 
 int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
@@ -27,12 +27,12 @@ int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
 }
 
 int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
-    if (mailbox->tail < mailbox->head && mailbox->tail + length < mailbox->head) {
+    if (mailbox->tail < mailbox->head && (char *) mailbox->tail + length < mailbox->head) {
         return RTX_ERR;
     } else if (mailbox->tail > mailbox->head) {
-        if (mailbox->tail + length <= mailbox->buffer_end) {
+        if ((char *) mailbox->tail + length <= mailbox->buffer_end) {
             return RTX_ERR;
-        } else if (mailbox->buffer_start + length - (mailbox->buffer_end - mailbox->tail) < mailbox->head) {
+        } else if ((char *) mailbox->buffer_start + length - ((char *) mailbox->buffer_end - (char *) mailbox->tail) < mailbox->head) {
             return RTX_ERR;
         }
     }
@@ -47,7 +47,7 @@ U32 peek_msg_len(CIRCULAR_BUFFER_T *mailbox) {
 
     for (int i = 4; i > 0; i--) {
         res = (*iterator) << (i-1);
-        iterator = iterator + 1;
+        iterator = (char *) iterator + 1;
 
         if (iterator > mailbox->buffer_end) {
             iterator = mailbox->buffer_start;
@@ -58,20 +58,19 @@ U32 peek_msg_len(CIRCULAR_BUFFER_T *mailbox) {
 }
 
 U32 peek_msg_type(CIRCULAR_BUFFER_T *mailbox) {
-    U32 type = 0;
     U32 res = 0;
     void *iterator = mailbox->head;
     // Iterate thru first 4 bits, then do the same like in peek_msg_len
 
-    if (iterator + 4 <= mailbox->buffer_end) {
-        iterator = iterator + 4;
+    if ((void *)((char *) iterator + 4) <= mailbox->buffer_end) {
+        iterator = (char *) iterator + 4;
     } else {
-        iterator = mailbox->buffer_start + 4 - (mailbox->buffer_end - iterator);
+        iterator = (char *) mailbox->buffer_start + 4 - ((char *) mailbox->buffer_end - (char *) iterator);
     }
 
     for (int i = 4; i > 0; i--) {
         res = (*iterator) << (i-1);
-        iterator = iterator + 1;
+        iterator =(char *) iterator + 1;
 
         if (iterator > mailbox->buffer_end) {
             iterator = mailbox->buffer_start;
