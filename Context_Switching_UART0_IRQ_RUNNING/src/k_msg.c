@@ -156,7 +156,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     tid_node->tid =sendingTask->tid;
     //Pass TID onto the linked list of the task
-    push_tid(task->msg_sender_head, tid_node);
+    push_tid((INT_LL_NODE_T **)(&(task->msg_sender_head)), tid_node);
     
     gp_current_task = sendingTask;
     //Turn back on interrupts

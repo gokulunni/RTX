@@ -11,5 +11,8 @@
 .\objects\sim\uart_irq.o: src\uart_def.h
 .\objects\sim\uart_irq.o: src\common.h
 .\objects\sim\uart_irq.o: src\uart_polling.h
+.\objects\sim\uart_irq.o: src\rtx.h
+.\objects\sim\uart_irq.o: src\k_rtx.h
+.\objects\sim\uart_irq.o: src\circular_buffer.h
 .\objects\sim\uart_irq.o: src\printf.h
 .\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
