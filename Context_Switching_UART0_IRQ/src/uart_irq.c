@@ -21,7 +21,7 @@ uint8_t g_send_char = 0;
 uint8_t g_char_in;
 uint8_t g_char_out;
 
-extern uint32_t g_switch_flag;
+uint32_t g_switch_flag;
 extern TCB *gp_current_task;
 
 extern int k_tsk_yield(void);

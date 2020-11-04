@@ -35,8 +35,6 @@ TCB *k_null_tsk = NULL;
 TCB *ready_queue_head = NULL;
 INT_LL_NODE_T *free_tid_head = NULL;
 
-uint32_t g_switch_flag;
-
 void *alloc_user_stack(size_t size);
 int dealloc_user_stack(U32 *ptr, size_t size);
 
