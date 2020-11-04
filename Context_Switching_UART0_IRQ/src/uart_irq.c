@@ -9,6 +9,7 @@
 #include "uart_irq.h"
 #include "uart_polling.h"
 #include "rtx.h"
+#include "k_rtx.h"
 #ifdef DEBUG_0
 #include "printf.h"
 #endif
@@ -21,6 +22,7 @@ uint8_t g_char_in;
 uint8_t g_char_out;
 
 extern uint32_t g_switch_flag;
+extern TCB *gp_current_task;
 
 extern int k_tsk_yield(void);
 /**

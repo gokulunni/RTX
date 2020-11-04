@@ -68,6 +68,10 @@ void kcd_task(void)
   char current_command[64];
   int command_index = 0;
   size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
+  U8 up_arrow[] = {0x1B, 0x41, '\n'};
+  U8 down_arrow[] = {0x1B, 0x42, '\n'};
+  U8 right_arrow[] = {0x1B, 0x43, '\n'};
+  U8 left_arrow[] = {0x1B, 0x44, '\n'};
   
   while(1)
   {

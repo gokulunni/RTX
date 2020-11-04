@@ -122,10 +122,10 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     if(task->state ==BLK_MSG){
         task->state = READY;
         //Add state back to ready_queue
-        push(&ready_queue_head, task->tid);
+        push(&ready_queue_head, task);
     }
 
-    if (!enqueue_msg(&task->mailbox,buf)){
+    if (!enqueue_msg( &(task->mailbox), (void*)buf)){
         //Does enqueue_msg read the header from the buffer?
         //Assuming i can just do deep copy and have logic
         //Inside of enqueue calculate length
@@ -141,7 +141,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Pass TID onto the linked list of the task
     push_tid(task->msg_sender_head, tid_node);
     
-    gp_current_task =&sendingTask;
+    gp_current_task = sendingTask;
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)
