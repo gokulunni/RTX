@@ -211,7 +211,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         p_taskinfo++;
     }
 
-    for (int q = MAX_TASKS - 1; q > i; q--) {
+    for (int q = i + 1; q < MAX_TASKS; q++) {
         INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0

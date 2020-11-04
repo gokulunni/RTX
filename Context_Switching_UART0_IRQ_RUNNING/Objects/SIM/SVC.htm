@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\SIM\SVC.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\SIM\SVC.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Nov 04 01:03:01 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Nov 04 01:25:54 2020
 <BR><P>
 <H3>Maximum Stack Usage =        272 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -568,7 +568,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_recv_msg
 </UL>
 
-<P><STRONG><a name="[3e]"></a>k_mbx_create</STRONG> (Thumb, 90 bytes, Stack size 16 bytes, k_msg.o(.text))
+<P><STRONG><a name="[3e]"></a>k_mbx_create</STRONG> (Thumb, 104 bytes, Stack size 16 bytes, k_msg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = k_mbx_create &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;circular_buffer_init
@@ -577,7 +577,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> usr_tasks.o(.text)
 </UL>
-<P><STRONG><a name="[3f]"></a>k_send_msg</STRONG> (Thumb, 254 bytes, Stack size 32 bytes, k_msg.o(.text))
+<P><STRONG><a name="[3f]"></a>k_send_msg</STRONG> (Thumb, 276 bytes, Stack size 32 bytes, k_msg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = k_send_msg &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;tid_is_available

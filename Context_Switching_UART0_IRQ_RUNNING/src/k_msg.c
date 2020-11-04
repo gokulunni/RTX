@@ -22,6 +22,7 @@ extern INT_LL_NODE_T *free_tid_head;
 int k_mbx_create(size_t size) {
 #ifdef DEBUG_0
     printf("k_mbx_create: size = %d\r\n", size);
+		printf("creating mailbox for tid: %d\r\n",gp_current_task->tid );
 #endif /* DEBUG_0 */
 
     if (size<=0||size<MIN_MBX_SIZE){
@@ -59,6 +60,8 @@ int k_mbx_create(size_t size) {
 int k_send_msg(task_t receiver_tid, const void *buf) {
 #ifdef DEBUG_0
     printf("k_send_msg: receiver_tid = %d, buf=0x%x\r\n", receiver_tid, buf);
+    printf("sending from tid: %d\r\n",gp_current_task->tid );
+    printf("sending to mailbox from for tid: %d\r\n",receiver_tid );
 #endif /* DEBUG_0 */
 
     //Trap kernel
