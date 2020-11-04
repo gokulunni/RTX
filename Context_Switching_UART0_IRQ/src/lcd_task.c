@@ -5,7 +5,7 @@
 #include "k_mem.h"
 #include <LPC17xx.h>
 
-extern U8 UART_buffer[128];
+U8 UART_buffer[128];
 
 void lcd_task(void)
 {
