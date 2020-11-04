@@ -46,7 +46,7 @@ U32 peek_msg_len(CIRCULAR_BUFFER_T *mailbox) {
     void *iterator = mailbox->head;
 
     for (int i = 4; i > 0; i--) {
-        res = (*iterator) << (i-1);
+        res = (U32) *((char *) iterator) << (i-1);
         iterator = (char *) iterator + 1;
 
         if (iterator > mailbox->buffer_end) {
@@ -69,8 +69,8 @@ U32 peek_msg_type(CIRCULAR_BUFFER_T *mailbox) {
     }
 
     for (int i = 4; i > 0; i--) {
-        res = (*iterator) << (i-1);
-        iterator =(char *) iterator + 1;
+        res = (U32) *((char *) iterator) << (i-1);
+        iterator = (char *) iterator + 1;
 
         if (iterator > mailbox->buffer_end) {
             iterator = mailbox->buffer_start;
@@ -116,7 +116,7 @@ int enqueue_msg(CIRCULAR_BUFFER_T *mailbox, void *msg) {
     }
 
     for (int i = 0; i < length; i++) {
-        *(mailbox->tail) = (char *) msg + i;
+        *((char *) mailbox->tail) = *((char *) msg + i);
 
         mailbox->tail = (char *) mailbox->tail + 1;
 

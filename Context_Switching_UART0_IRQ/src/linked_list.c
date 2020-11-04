@@ -24,17 +24,19 @@ INT_LL_NODE_T *pop_tid(INT_LL_NODE_T **free_tid_head) {
 
     INT_LL_NODE_T *temp_prev = NULL;
     INT_LL_NODE_T *temp = *free_tid_head;
-    while ((*temp)->next != NULL) {
+    while (temp->next != NULL) {
         temp_prev = temp;
         temp = temp->next;
     }
 
     if (temp_prev != NULL) {
         temp_prev->next = NULL;
-    }
+    } else {
+		    *free_tid_head = NULL;
+		}
 
-    INT_LL_NODE_T *popped = *temp;
-    *free_tid_head = (*free_tid_head)->next;
+    INT_LL_NODE_T *popped = temp;
+		
     return popped;
 }
 
