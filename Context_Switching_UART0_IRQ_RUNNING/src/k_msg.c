@@ -52,6 +52,8 @@ int k_mbx_create(size_t size) {
     
     //Call circular buffer init and pass in buffer and size
     circular_buffer_init(&gp_current_task->mailbox, mailbox_buffer, size);
+	
+		
 		gp_current_task->has_mailbox=TRUE;
 
     return RTX_OK;
@@ -127,10 +129,11 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         return RTX_ERR;
     }
 
-    if(is_circ_buf_full(&task->mailbox,length)){
-        __enable_irq();
-        return RTX_ERR;
-    }
+		//Commenting out for testing purposes
+    //if(is_circ_buf_full(&task->mailbox,length)){
+    //    __enable_irq();
+    //    return RTX_ERR;
+    //}
 
     //check that this doesn't conflict with pre emption
     if(task->state ==BLK_MSG){
@@ -159,7 +162,8 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Turn back on interrupts
     __enable_irq();
     //Switch properly at the end (call yeild?)
-    k_tsk_yield();
+    //Commenting out for testing purposes.
+		//k_tsk_yield();
   
     return RTX_OK;
 }
@@ -191,7 +195,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     buf = k_mem_alloc(len);
 
-    if (!dequeue_msg( &(gp_current_task->mailbox), ptr, len))
+    if (dequeue_msg( &(gp_current_task->mailbox), ptr, len)==RTX_ERR)
     {
         __enable_irq();
         return RTX_ERR;

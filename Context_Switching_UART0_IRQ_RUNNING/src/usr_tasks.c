@@ -78,7 +78,7 @@ void task2(void)
     ptr->type = KCD_REG;
     buf += msg_hdr_size;
     *buf = 'W';
-    send_msg(TID_KCD, (void *)ptr);
+    send_msg(3, (void *)ptr);
     recv_msg(&sender_tid, g_buf2, 128);
     
     /* do command processing */
