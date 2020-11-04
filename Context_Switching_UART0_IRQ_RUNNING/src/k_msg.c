@@ -14,6 +14,7 @@ extern TCB *gp_current_task;
 extern TCB *ready_queue_head;
 extern TCB g_tcbs[MAX_TASKS];
 extern TCB kernal_task;
+extern INT_LL_NODE_T *free_tid_head;
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* ! DEBUG_0 */
@@ -50,6 +51,7 @@ int k_mbx_create(size_t size) {
     
     //Call circular buffer init and pass in buffer and size
     circular_buffer_init(&gp_current_task->mailbox, mailbox_buffer, size);
+		gp_current_task->has_mailbox=TRUE;
 
     return RTX_OK;
 }
@@ -74,7 +76,16 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Check all tid's in task through g_tcbs, ensure one exists
     //Recycle code from lab 2 
 		int recieved_tid_int = (int) receiver_tid;
-    TCB *task = &g_tcbs[recieved_tid_int];
+    
+		
+		//Check if task is avaliable use is avalible
+		if (tid_is_available(free_tid_head, receiver_tid) == 1) {
+        #ifdef DEBUG_0
+        printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
+        #endif /* DEBUG_0 */
+        return RTX_ERR;
+    }
+		TCB *task = &g_tcbs[recieved_tid_int];
 		
     if (!task){
         #ifdef DEBUG_0
