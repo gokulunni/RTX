@@ -22,14 +22,14 @@
 #endif /* DEBUG_0 */
 
 /* ----- Global Variables ----- */
-extern TCB *gp_current_task;    /* always point to the current RUN process */
+TCB *gp_current_task;    /* always point to the current RUN process */
 
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
-extern TCB g_tcbs[MAX_TASKS];
+TCB g_tcbs[MAX_TASKS];
 U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
-extern TCB kernal_task;
+TCB kernal_task;
 TCB *k_null_tsk = NULL;
 
 TCB *ready_queue_head = NULL;
