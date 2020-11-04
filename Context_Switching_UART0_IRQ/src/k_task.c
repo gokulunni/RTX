@@ -151,7 +151,13 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         p_tcb->tid = i+1;
         p_tcb->state = NEW;
-        p_tcb->mailbox=NULL;
+        p_tcb->has_mailbox=NULL;
+				//Initialize mailbox to NULL values
+				p_tcb->mailbox.buffer_start = NULL;
+				p_tcb->mailbox.buffer_end = NULL;
+				p_tcb->mailbox.head = NULL;
+				p_tcb->mailbox.tail = NULL;
+			
         //CHECK CREATE FUNCTION
 
         p_tcb->prio = p_taskinfo->prio;
@@ -437,8 +443,12 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->next = NULL;
     new_task->prio = prio;
     new_task->priv = 0;
-    new_task->mailbox=NULL;
-    //ADD SETTING MAILBOX TO NULL
+    new_task->has_mailbox=NULL;
+    //Initialize mailbox to NULL values
+		new_task->mailbox.buffer_start = NULL;
+		new_task->mailbox.buffer_end = NULL;
+		new_task->mailbox.head = NULL;
+		new_task->mailbox.tail = NULL;
 
     new_task->psp_size = stack_size;
     new_task->psp_hi = alloc_user_stack(stack_size);
