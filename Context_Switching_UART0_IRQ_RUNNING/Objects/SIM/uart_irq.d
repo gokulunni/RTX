@@ -1,0 +1,15 @@
+.\objects\sim\uart_irq.o: src\uart_irq.c
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.6.0\Device\Include\LPC17xx.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.7.0\CMSIS\Core\Include\core_cm3.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.7.0\CMSIS\Core\Include\cmsis_version.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.7.0\CMSIS\Core\Include\cmsis_compiler.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.7.0\CMSIS\Core\Include\cmsis_armcc.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.7.0\CMSIS\Core\Include\mpu_armv7.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.6.0\Device\Include\system_LPC17xx.h
+.\objects\sim\uart_irq.o: src\uart_irq.h
+.\objects\sim\uart_irq.o: src\uart_def.h
+.\objects\sim\uart_irq.o: src\common.h
+.\objects\sim\uart_irq.o: src\uart_polling.h
+.\objects\sim\uart_irq.o: src\printf.h
+.\objects\sim\uart_irq.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
