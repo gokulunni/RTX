@@ -29,7 +29,7 @@ int k_mbx_create(size_t size) {
     }
 
     //Assume it is not the NULL task running
-    if (!gp_current_task->has_mailbox ){ //MailBox already Exists
+    if (gp_current_task->has_mailbox ){ //MailBox already Exists
         return RTX_ERR;    
     }
 
