@@ -17,6 +17,7 @@
 #include "rtx.h"
 #include "priv_tasks.h"
 #include "uart_polling.h"
+#include "usr_tasks.h"
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* DEBUG_0 */
@@ -37,7 +38,7 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
         return RTX_ERR;
     }
     
-    tasks[0].ptask = &lcd_task;
+    tasks[0].ptask = task2;
     tasks[0].u_stack_size = 0x0;
     tasks[0].prio = HIGH;
     tasks[0].priv = 1;

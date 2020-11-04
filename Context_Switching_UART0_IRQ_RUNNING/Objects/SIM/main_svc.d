@@ -12,5 +12,6 @@
 .\objects\sim\main_svc.o: src\priv_tasks.h
 .\objects\sim\main_svc.o: src\uart_polling.h
 .\objects\sim\main_svc.o: src\uart_def.h
+.\objects\sim\main_svc.o: src\usr_tasks.h
 .\objects\sim\main_svc.o: src\printf.h
 .\objects\sim\main_svc.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h

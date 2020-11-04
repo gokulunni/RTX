@@ -1,0 +1,10 @@
+.\objects\sim\priv_tasks.o: src\priv_tasks.c
+.\objects\sim\priv_tasks.o: src\uart_polling.h
+.\objects\sim\priv_tasks.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\sim\priv_tasks.o: src\uart_def.h
+.\objects\sim\priv_tasks.o: src\priv_tasks.h
+.\objects\sim\priv_tasks.o: src\rtx.h
+.\objects\sim\priv_tasks.o: src\common.h
+.\objects\sim\priv_tasks.o: src\usr_tasks.h
+.\objects\sim\priv_tasks.o: src\printf.h
+.\objects\sim\priv_tasks.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h

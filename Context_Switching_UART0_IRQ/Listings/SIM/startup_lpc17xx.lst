@@ -432,11 +432,12 @@ ARM Macro Assembler    Page 7
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=.\objects\sim\startup_lpc17xx.d -o.\objects\sim\startup_lpc17xx.o 
--I.\RTE\Device\LPC1768 -I.\RTE\_CS_SIM -IC:\opt\Keil5\Arm\Pack\ARM\CMSIS\5.7.0\
-CMSIS\Core\Include -IC:\opt\Keil5\Arm\Pack\Keil\LPC1700_DFP\2.6.0\Device\Includ
-e --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 530" --predef
-ine="_RTE_ SETA 1" --predefine="LPC175x_6x SETA 1" --predefine="_RTE_ SETA 1" -
--list=.\listings\sim\startup_lpc17xx.lst RTE\Device\LPC1768\startup_LPC17xx.s
+-I.\RTE\Device\LPC1768 -I.\RTE\_CS_SIM -IC:\Software\Keil_v5\ARM\PACK\ARM\CMSIS
+\5.7.0\CMSIS\Core\Include -IC:\Software\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.6.0
+\Device\Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA
+ 531" --predefine="_RTE_ SETA 1" --predefine="LPC175x_6x SETA 1" --predefine="_
+RTE_ SETA 1" --list=.\listings\sim\startup_lpc17xx.lst RTE\Device\LPC1768\start
+up_LPC17xx.s
 
 
 

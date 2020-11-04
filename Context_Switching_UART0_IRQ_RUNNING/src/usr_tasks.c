@@ -82,7 +82,10 @@ void task2(void)
     recv_msg(&sender_tid, g_buf2, 128);
     
     /* do command processing */
-    
+    buf = (void*) ((char*)g_buf2+8);
+		uart1_put_string ("it's bavu");
+	
+		uart1_put_string(buf);
     /* Terminate if you are not a daemon task.
        For a deamon task, it should be in an infinite loop and never terminate.
     */

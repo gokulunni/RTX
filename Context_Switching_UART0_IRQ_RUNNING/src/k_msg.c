@@ -125,7 +125,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         push(&ready_queue_head, task);
     }
 
-    if (!enqueue_msg( &(task->mailbox), (void*)buf)){
+    if (enqueue_msg( &(task->mailbox), (void*)buf)==RTX_ERR){
         //Does enqueue_msg read the header from the buffer?
         //Assuming i can just do deep copy and have logic
         //Inside of enqueue calculate length
