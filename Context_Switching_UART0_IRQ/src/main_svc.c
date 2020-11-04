@@ -33,24 +33,24 @@ extern void null_task(void);
 
 int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
-    if (num_tasks !=3) {
+    if (num_tasks !=1) {
         return RTX_ERR;
     }
+//
+//    tasks[0].ptask = &lcd_task;
+//    tasks[0].u_stack_size = 0x0;
+//    tasks[0].prio = HIGH;
+//    tasks[0].priv = 1;
+//
+//    tasks[1].ptask = &kcd_task;
+//    tasks[1].u_stack_size = 0x100;
+//    tasks[1].prio = HIGH;
+//    tasks[1].priv = 0;
     
-    tasks[0].ptask = &lcd_task;
-    tasks[0].u_stack_size = 0x0;
-    tasks[0].prio = HIGH;
-    tasks[0].priv = 1;
-    
-    tasks[1].ptask = &kcd_task;
-    tasks[1].u_stack_size = 0x100;
-    tasks[1].prio = HIGH;
-    tasks[1].priv = 0;
-    
-    tasks[2].ptask = &null_task;
-    tasks[2].u_stack_size = 0x100;
-    tasks[2].prio = PRIO_NULL;
-    tasks[2].priv = 0;
+    tasks[0].ptask = &null_task;
+    tasks[0].u_stack_size = 0x100;
+    tasks[0].prio = PRIO_NULL;
+    tasks[0].priv = 0;
 
     return RTX_OK;
 }
@@ -75,7 +75,7 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     set_task_info(task_info, 2);
-    set_fixed_tasks(task_info + 2, 3);  /* kcd, lcd, null tasks */
+    set_fixed_tasks(task_info, 1);  /* kcd, lcd, null tasks */
     /* start the RTX and built-in tasks */
     rtx_init(32, FIRST_FIT, task_info, 5); 
     /* We should never reach here!!! */

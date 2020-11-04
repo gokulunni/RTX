@@ -28,16 +28,16 @@ int is_circ_buf_empty(CIRCULAR_BUFFER_T *mailbox) {
 
 int is_circ_buf_full(CIRCULAR_BUFFER_T *mailbox, U32 length) {
     if (mailbox->tail < mailbox->head && (char *) mailbox->tail + length < mailbox->head) {
-        return RTX_ERR;
+        return 0;
     } else if (mailbox->tail > mailbox->head) {
         if ((char *) mailbox->tail + length <= mailbox->buffer_end) {
-            return RTX_ERR;
+            return 0;
         } else if ((char *) mailbox->buffer_start + length - ((char *) mailbox->buffer_end - (char *) mailbox->tail) < mailbox->head) {
-            return RTX_ERR;
+            return 0;
         }
     }
 
-    return RTX_OK;
+    return 1;
 }
 
 
