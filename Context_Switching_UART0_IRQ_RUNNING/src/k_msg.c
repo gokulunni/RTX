@@ -177,9 +177,6 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 }
 
 int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
-    #ifdef DEBUG_0
-        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-    #endif /* DEBUG_0 */
     if ( !(len > 0)) {
         return RTX_ERR;
     }
@@ -191,8 +188,11 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     if (!gp_current_task->has_mailbox)
     {
-        __enable_irq();
-        return RTX_ERR;
+			#ifdef DEBUG_0
+        printf("k_recv_msg: current task does NOT have a mailbox");
+			#endif /* DEBUG_0 */
+			__enable_irq();
+			return RTX_ERR;
     }
     
     while(is_circ_buf_empty( &(gp_current_task->mailbox)))
@@ -202,15 +202,27 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     }
 
     buf = k_mem_alloc(len);
+		if (buf == NULL)
+		{
+			#ifdef DEBUG_0
+        printf("k_recv_msg: could not allocate memory for buf");
+			#endif /* DEBUG_0 */
+		}
 
-    if (dequeue_msg( &(gp_current_task->mailbox), ptr, len)==RTX_ERR)
+    if (dequeue_msg( &(gp_current_task->mailbox), ptr, len) == RTX_ERR)
     {
-        __enable_irq();
-        return RTX_ERR;
+			#ifdef DEBUG_0
+        printf("k_recv_msg: error dequeueing message from mailbox");
+			#endif /* DEBUG_0 */
+			__enable_irq();
+			return RTX_ERR;
     }
 
     if (!mem_cpy(buf, ptr, len))
 		{
+			#ifdef DEBUG_0
+        printf("k_recv_msg: could not copy memory from *ptr to *buf");
+			#endif /* DEBUG_0 */
 			__enable_irq();
 			return RTX_ERR;
 		}
@@ -218,12 +230,17 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
 		
-		INT_LL_NODE_T* sender = pop_tid(gp_current_task->msg_sender_head);
+		INT_LL_NODE_T* sender = k_mem_alloc(sizeof(INT_LL_NODE_T));
+		sender = pop_tid((INT_LL_NODE_T**)&(gp_current_task->msg_sender_head));
 		*sender_tid = sender->tid;
 		k_mem_dealloc(sender);
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
     __enable_irq();
+		
+		#ifdef DEBUG_0
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+    #endif /* DEBUG_0 */
 
     return 0;
 }
