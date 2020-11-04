@@ -30,7 +30,7 @@ U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
 TCB kernal_task;
-TCB *null_task = NULL;
+TCB *k_null_tsk = NULL;
 
 TCB *ready_queue_head = NULL;
 FREE_TID_T *free_tid_head = NULL;
@@ -126,7 +126,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         return RTX_ERR;
     }
 
-    if (null_task != NULL) {
+    if (k_null_tsk != NULL) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_init: init has been run before\n\r");
         #endif /* DEBUG_0 */
@@ -218,36 +218,36 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     print_prio_queue(ready_queue_head);
 
 
-    if (null_task == NULL) {
-        null_task = &g_tcbs[0];
-        null_task->tid = PID_NULL;
-        null_task->state = NEW;
+    if (k_null_tsk == NULL) {
+        k_null_tsk = &g_tcbs[0];
+        k_null_tsk->tid = PID_NULL;
+        k_null_tsk->state = NEW;
 
-        null_task->psp_hi = alloc_user_stack(0x44);
-        if (null_task->psp_hi == NULL) {
+        k_null_tsk->psp_hi = alloc_user_stack(0x44);
+        if (k_null_tsk->psp_hi == NULL) {
             #ifdef DEBUG_0
             printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
             #endif /* DEBUG_0 */
             return RTX_ERR;
         }
-        null_task->psp_size = 0x44;
+        k_null_tsk->psp_size = 0x44;
 
-        sp = null_task->psp_hi; /* stacks grows down, so get the high addr. */
+        sp = k_null_tsk->psp_hi; /* stacks grows down, so get the high addr. */
         *(--sp) = INITIAL_xPSR;
         *(--sp) = (U32)(&null_task_func);
         for (int g = 0; g < 6; g++) { /*R0-R3, R12, LR */
             *(--sp) = 0x0;
         }
-        null_task->psp = sp;
+        k_null_tsk->psp = sp;
 
-        null_task->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
-        null_task->msp = null_task->msp_hi;
+        k_null_tsk->msp_hi = g_k_stacks[0] + (KERN_STACK_SIZE >> 2);
+        k_null_tsk->msp = k_null_tsk->msp_hi;
 
-        null_task->prio = PRIO_NULL;
-        null_task->priv = 0;
+        k_null_tsk->prio = PRIO_NULL;
+        k_null_tsk->priv = 0;
     }
 
-    gp_current_task = null_task;
+    gp_current_task = k_null_tsk;
 
     return RTX_OK;
 }
