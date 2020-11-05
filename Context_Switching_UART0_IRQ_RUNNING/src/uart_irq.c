@@ -189,12 +189,12 @@ normal_operation
 
 RESTORE
     ;CPSIE I -> dont think we should be enabling interrupts before restoring?
-    POP{r4-r11, pc}
+    POP{r4-r11, lr}
     MVN  LR, #:NOT:0xFFFFFFFD           ; set EXC_RETURN value to Thread mode, PSP
     LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
 	LDR R3, [R3]                        ; Get address of current task
 	MOV R2, #0                          ; clear R2
-	LDRB R2, [R3, #25]                  ; read priv member (136 bits = 17 byte offset)
+	LDRB R2, [R3, #43]                  ; read priv member (344 bits = 43 byte offset)
     CMP R2, #1                          ; check if priv level is 1 or 0
     BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
     B user_thread                       ; if 0, handler was invoked by user thread
@@ -251,8 +251,9 @@ void c_UART0_IRQHandler(void)
         header->length = msg_hdr_size + 1;
         header->type = KEY_IN;
         buf[msg_hdr_size] = g_char_in;
-        
-        send_msg(TID_KCD, buf);
+	//			char * test = (char *)mem_alloc(1);
+		//		mem_dealloc(test);
+        k_send_msg(TID_KCD, buf);
 				
     } else if (IIR_IntId & IIR_THRE) {
     /* THRE Interrupt, transmit holding register becomes empty */
