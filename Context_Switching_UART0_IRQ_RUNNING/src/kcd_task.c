@@ -77,8 +77,7 @@ void kcd_task(void)
   while(1)
   { 
     char temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
-		char letter = 'c';
-		char *temp=&letter;
+
 
     if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 3) == 0)
     {
@@ -98,11 +97,9 @@ void kcd_task(void)
       //KEY_IN
       else if((U32)temp_buffer[4] == KEY_IN)
       {
-        if(command_specifier) //check if '%' was typed already
-        {
-
-          //TODO: Determine whether the msg for KEY_IN is always a single char, to simplifiy logic
-          U32 msg_length = ((RTX_MSG_HDR *)temp_buffer) -> length;
+        
+        //TODO: Determine whether the msg for KEY_IN is always a single char, to simplifiy logic
+          U32 msg_length = (((RTX_MSG_HDR *)temp_buffer) -> length) - msg_hdr_size;
           for(int i = 0; i < msg_length; i++)
           {
             current_command[command_index] = temp_buffer[msg_hdr_size + i]; //add typed char to current cmd string
@@ -110,8 +107,11 @@ void kcd_task(void)
           }
           --command_index; //we want to point to last char in array
 
+        if(command_specifier) //check if '%' was typed already
+        {
           if(current_command[command_index] == '\n')
           {
+              current_command[command_index] = '\0'; //null terminate string for comparison
               if(str_cmp(current_command, "LT") == 0)
               {														
                 //1. echo command
@@ -122,7 +122,7 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, message, 3);
 
-                send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
+                send_msg(TID_DISPLAY, buf);
 
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
@@ -132,7 +132,7 @@ void kcd_task(void)
                 header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
                 header -> type = DISPLAY;
                 mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
-                send_msg((g_tcbs[TID_DISPLAY]).tid, display_buffer);
+                send_msg(TID_DISPLAY, display_buffer);
               }
               else if(str_cmp(current_command, "LM") == 0)
               {
@@ -144,7 +144,7 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, message, 3);
 
-                send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
+                send_msg(TID_DISPLAY, buf);
 
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
@@ -154,7 +154,7 @@ void kcd_task(void)
                 header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
                 header -> type = DISPLAY;
                 mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
-                send_msg((g_tcbs[TID_DISPLAY]).tid, display_buffer);
+                send_msg(TID_DISPLAY, display_buffer);
               }
               
               REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command);
@@ -168,7 +168,7 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, current_command, string_length);
 
-                send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
+                send_msg(TID_DISPLAY, buf);
                 
                 //2. Send to mailbox of registered task
                 header->type = KCD_CMD;
@@ -187,7 +187,7 @@ void kcd_task(void)
                 header->type = DISPLAY;
                 mem_cpy(buf + msg_hdr_size, current_command, string_length);
                 
-                send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
+                send_msg(TID_DISPLAY, buf);
 								mem_dealloc(buf);
               }
 
@@ -196,22 +196,24 @@ void kcd_task(void)
               //temp_buffer = (U8 *)mem_alloc(msg_hdr_size + 3);
 
               command_index = 0; //reset the buffer since 'ENTER' was pressed
+              command_specifier = 0;
             }
             else //wait for next character, cmd is not finished
             {
               command_index++;
             }
           }
-          else if(current_command[command_index] == '%') //comand specifier was typed
+          else if(command_index == 0 && current_command[0] == '%') //comand specifier was typed
           {
-            command_index = 0;
             command_specifier = 1;
           }
           else //Not a command, simply echo keystroke
           {
             RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+            temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
+            header -> length = msg_hdr_size + 2;
             header -> type = DISPLAY;
-            send_msg((g_tcbs[TID_DISPLAY]).tid, temp_buffer);
+            send_msg(TID_DISPLAY, temp_buffer);
           }
 					mem_dealloc(temp_buffer);
       }
