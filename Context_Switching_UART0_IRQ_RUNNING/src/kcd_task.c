@@ -73,13 +73,13 @@ void kcd_task(void)
   U8 left_arrow[] = {0x1B, 0x44, '\n'};
   
   while(1)
-  {
-    U8 temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
-    
+  { 
+    char temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
+
     if(recv_msg(&sender_tid, &temp_buffer , msg_hdr_size + 3) == 0)
     {
       /* Check the message type */
-      
+
       //KCD_REG
       if((U32)temp_buffer[4] == KCD_REG)
       {
@@ -96,8 +96,14 @@ void kcd_task(void)
       {
         if(command_specifier) //check if '%' was typed already
         {
-          current_command[command_index] = temp_buffer[msg_hdr_size]; //add typed char to current cmd string
-        
+          U32 msg_length = ((RTX_MSG_HDR *)temp_buffer) -> length;
+          for(int i = 0; i < msg_length; i++)
+          {
+            current_command[command_index] = temp_buffer[msg_hdr_size + i]; //add typed char to current cmd string
+            command_index++;
+          }
+          --command_index; //we want to point to last char in array
+
           if(current_command[command_index] == '\n')
           {
               if(str_cmp(current_command, "LT") == 0)
@@ -166,6 +172,10 @@ void kcd_task(void)
                 send_msg((g_tcbs[TID_DISPLAY]).tid, buf);
 								mem_dealloc(buf);
               }
+
+              //TODO: Confirm that we can reuse buffer and don't need to reallocate
+              //mem_dealloc(temp_buffer);
+              //temp_buffer = (U8 *)mem_alloc(msg_hdr_size + 3);
             }
           }
           else if(current_command[command_index] == '%')
