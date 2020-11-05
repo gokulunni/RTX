@@ -27,23 +27,21 @@ Project File Date:  11/05/2020
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Software\Keil_v5\ARM\ARMCC\Bin'
 Build target 'CS SIM'
-compiling kcd_task.c...
-src\kcd_task.c(182): warning:  #177-D: variable "message"  was declared but never referenced
-                  char *message = "Command cannot be processed."; 
-src\kcd_task.c(81): warning:  #177-D: variable "temp"  was declared but never referenced
-  		char *temp=&letter;
-src\kcd_task.c(72): warning:  #177-D: variable "up_arrow"  was declared but never referenced
-    U8 up_arrow[] = {0x1B, 0x41, '\n'};
-src\kcd_task.c(73): warning:  #177-D: variable "down_arrow"  was declared but never referenced
-    U8 down_arrow[] = {0x1B, 0x42, '\n'};
-src\kcd_task.c(74): warning:  #177-D: variable "right_arrow"  was declared but never referenced
-    U8 right_arrow[] = {0x1B, 0x43, '\n'};
-src\kcd_task.c(75): warning:  #177-D: variable "left_arrow"  was declared but never referenced
-    U8 left_arrow[] = {0x1B, 0x44, '\n'};
-src\kcd_task.c: 6 warnings, 0 errors
+compiling usr_tasks.c...
+src\usr_tasks.c(70): warning:  #177-D: variable "sender_tid"  was declared but never referenced
+      task_t sender_tid = 0;
+src\usr_tasks.c(111): warning:  #2548-D: multicharacter character literal (potential portability problem)
+      *buf = 'WE';
+src\usr_tasks.c(111): warning:  #69-D: integer conversion resulted in truncation
+      *buf = 'WE';
+src\usr_tasks.c(103): warning:  #177-D: variable "sender_tid"  was declared but never referenced
+      task_t sender_tid = 0;
+src\usr_tasks.c(130): warning:  #177-D: variable "msg_hdr_size"  was declared but never referenced
+      size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
+src\usr_tasks.c: 5 warnings, 0 errors
 linking...
-Program Size: Code=12100 RO-data=700 RW-data=76 ZI-data=10788  
-".\Objects\SIM\SVC.axf" - 0 Error(s), 6 Warning(s).
+Program Size: Code=12648 RO-data=768 RW-data=76 ZI-data=10788  
+".\Objects\SIM\SVC.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -70,10 +68,10 @@ Package Vendor: Keil
    * Component: ARM::CMSIS:CORE:5.4.0
 
    * Component: Keil::Device:Startup:1.0.0
-      Source file:   Device\Source\system_LPC17xx.c
-      Include file:  RTE_Driver\Config\RTE_Device.h
-      Source file:   Device\Source\ARM\startup_LPC17xx.s
       Include file:  Device\Include\LPC17xx.h
+      Source file:   Device\Source\ARM\startup_LPC17xx.s
+      Include file:  RTE_Driver\Config\RTE_Device.h
+      Source file:   Device\Source\system_LPC17xx.c
 Build Time Elapsed:  00:00:01
 </pre>
 </body>

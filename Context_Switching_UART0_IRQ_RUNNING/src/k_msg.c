@@ -141,6 +141,9 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //check that this doesn't conflict with pre emption
     if(task->state ==BLK_MSG){
+				#ifdef DEBUG_0
+					printf("k_send_msg: unblocking mailbox after sending message to blocked TID");
+				#endif /* DEBUG_0 */
         task->state = READY;
         //Add state back to ready_queue
         push(&ready_queue_head, task);
@@ -199,6 +202,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     while(is_circ_buf_empty( &(gp_current_task->mailbox)))
     {
         gp_current_task->state = BLK_MSG;
+				#ifdef DEBUG_0
+					printf("k_recv_msg: blocking task due to empty mailbox");
+				#endif /* DEBUG_0 */
         k_tsk_yield();
     }
 
