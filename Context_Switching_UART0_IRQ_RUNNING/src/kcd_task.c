@@ -96,6 +96,8 @@ void kcd_task(void)
       {
         if(command_specifier) //check if '%' was typed already
         {
+
+          //TODO: Determine whether the msg for KEY_IN is always a single char, to simplifiy logic
           U32 msg_length = ((RTX_MSG_HDR *)temp_buffer) -> length;
           for(int i = 0; i < msg_length; i++)
           {
@@ -176,16 +178,24 @@ void kcd_task(void)
               //TODO: Confirm that we can reuse buffer and don't need to reallocate
               //mem_dealloc(temp_buffer);
               //temp_buffer = (U8 *)mem_alloc(msg_hdr_size + 3);
+
+              command_index = 0; //reset the buffer since 'ENTER' was pressed
+            }
+            else //wait for next character, cmd is not finished
+            {
+              command_index++;
             }
           }
-          else if(current_command[command_index] == '%')
+          else if(current_command[command_index] == '%') //comand specifier was typed
           {
-            command_index = 0; //reset command index if % was typed
+            command_index = 0;
             command_specifier = 1;
           }
-          else //wait for next character, cmd is not finished
+          else //Not a command, simply echo keystroke
           {
-            command_index++;
+            RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+            header -> type = DISPLAY;
+            send_msg((g_tcbs[TID_DISPLAY]).tid, temp_buffer);
           }
       }
     }
