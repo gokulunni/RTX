@@ -36,7 +36,7 @@ int suite1() {
 	
 		RTX_TASK_INFO task_info[5];
     
-    task_info[0].ptask = task2;
+    task_info[0].ptask = &lcd_task;
     task_info[0].u_stack_size = 0x0;
     task_info[0].prio = HIGH;
     task_info[0].priv = 1;
@@ -50,8 +50,16 @@ int suite1() {
     task_info[2].u_stack_size = 0x100;
     task_info[2].prio = PRIO_NULL;
     task_info[2].priv = 0;
-		
-		set_task_info(task_info + 2, 3);
+	
+	task_info[3].ptask = &recieve_task;
+	task_info[3].u_stack_size = 0x100;
+	task_info[3].prio = HIGH;
+	task_info[3].priv = 0;
+	
+	task_info[4].ptask = &send_task;
+	task_info[4].u_stack_size = 0x100;
+	task_info[4].prio = MEDIUM;
+	task_info[4].priv = 0;
 	
 		rtx_init(32, FIRST_FIT, task_info, 5);
 
