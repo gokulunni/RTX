@@ -147,16 +147,35 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     // TODO: if PRIO is NULL, skip that task
     for (i = 0; i < num_tasks; i++) { // TODO: check that num task less than max
         int j;
-        TCB *p_tcb = &g_tcbs[i+1];
-
-        p_tcb->tid = i+1;
+        TCB *p_tcb;
+			
+		if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) {
+			continue;
+        }
+				
+        if(p_taskinfo -> ptask == &kcd_task)
+        {
+            p_tcb = &g_tcbs[TID_KCD];
+            p_tcb->tid = TID_KCD;
+        }
+        else if(p_taskinfo -> ptask == &lcd_task)
+        {
+            p_tcb = &g_tcbs[TID_DISPLAY];
+            p_tcb-> tid = TID_DISPLAY;
+        }
+        else
+        {
+            p_tcb = &g_tcbs[i+1];
+            p_tcb->tid = i+1;
+        }
+        
         p_tcb->state = NEW;
         p_tcb->has_mailbox=NULL;
-				//Initialize mailbox to NULL values
-				p_tcb->mailbox.buffer_start = NULL;
-				p_tcb->mailbox.buffer_end = NULL;
-				p_tcb->mailbox.head = NULL;
-				p_tcb->mailbox.tail = NULL;
+        //Initialize mailbox to NULL values
+        p_tcb->mailbox.buffer_start = NULL;
+        p_tcb->mailbox.buffer_end = NULL;
+        p_tcb->mailbox.head = NULL;
+        p_tcb->mailbox.tail = NULL;
 			
         //CHECK CREATE FUNCTION
 
@@ -212,6 +231,11 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     }
 
     for (int q = i + 1; q < MAX_TASKS; q++) {
+			
+        if(q == TID_KCD || q == TID_DISPLAY) {
+            continue;
+        }
+				
         INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
             #ifdef DEBUG_0
@@ -219,9 +243,10 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             #endif /* DEBUG_0 */
             return RTX_ERR;
         }
-        new_tid->tid = q;
+				
+		new_tid->tid = q;
         push_tid(&free_tid_head, new_tid);
-    }
+	}
 
     print_free_tids(free_tid_head);
     print_prio_queue(ready_queue_head);
