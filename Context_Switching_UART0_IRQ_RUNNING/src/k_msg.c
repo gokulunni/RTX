@@ -223,16 +223,14 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
 		
-		if (sender_tid != NULL)
-		{
-			INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**) &(prev_current_task->msg_sender_head));
+		INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**) &(prev_current_task->msg_sender_head));
+		if (sender_tid != NULL) {
 			*sender_tid = sender->tid;
-			if (k_mem_dealloc(sender) == RTX_ERR)
-			{
-				#ifdef DEBUG_0
-        printf("k_recv_msg: could not deallocate pointer to sender");
-				#endif /* DEBUG_0 */
-			}
+		}
+		if (k_mem_dealloc(sender) == RTX_ERR) {
+			#ifdef DEBUG_0
+			printf("k_recv_msg: could not deallocate pointer to sender");
+			#endif /* DEBUG_0 */
 		}
 		
     //atomicity off / enable interrupts
