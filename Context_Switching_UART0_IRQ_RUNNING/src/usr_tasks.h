@@ -18,5 +18,7 @@
 int set_usr_task_info(RTX_TASK_INFO *tasks,int num_tasks);
 void task1(void);
 void task2(void);
+void send_task(void);
+void recieve_task(void);
 
 #endif /* USR_TASK_H_ */
