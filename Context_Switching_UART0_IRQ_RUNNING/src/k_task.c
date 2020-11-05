@@ -153,17 +153,17 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         {
             p_tcb = &g_tcbs[TID_KCD];
             p_tcb->tid = TID_KCD;
-						//i--?
+			i--;
         }
         else if(p_taskinfo -> ptask == &lcd_task)
         {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
-						//i--?
+	        i--;
         }
-				else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) 
-				{
-						continue;
+        else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) 
+        {
+            continue;
         }
         else
         {
