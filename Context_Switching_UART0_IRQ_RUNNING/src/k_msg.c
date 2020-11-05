@@ -209,9 +209,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 				#endif /* DEBUG_0 */
 				__enable_irq();
         k_tsk_yield();
-			
+				__disable_irq();
     }
-		__disable_irq();
+		
 
     //buf = k_mem_alloc(len);
 		//if (buf == NULL)
