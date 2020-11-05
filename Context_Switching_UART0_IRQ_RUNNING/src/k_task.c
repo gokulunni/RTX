@@ -332,7 +332,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (state == NEW) {
         if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {
-            p_tcb_old->state = READY;
+						if(p_tcb_old -> state != BLK_MSG){
+							p_tcb_old->state = READY; 
+						}
             p_tcb_old->msp = (U32 *) __get_MSP();
             p_tcb_old->psp = (U32 *) __get_PSP();
         }
@@ -347,7 +349,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (gp_current_task != p_tcb_old) {
         if (state == READY) {
-            p_tcb_old->state = READY; 
+						if(p_tcb_old -> state != BLK_MSG){
+							p_tcb_old->state = READY; 
+						}
             p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
             p_tcb_old->psp = (U32 *) __get_PSP();
             gp_current_task->state = RUNNING;
