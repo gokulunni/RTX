@@ -184,7 +184,8 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     //trap into kernel- atomicity on / disable interrupts
     __disable_irq();
     //TCB* curr_task = gp_current_task;
-		void* ptr;
+		void* ptr=buf;
+		task_t *save_sender = sender_tid;
 
     if (!gp_current_task->has_mailbox)
     {

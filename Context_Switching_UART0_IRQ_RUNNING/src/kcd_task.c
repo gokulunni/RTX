@@ -77,6 +77,8 @@ void kcd_task(void)
   while(1)
   { 
     char temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
+		char letter = 'c';
+		char *temp=&letter;
 
     if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 3) == 0)
     {
