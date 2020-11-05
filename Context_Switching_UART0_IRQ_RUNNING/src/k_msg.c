@@ -230,9 +230,8 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
 		
-		INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**)&(gp_current_task->msg_sender_head));
-		sender_tid = (task_t*) sender->tid;
-		
+		INT_LL_NODE_T* sender =pop_tid((INT_LL_NODE_T**)&(gp_current_task->msg_sender_head));
+		*sender_tid = sender->tid;
 		k_mem_dealloc(sender);
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
