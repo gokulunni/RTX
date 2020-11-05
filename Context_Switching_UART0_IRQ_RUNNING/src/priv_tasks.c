@@ -46,7 +46,7 @@ void priv_task1(void)
         }
         uart1_put_string("\n\r");
         
-        for ( x = 0; x < DELAY; x++); // some artifical delay
+        //for ( x = 0; x < DELAY; x++); // some artifical delay
         if ( (++i)%6 == 0 ) {
             uart1_put_string("priv_task1 before yielding cpu.\n\r");
             ret_val = tsk_yield();
@@ -83,7 +83,7 @@ void priv_task2(void)
         }
         uart1_put_string("\n\r");
         
-        for ( x = 0; x < DELAY; x++); // some artifical delay
+        //for ( x = 0; x < DELAY; x++); // some artifical delay
         if ( i%6 == 0 ) {
             uart1_put_string("priv_task2 before yielding cpu.\n\r");
             ret_val = tsk_yield();

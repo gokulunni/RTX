@@ -67,6 +67,8 @@ void kcd_task(void)
   char current_command[64];
   int command_index = 0;
   size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
+
+  //TODO: Do we simply ignore control keys (i.e. arrows and fn keys)
   U8 up_arrow[] = {0x1B, 0x41, '\n'};
   U8 down_arrow[] = {0x1B, 0x42, '\n'};
   U8 right_arrow[] = {0x1B, 0x43, '\n'};
@@ -76,7 +78,7 @@ void kcd_task(void)
   { 
     char temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
 
-    if(recv_msg(&sender_tid, &temp_buffer , msg_hdr_size + 3) == 0)
+    if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 3) == 0)
     {
       /* Check the message type */
 
@@ -123,6 +125,12 @@ void kcd_task(void)
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = tsk_ls(tids, MAX_TASKS);
+                U8 *display_buffer = (U8 *)mem_alloc(msg_hdr_size + num_tasks*sizeof(task_t));
+                header = (void *)display_buffer;
+                header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
+                header -> type = DISPLAY;
+                mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
+                send_msg((g_tcbs[TID_DISPLAY]).tid, display_buffer);
               }
               else if(str_cmp(current_command, "LM") == 0)
               {
@@ -139,6 +147,12 @@ void kcd_task(void)
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = mbx_ls(tids, MAX_TASKS);
+                U8 *display_buffer = (U8 *)mem_alloc(msg_hdr_size + num_tasks*sizeof(task_t));
+                header = (void *)display_buffer;
+                header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
+                header -> type = DISPLAY;
+                mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
+                send_msg((g_tcbs[TID_DISPLAY]).tid, display_buffer);
               }
               
               REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command);
@@ -197,6 +211,7 @@ void kcd_task(void)
             header -> type = DISPLAY;
             send_msg((g_tcbs[TID_DISPLAY]).tid, temp_buffer);
           }
+					mem_dealloc(temp_buffer);
       }
     }
   }

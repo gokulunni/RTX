@@ -66,29 +66,29 @@ void task1(void)
  */
 void task2(void)
 {
-    size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
-    U8  *buf = &g_buf1[0]; /* buffer is allocated by the caller */
-    struct rtx_msg_hdr *ptr = (void *)buf;
-    task_t sender_tid = 0;
-    
-    uart1_put_string ("task2: entering \n\r");
-    
-    mbx_create(128); 
-    ptr->length = msg_hdr_size + 1;
-    ptr->type = KCD_REG;
-    buf += msg_hdr_size;
-    *buf = 'W';
-    send_msg(3, (void *)ptr);
-    recv_msg(&sender_tid, g_buf2, 128);
-    
-    /* do command processing */
-    buf = (void*) ((char*)g_buf2+8);
-		uart1_put_string ("it's bavu");
-	
-		uart1_put_string(buf);
-    /* Terminate if you are not a daemon task.
-       For a deamon task, it should be in an infinite loop and never terminate.
-    */
+//    size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
+//    U8  *buf = &g_buf1[0]; /* buffer is allocated by the caller */
+//    struct rtx_msg_hdr *ptr = (void *)buf;
+//    task_t sender_tid = 0;
+//    
+//    uart1_put_string ("task2: entering \n\r");
+//    
+//    mbx_create(128); 
+//    ptr->length = msg_hdr_size + 1;
+//    ptr->type = KCD_REG;
+//    buf += msg_hdr_size;
+//    *buf = 'W';
+//    send_msg(3, (void *)ptr);
+//    recv_msg(&sender_tid, g_buf2, 128);
+//    
+//    /* do command processing */
+//    buf = (void*) ((char*)g_buf2+8);
+//		uart1_put_string ("it's bavu");
+//	
+//		uart1_put_string(buf);
+//    /* Terminate if you are not a daemon task.
+//       For a deamon task, it should be in an infinite loop and never terminate.
+//    */
     tsk_exit();
 }
 
