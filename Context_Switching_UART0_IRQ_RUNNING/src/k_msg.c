@@ -201,15 +201,15 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
         k_tsk_yield();
     }
 
-    buf = k_mem_alloc(len);
-		if (buf == NULL)
-		{
-			#ifdef DEBUG_0
-        printf("k_recv_msg: could not allocate memory for buf");
-			#endif /* DEBUG_0 */
-		}
+    //buf = k_mem_alloc(len);
+		//if (buf == NULL)
+		//{
+		//	#ifdef DEBUG_0
+    //    printf("k_recv_msg: could not allocate memory for buf");
+		//	#endif /* DEBUG_0 */
+		//}
 
-    if (dequeue_msg( &(gp_current_task->mailbox), ptr, len) == RTX_ERR)
+    if (dequeue_msg( &(gp_current_task->mailbox), buf, len) == RTX_ERR)
     {
 			#ifdef DEBUG_0
         printf("k_recv_msg: error dequeueing message from mailbox");
@@ -218,14 +218,14 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			return RTX_ERR;
     }
 
-    if (!mem_cpy(buf, ptr, len))
-		{
-			#ifdef DEBUG_0
-        printf("k_recv_msg: could not copy memory from *ptr to *buf");
-			#endif /* DEBUG_0 */
-			__enable_irq();
-			return RTX_ERR;
-		}
+    //if (!mem_cpy(buf, ptr, len))
+		//{
+		//	#ifdef DEBUG_0
+    //    printf("k_recv_msg: could not copy memory from *ptr to *buf");
+		//	#endif /* DEBUG_0 */
+		//	__enable_irq();
+		//	return RTX_ERR;
+		//}
 		
 		TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
