@@ -251,28 +251,32 @@ void *first_fit_mem_alloc(size_t size) {
             new_node->next = cur_node->next;
             new_node->prev = cur_node->prev;
 
-#ifdef DEBUG_MEM
+            if (cur_node->prev != NULL) {
+                cur_node->prev->next = new_node;
+            }
+
+            #ifdef DEBUG_MEM
             printf("first_fit_mem_alloc: New free node address 0x%x after splitting\r\n", new_node);
             printf("first_fit_mem_alloc: New free node size 0x%x after splitting\r\n", new_node->size);
             printf("first_fit_mem_alloc: New free node prev 0x%x after splitting\r\n", new_node->prev);
             printf("first_fit_mem_alloc: New free node next 0x%x after splitting\r\n", new_node->next);
-#endif /* DEBUG_MEM */
+            #endif /* DEBUG_MEM */
 
             ret_node = (used_mem_node_t *) cur_node;
             ret_node->size = mem_chunk_size - sizeof(used_mem_node_t);
             if (gp_current_task) {
                 ret_node->owner_tid = gp_current_task->tid;
             } else {
-#ifdef DEBUG_MEM
+                #ifdef DEBUG_MEM
                 printf("first_fit_mem_alloc: No running task to alloc a memory block\r\n");
-#endif /* DEBUG_MEM */
+                #endif /* DEBUG_MEM */
                 return NULL;
             }
 
-#ifdef DEBUG_MEM
+            #ifdef DEBUG_MEM
             printf("first_fit_mem_alloc: New allocated node address 0x%x\r\n", ret_node);
             printf("first_fit_mem_alloc: New allocated node size 0x%x\r\n", ret_node->size);
-#endif /* DEBUG_MEM */
+            #endif /* DEBUG_MEM */
 
             print_linked_list("first_fit_mem_alloc");
 
