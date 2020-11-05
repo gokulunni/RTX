@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>DEBUG_0 SIM_TARGET</Define>
+              <Define>DEBUG_0 SIM_TARGET DEBUG_PRIO_Q</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
