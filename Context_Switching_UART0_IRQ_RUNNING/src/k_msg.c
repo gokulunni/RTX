@@ -232,7 +232,12 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		
 		INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**)&(gp_current_task->msg_sender_head));
 		*sender_tid = sender->tid;
-		k_mem_dealloc(sender);
+		if (k_mem_dealloc(sender) == RTX_ERR)
+		{
+			#ifdef DEBUG_0
+        printf("k_recv_msg: could not deallocate pointer to sender");
+			#endif /* DEBUG_0 */
+		}
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
     __enable_irq();
