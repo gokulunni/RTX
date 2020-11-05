@@ -523,6 +523,16 @@ void k_tsk_exit(void) {
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
+				
+				//Dellocate mailbox if it exists. ownership of mailbox is deallocating task
+				if (gp_current_task->has_mailbox){
+					if (k_mem_dealloc(gp_current_task->mailbox.buffer_start) == RTX_ERR)
+						{
+							#ifdef DEBUG_0
+								printf("k_task_exit: could not deallocate pointer to mailbox");
+							#endif /* DEBUG_0 */
+						}
+				}
 
         TCB *prev_current_task = gp_current_task;
         gp_current_task = &kernal_task;
@@ -536,6 +546,7 @@ void k_tsk_exit(void) {
             }
             prev_current_task->psp = NULL;
         }
+				
 
         INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
