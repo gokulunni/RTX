@@ -181,11 +181,26 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 }
 
 int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
+	#ifdef DEBUG_0
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+  #endif /* DEBUG_0 */
+	
     if ( !(len > 0)) {
+			#ifdef DEBUG_0
+        printf("k_recv_msg: invalid len entered");
+			#endif /* DEBUG_0 */
         return RTX_ERR;
     }
+		
+		if (buf == NULL) {
+			#ifdef DEBUG_0
+        printf("k_recv_msg: can not pass in unallocated pointer for buf");
+			#endif /* DEBUG_0 */
+			return RTX_ERR;
+		}
 
     //trap into kernel- atomicity on / disable interrupts
+
    // __disable_irq();
     //TCB* curr_task = gp_current_task;
 		void* ptr=buf;
@@ -213,14 +228,6 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     }
 		
 
-    //buf = k_mem_alloc(len);
-		//if (buf == NULL)
-		//{
-		//	#ifdef DEBUG_0
-    //    printf("k_recv_msg: could not allocate memory for buf");
-		//	#endif /* DEBUG_0 */
-		//}
-
     if (dequeue_msg( &(gp_current_task->mailbox), buf, len) == RTX_ERR)
     {
 			#ifdef DEBUG_0
@@ -229,55 +236,63 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			//__enable_irq();
 			return RTX_ERR;
     }
-
-    //if (!mem_cpy(buf, ptr, len))
-		//{
-		//	#ifdef DEBUG_0
-    //    printf("k_recv_msg: could not copy memory from *ptr to *buf");
-		//	#endif /* DEBUG_0 */
-		//	__enable_irq();
-		//	return RTX_ERR;
-		//}
 		
 		TCB *prev_current_task = gp_current_task;
     gp_current_task = &kernal_task;
 		
 		INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**) &(prev_current_task->msg_sender_head));
-		*sender_tid = sender->tid;
-		if (k_mem_dealloc(sender) == RTX_ERR)
-		{
+		if (sender_tid != NULL) {
+			*sender_tid = sender->tid;
+		}
+		if (k_mem_dealloc(sender) == RTX_ERR) {
 			#ifdef DEBUG_0
-        printf("k_recv_msg: could not deallocate pointer to sender");
+			printf("k_recv_msg: could not deallocate pointer to sender");
 			#endif /* DEBUG_0 */
 		}
+		
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
+
     //__enable_irq();
 		
 		#ifdef DEBUG_0
         printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
     #endif /* DEBUG_0 */
 
+
     return 0;
 }
 
 int k_mbx_ls(task_t *buf, int count) {
-#ifdef DEBUG_0
+	#ifdef DEBUG_0
     printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
-#endif /* DEBUG_0 */
+	#endif /* DEBUG_0 */
 	
 	int actual_count = 0;
 	int buf_index = 0;
 	
+	if (buf == NULL) {
+		#ifdef DEBUG_0
+    printf("k_mbx_ls: can not pass in NULL task elements");
+		#endif /* DEBUG_0 */
+		return RTX_ERR;
+	}
+	if (count < 0) {
+		#ifdef DEBUG_0
+    printf("k_mbx_ls: invalid count passed in");
+		#endif /* DEBUG_0 */
+		return RTX_ERR;
+	}
+	
 	for (int i = MAX_TASKS-1; i >= 0; i--)
 	{
+		if (actual_count == count)
+			break;
+		
 		if (g_tcbs[i].state != DORMANT && g_tcbs[i].has_mailbox) {
 			actual_count++;
 			buf[buf_index++] = g_tcbs[i].tid;
 		}
-		
-		if (actual_count == count)
-			break;
 	}
-    return actual_count;
+	return actual_count;
 }
