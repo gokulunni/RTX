@@ -73,13 +73,13 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 
     //Trap kernel
     //No interrupts
-    __disable_irq();
+    //__disable_irq();
 
     if (!buf){
         #ifdef DEBUG_0
             printf("k_send_msg: buf is NULL\r\n");
         #endif /* DEBUG_0 */
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
 
@@ -93,7 +93,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
         #endif /* DEBUG_0 */
-			__enable_irq();
+			//__enable_irq();
         return RTX_ERR;
     }
 		TCB *task = &g_tcbs[recieved_tid_int];
@@ -104,7 +104,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         #ifdef DEBUG_0
             printf("k_send_msg: reciever_tid is not running\r\n");
         #endif /* DEBUG_0 */
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
      
@@ -114,7 +114,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
             printf("k_send_msg: reciever_tid has no mailbox running\r\n");
         #endif /* DEBUG_0 */
         //No mailbox for task
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
 
@@ -127,7 +127,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 				 #ifdef DEBUG_0
             printf("k_send_msg: Length of mailbox is less tha MIN_MSG_SIZE\r\n");
         #endif /* DEBUG_0 */
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
 
@@ -136,7 +136,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 			 #ifdef DEBUG_0
             printf("k_send_msg: circular buffer is full for recieving tid\r\n");
         #endif /* DEBUG_0 */
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
 
@@ -157,7 +157,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 			 #ifdef DEBUG_0
             printf("k_send_msg: could not enqueue message\r\n");
         #endif /* DEBUG_0 */
-        __enable_irq();
+        //__enable_irq();
         return RTX_ERR;
     }
     TCB *sendingTask= gp_current_task;
@@ -171,11 +171,11 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     
     gp_current_task = sendingTask;
     //Turn back on interrupts
-    __enable_irq();
+    //__enable_irq();
     //Switch properly at the end (call yeild?)
 		
     //Commenting out for testing purposes.
-		//k_tsk_yield();
+		k_tsk_yield();
   
     return RTX_OK;
 }
@@ -200,7 +200,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		}
 
     //trap into kernel- atomicity on / disable interrupts
-    __disable_irq();
+
+   // __disable_irq();
+    //TCB* curr_task = gp_current_task;
 		void* ptr=buf;
 		task_t *save_sender = sender_tid;
 
@@ -209,7 +211,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			#ifdef DEBUG_0
         printf("k_recv_msg: current task does NOT have a mailbox");
 			#endif /* DEBUG_0 */
-			__enable_irq();
+			//__enable_irq();
 			return RTX_ERR;
     }
     
@@ -220,9 +222,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 				#ifdef DEBUG_0
 					printf("k_recv_msg: blocking task due to empty mailbox");
 				#endif /* DEBUG_0 */
-				__enable_irq();
+				//__enable_irq();
         k_tsk_yield();
-				__disable_irq();
+				//__disable_irq();
     }
 		
 
@@ -231,7 +233,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			#ifdef DEBUG_0
         printf("k_recv_msg: error dequeueing message from mailbox");
 			#endif /* DEBUG_0 */
-			__enable_irq();
+			//__enable_irq();
 			return RTX_ERR;
     }
 		
@@ -250,7 +252,13 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
-    __enable_irq();
+
+    //__enable_irq();
+		
+		#ifdef DEBUG_0
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+    #endif /* DEBUG_0 */
+
 
     return 0;
 }
