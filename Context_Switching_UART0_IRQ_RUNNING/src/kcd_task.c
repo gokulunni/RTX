@@ -68,16 +68,17 @@ void kcd_task(void)
   int command_index = 0;
   size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
 
-  //TODO: Do we simply ignore control keys (i.e. arrows and fn keys)
+  //TODO: Do we simply ignore control keys? (i.e. arrows and fn keys)
   U8 up_arrow[] = {0x1B, 0x41, '\n'};
   U8 down_arrow[] = {0x1B, 0x42, '\n'};
   U8 right_arrow[] = {0x1B, 0x43, '\n'};
   U8 left_arrow[] = {0x1B, 0x44, '\n'};
+  char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8',
+                    '9', '10', '11', '12', '13', '14', '15', '16'};
   
   while(1)
   { 
     char temp_buffer[11]; //ASSUMPTION: No cmd will be longer than 3 chars? (for KCD_REG)
-
 
     if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 3) == 0)
     {
@@ -109,7 +110,7 @@ void kcd_task(void)
 
         if(command_specifier) //check if '%' was typed already
         {
-          if(current_command[command_index] == '\n')
+          if(current_command[command_index] == '\r')
           {
               current_command[command_index] = '\0'; //null terminate string for comparison
               if(str_cmp(current_command, "LT") == 0)
@@ -127,11 +128,17 @@ void kcd_task(void)
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = tsk_ls(tids, MAX_TASKS);
-                U8 *display_buffer = (U8 *)mem_alloc(msg_hdr_size + num_tasks*sizeof(task_t));
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + num_tasks*2);
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
+                header -> length = msg_hdr_size + num_tasks*2;
                 header -> type = DISPLAY;
-                mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
+                //Conver the tids to char for displaying, and display each in a new line
+                for(int i = 0; i < num_tasks; i++)
+                {
+                  display_buffer[msg_hdr_size + i] = digits[tids[i]];
+                  i++;
+                  display_buffer[msg_hdr_size + i] = '\n';
+                }
                 send_msg(TID_DISPLAY, display_buffer);
               }
               else if(str_cmp(current_command, "LM") == 0)
@@ -149,11 +156,17 @@ void kcd_task(void)
                 //2. Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = mbx_ls(tids, MAX_TASKS);
-                U8 *display_buffer = (U8 *)mem_alloc(msg_hdr_size + num_tasks*sizeof(task_t));
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + num_tasks*2);
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + sizeof(task_t)*num_tasks;
+                header -> length = msg_hdr_size + num_tasks*2;
                 header -> type = DISPLAY;
-                mem_cpy(display_buffer + msg_hdr_size, tids, num_tasks * sizeof(task_t));
+                //Conver the tids to char for displaying, and display each in a new line
+                for(int i = 0; i < num_tasks; i++)
+                {
+                  display_buffer[msg_hdr_size + i] = digits[tids[i]];
+                  i++;
+                  display_buffer[msg_hdr_size + i] = '\n';
+                }
                 send_msg(TID_DISPLAY, display_buffer);
               }
               
@@ -198,14 +211,27 @@ void kcd_task(void)
               command_index = 0; //reset the buffer since 'ENTER' was pressed
               command_specifier = 0;
             }
-            else //wait for next character, cmd is not finished
+            else //wait for next character, cmd is not finished, print current char
             {
+              RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+              temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
+              header -> length = msg_hdr_size + 2;
+              header -> type = DISPLAY;
+              send_msg(TID_DISPLAY, temp_buffer);
               command_index++;
             }
           }
           else if(command_index == 0 && current_command[0] == '%') //comand specifier was typed
           {
+            current_command[0] = '%';
+            command_index++;
             command_specifier = 1;
+
+            RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+            temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
+            header -> length = msg_hdr_size + 2;
+            header -> type = DISPLAY;
+            send_msg(TID_DISPLAY, temp_buffer);
           }
           else //Not a command, simply echo keystroke
           {
