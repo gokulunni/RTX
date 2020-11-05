@@ -93,6 +93,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         #ifdef DEBUG_0
         printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
         #endif /* DEBUG_0 */
+			__enable_irq();
         return RTX_ERR;
     }
 		TCB *task = &g_tcbs[recieved_tid_int];
@@ -201,12 +202,16 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     
     while(is_circ_buf_empty( &(gp_current_task->mailbox)))
     {
+				
         gp_current_task->state = BLK_MSG;
 				#ifdef DEBUG_0
 					printf("k_recv_msg: blocking task due to empty mailbox");
 				#endif /* DEBUG_0 */
+				__enable_irq();
         k_tsk_yield();
+			
     }
+		__disable_irq();
 
     //buf = k_mem_alloc(len);
 		//if (buf == NULL)
