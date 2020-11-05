@@ -152,12 +152,17 @@ void send_task(void)
     /* Terminate if you are not a daemon task.
        For a deamon task, it should be in an infinite loop and never terminate.
     */
+		print_test_result(4, RTX_OK, "Scheduling policy test");
 		uart1_put_string ("sent_task: exiting \n\r");
+		
+		print_final_results();
     tsk_exit();
 }
 
 void recieve_task(void)
 {
+	total_tests = 1;
+	print_test_start(1);
     size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
     U8  *buf = &g_buf1[0]; /* buffer is allocated by the caller */
     struct rtx_msg_hdr *ptr = (void *)buf;
