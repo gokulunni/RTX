@@ -177,6 +177,10 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 }
 
 int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
+	#ifdef DEBUG_0
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+  #endif /* DEBUG_0 */
+	
     if ( !(len > 0)) {
 			#ifdef DEBUG_0
         printf("k_recv_msg: invalid len entered");
@@ -236,15 +240,14 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
     __enable_irq();
-		
-		#ifdef DEBUG_0
-        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-    #endif /* DEBUG_0 */
 
     return 0;
 }
 
 int k_mbx_ls(task_t *buf, int count) {
+	#ifdef DEBUG_0
+    printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
+	#endif /* DEBUG_0 */
 	
 	int actual_count = 0;
 	int buf_index = 0;
@@ -264,17 +267,13 @@ int k_mbx_ls(task_t *buf, int count) {
 	
 	for (int i = MAX_TASKS-1; i >= 0; i--)
 	{
+		if (actual_count == count)
+			break;
+		
 		if (g_tcbs[i].state != DORMANT && g_tcbs[i].has_mailbox) {
 			actual_count++;
 			buf[buf_index++] = g_tcbs[i].tid;
 		}
-		
-		if (actual_count == count)
-			break;
 	}
-	
-	#ifdef DEBUG_0
-    printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
-	#endif /* DEBUG_0 */
 	return actual_count;
 }

@@ -721,36 +721,35 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 }
 
 int k_tsk_ls(task_t *buf, int count){
+	#ifdef DEBUG_0
+    printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
+	#endif /* DEBUG_0 */
 	
 	int actual_count = 0;
 	int buf_index = 0;
 	
 	if (buf == NULL) {
 		#ifdef DEBUG_0
-    printf("k_mbx_ls: can not pass in NULL task elements");
+    printf("k_tsk_ls: can not pass in NULL task elements");
 		#endif /* DEBUG_0 */
 		return RTX_ERR;
 	}
 	if (count < 0) {
 		#ifdef DEBUG_0
-    printf("k_mbx_ls: invalid count passed in");
+    printf("k_tsk_ls: invalid count passed in");
 		#endif /* DEBUG_0 */
 		return RTX_ERR;
 	}
 	
 	for (int i = MAX_TASKS-1; i >= 0; i--)
 	{
+		if (actual_count == count)
+			break;
+		
 		if (g_tcbs[i].state != DORMANT) {
 			actual_count++;
 			buf[buf_index++] = g_tcbs[i].tid;
 		}
-		
-		if (actual_count == count)
-			break;
 	}
-	
-	#ifdef DEBUG_0
-    printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
-	#endif /* DEBUG_0 */
     return actual_count;
 }
