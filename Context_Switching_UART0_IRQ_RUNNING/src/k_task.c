@@ -301,7 +301,7 @@ TCB *dummy_scheduler(void) {
         TCB *popped = pop(&ready_queue_head);
 
         // If there is a current task, push current task back on ready queue
-        if (gp_current_task) {
+        if (gp_current_task && gp_current_task -> state != BLK_MSG) {
             push(&ready_queue_head, gp_current_task);
         }
 
