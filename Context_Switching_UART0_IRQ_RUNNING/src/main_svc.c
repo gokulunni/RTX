@@ -38,8 +38,8 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
         return RTX_ERR;
     }
     
-    tasks[0].ptask = task2;
-    tasks[0].u_stack_size = 0x0;
+    tasks[0].ptask = &lcd_task;
+    tasks[0].u_stack_size = 0x1000;
     tasks[0].prio = HIGH;
     tasks[0].priv = 1;
     
@@ -52,6 +52,8 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
     tasks[2].u_stack_size = 0x100;
     tasks[2].prio = PRIO_NULL;
     tasks[2].priv = 0;
+		
+		
 
     return RTX_OK;
 }

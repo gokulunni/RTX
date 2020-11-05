@@ -5,24 +5,33 @@
 #include "k_mem.h"
 #include <LPC17xx.h>
 
-U8 UART_buffer[128];
+char *TX_buffer;
+extern TCB kernal_task;
+extern TCB *gp_current_task;
 
 void lcd_task(void)
 {
     mbx_create(128); //TODO: Determine whether this is an appropriate size
     task_t sender_tid;
+    
+    /* Allocate internal kernel buffer for use between uart and LCD */
+    TCB *lcdtask= gp_current_task;
+    gp_current_task = &kernal_task;
+    TX_buffer = (char *)mem_alloc(64); //TODO: Might not need this much space
+    gp_current_task = lcdtask;
 
     while(1)
     {
-		U8 temp_buffer[sizeof(RTX_MSG_HDR) + 32]; //TODO: is 32 bytes for msg big enough?
+		U8 temp_buffer[40]; //TODO: is 32 bytes for msg big enough?
         //copy contents to internal kernel buffer so UART can transmit
         if(recv_msg(&sender_tid, &temp_buffer , 64) == 0)
         {
             
             if((U32)temp_buffer[4] == DISPLAY)
             {
+                U32 length = (((RTX_MSG_HDR *)temp_buffer) -> length) - 8;
                 //copy contents of buffer to internal kernel buffer for UART
-                mem_cpy(UART_buffer, &temp_buffer, (U32)temp_buffer);
+                mem_cpy(TX_buffer, temp_buffer + 8, length);
 
                 //Enable UART Transmit interrupt
                 LPC_UART_TypeDef * pUart = (LPC_UART_TypeDef *) LPC_UART0;
