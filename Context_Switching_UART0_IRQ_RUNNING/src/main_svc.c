@@ -38,12 +38,12 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
         return RTX_ERR;
     }
     
-    tasks[0].ptask = &recieve_task;
-    tasks[0].u_stack_size = 0x0;
+    tasks[0].ptask = &lcd_task;
+    tasks[0].u_stack_size = 0x100;
     tasks[0].prio = HIGH;
     tasks[0].priv = 1;
     
-    tasks[1].ptask = &send_task;
+    tasks[1].ptask = &kcd_task;
     tasks[1].u_stack_size = 0x100;
     tasks[1].prio = HIGH;
     tasks[1].priv = 0;

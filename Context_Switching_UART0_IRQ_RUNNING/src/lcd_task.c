@@ -35,7 +35,7 @@ void lcd_task(void)
 
                 //Enable UART Transmit interrupt
                 LPC_UART_TypeDef * pUart = (LPC_UART_TypeDef *) LPC_UART0;
-                pUart->IER ^= IER_THRE; //toggling THR
+				pUart->IER = IER_THRE | IER_RLS | IER_RBR;
     
             }            
         }

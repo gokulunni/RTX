@@ -271,8 +271,9 @@ void c_UART0_IRQHandler(void)
 #ifdef DEBUG_0
             uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
 #endif // DEBUG_0
-            pUart->IER ^= IER_THRE | IER_RLS | IER_RBR; // toggle the IER_THRE bit 
-            //pUart->THR = '\0';
+            pUart->IER = IER_RLS | IER_RBR;
+            //pUart->IER ^= IER_THRE | IER_RLS | IER_RBR; // toggle the IER_THRE bit 
+            pUart->THR = '\0';
             g_send_char = 0;
             buffer_index = 0;
         }

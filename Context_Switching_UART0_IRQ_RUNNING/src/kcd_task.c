@@ -113,7 +113,7 @@ void kcd_task(void)
           if(current_command[command_index] == '\r')
           {
               current_command[command_index] = '\0'; //null terminate string for comparison
-              if(str_cmp(current_command, "LT") == 0)
+              if(str_cmp(current_command + 1, "LT") == 0)
               {														
                 //1. echo command
                 char *message = "LT"; 
@@ -141,7 +141,7 @@ void kcd_task(void)
                 }
                 send_msg(TID_DISPLAY, display_buffer);
               }
-              else if(str_cmp(current_command, "LM") == 0)
+              else if(str_cmp(current_command + 1, "LM") == 0)
               {
                 //1. echo command
                 char *message = "LM"; 
@@ -170,7 +170,7 @@ void kcd_task(void)
                 send_msg(TID_DISPLAY, display_buffer);
               }
               
-              REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command);
+              REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command + 1);
               if(cmd != NULL) /* Registered command */
               {
                 //1. Echo command
