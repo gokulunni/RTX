@@ -30,10 +30,9 @@ __asm void SVC_Handler (void)
   PRESERVE8             ; 8 bytes alignement of the stack
   CPSID I               ; disable interrupt
 	
-  MRS  R0, PSP          ; Read PSP into R0
-	CMP  R0, #0 				  ; Check if this is the first invocation
+	CMP LR, 0xFFFFFFF9    ;Check LR value to see if MSP, privileged
 	BNE  normal_operation 
-	MRS  R0, MSP          ;since PSP = 0x0, load MSP address
+	MRS  R0, MSP          ;since MSP/Privileged, this is 1st invocation, use MSP
   										
 	
 normal_operation

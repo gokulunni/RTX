@@ -30,10 +30,9 @@ __asm void SVC_Handler (void)
   PRESERVE8             ; 8 bytes alignement of the stack
   CPSID I               ; disable interrupt
 	
-  MRS  R0, PSP          ; Read PSP into R0
-	CMP  R0, #0 				  ; Check if this is the first invocation
+	CMP LR, 0xFFFFFFF9    ;Check LR value to see if MSP, privileged
 	BNE  normal_operation 
-	MRS  R0, MSP          ;since PSP = 0x0, load MSP address
+	MRS  R0, MSP          ;since MSP/Privileged, this is 1st invocation, use MSP
   										
 	
 normal_operation
@@ -70,7 +69,7 @@ SVC_EXIT
   LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
 	LDR R3, [R3]                        ; Get address of current task
 	MOV R2, #0                          ; clear R2
-	LDRB R2, [R3, #25]                  ; read priv member (136 bits = 17 byte offset)
+	LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
   CMP R2, #1                          ; check if priv level is 1 or 0
   BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
   B user_thread                       ; if 0, handler was invoked by user thread
@@ -88,3 +87,4 @@ user_thread
   CPSIE I                    ; enable interrupt
   BX   LR
 }
+
