@@ -73,8 +73,7 @@ void kcd_task(void)
   U8 down_arrow[] = {0x1B, 0x42, '\n'};
   U8 right_arrow[] = {0x1B, 0x43, '\n'};
   U8 left_arrow[] = {0x1B, 0x44, '\n'};
-  char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8',
-                    '9', '10', '11', '12', '13', '14', '15', '16'};
+  char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   
   while(1)
   { 
@@ -98,107 +97,107 @@ void kcd_task(void)
       //KEY_IN
       else if((U32)temp_buffer[4] == KEY_IN)
       {
-        
-        //TODO: Determine whether the msg for KEY_IN is always a single char, to simplifiy logic
-          U32 msg_length = (((RTX_MSG_HDR *)temp_buffer) -> length) - msg_hdr_size;
-          for(int i = 0; i < msg_length; i++)
-          {
-            current_command[command_index] = temp_buffer[msg_hdr_size + i]; //add typed char to current cmd string
-            command_index++;
-          }
-          --command_index; //we want to point to last char in array
+					current_command[command_index] = temp_buffer[msg_hdr_size]; //add typed char to current cmd string
+
+					//Replace carriage return with new line on output
+					if(current_command[command_index] == '\r')
+						temp_buffer[msg_hdr_size] = '\n';
+					
+          //ALWAYS echo the character
+          RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+          temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
+          header -> length = msg_hdr_size + 2;
+          header -> type = DISPLAY;
+          send_msg(TID_DISPLAY, temp_buffer);
 
         if(command_specifier) //check if '%' was typed already
         {
           if(current_command[command_index] == '\r')
           {
               current_command[command_index] = '\0'; //null terminate string for comparison
+							REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command + 1); //get registered cmd
+						
               if(str_cmp(current_command + 1, "LT") == 0)
               {														
-                //1. echo command
-                char *message = "LT"; 
-                U8 buf[11];
-                RTX_MSG_HDR *header = (void*)buf;
-                header->length = msg_hdr_size + 3;
-                header->type = DISPLAY;
-                mem_cpy(buf + msg_hdr_size, message, 3);
-
-                send_msg(TID_DISPLAY, buf);
-
-                //2. Send list of tids to LCD task
+                // Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = tsk_ls(tids, MAX_TASKS);
-                char *display_buffer = (char *)mem_alloc(msg_hdr_size + num_tasks*2);
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 4);
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + num_tasks*2;
+                header -> length = msg_hdr_size + 2;
                 header -> type = DISPLAY;
-                //Conver the tids to char for displaying, and display each in a new line
+								
+                //Convert the tids to char for displaying, and display each in a new line
                 for(int i = 0; i < num_tasks; i++)
                 {
-                  display_buffer[msg_hdr_size + i] = digits[tids[i]];
-                  i++;
-                  display_buffer[msg_hdr_size + i] = '\n';
+                  if(tids[i] > 9)
+                  {
+                    header -> length = msg_hdr_size + 4;
+                    int first_digit = 1;
+										int second_digit = tids[i] - 10;
+                    display_buffer[msg_hdr_size] = digits[first_digit];
+                    display_buffer[msg_hdr_size + 1] = digits[second_digit];
+                    display_buffer[msg_hdr_size + 2] = '\n';
+                    display_buffer[msg_hdr_size + 3] = '\0';
+                  }
+                  else
+                  {
+                    display_buffer[msg_hdr_size] = digits[tids[i]];
+                    display_buffer[msg_hdr_size + 1] = '\n';
+                    display_buffer[msg_hdr_size + 2] = '\0';
+                  }
+									send_msg(TID_DISPLAY, display_buffer);
                 }
-                send_msg(TID_DISPLAY, display_buffer);
+                mem_dealloc(display_buffer);
               }
               else if(str_cmp(current_command + 1, "LM") == 0)
               {
-                //1. echo command
-                char *message = "LM"; 
-                U8 buf[11];
-                RTX_MSG_HDR *header = (void*)buf;
-                header->length = msg_hdr_size + 3;
-                header->type = DISPLAY;
-                mem_cpy(buf + msg_hdr_size, message, 3);
-
-                send_msg(TID_DISPLAY, buf);
-
-                //2. Send list of tids to LCD task
+                // Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = mbx_ls(tids, MAX_TASKS);
-                char *display_buffer = (char *)mem_alloc(msg_hdr_size + num_tasks*2);
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 4);
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + num_tasks*2;
+                header -> length = msg_hdr_size + 3;
                 header -> type = DISPLAY;
                 //Conver the tids to char for displaying, and display each in a new line
                 for(int i = 0; i < num_tasks; i++)
                 {
-                  display_buffer[msg_hdr_size + i] = digits[tids[i]];
-                  i++;
-                  display_buffer[msg_hdr_size + i] = '\n';
+                  if(tids[i] > 9)
+                  {
+                    header -> length = msg_hdr_size + 4;
+                    int first_digit = 1;
+										int second_digit = tids[i] - 10;
+                    display_buffer[msg_hdr_size] = digits[first_digit];
+                    display_buffer[msg_hdr_size + 1] = digits[second_digit];
+                    display_buffer[msg_hdr_size + 2] = '\n';
+                    display_buffer[msg_hdr_size + 3] = '\0';
+                  }
+                  else
+                  {
+                    display_buffer[msg_hdr_size] = digits[tids[i]];
+                    display_buffer[msg_hdr_size + 1] = '\n';
+                    display_buffer[msg_hdr_size + 2] = '\0';
+                  }
+									send_msg(TID_DISPLAY, display_buffer);
                 }
-                send_msg(TID_DISPLAY, display_buffer);
+                mem_dealloc(display_buffer);
               }
-              
-              REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command + 1);
-              if(cmd != NULL) /* Registered command */
+              else if(cmd != NULL) /* Registered command */
               {
-                //1. Echo command
-                size_t string_length = command_index + 1;
-                U8 *buf = (U8*)mem_alloc(msg_hdr_size + string_length);
-                RTX_MSG_HDR *header = (void*)buf;
-                header->length = msg_hdr_size + string_length;
-                header->type = DISPLAY;
-                mem_cpy(buf + msg_hdr_size, current_command, string_length);
-
-                send_msg(TID_DISPLAY, buf);
-                
-                //2. Send to mailbox of registered task
+                // Send to mailbox of registered task
                 header->type = KCD_CMD;
-                send_msg((g_tcbs[cmd->handler_tid]).tid, buf);
-								
-								mem_dealloc(buf);
+                send_msg((g_tcbs[cmd->handler_tid]).tid, temp_buffer);
               }
               else /* unregistered command */
               {
                 //Display error message in terminal
-                char *message = "Command cannot be processed."; 
-                size_t string_length = 29; //28 chars + new line
+                char *message = "Command cannot be processed.\n"; 
+                size_t string_length = 30; //28 chars + new line + null terminator
                 U8 *buf = (U8 *)mem_alloc(msg_hdr_size + string_length);
                 RTX_MSG_HDR *header = (void*)buf;
                 header->length = msg_hdr_size + string_length;
                 header->type = DISPLAY;
-                mem_cpy(buf + msg_hdr_size, current_command, string_length);
+                mem_cpy(buf + msg_hdr_size, message, string_length);
                 
                 send_msg(TID_DISPLAY, buf);
 								mem_dealloc(buf);
@@ -211,36 +210,18 @@ void kcd_task(void)
               command_index = 0; //reset the buffer since 'ENTER' was pressed
               command_specifier = 0;
             }
-            else //wait for next character, cmd is not finished, print current char
+            else //wait for next character
             {
-              RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
-              temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
-              header -> length = msg_hdr_size + 2;
-              header -> type = DISPLAY;
-              send_msg(TID_DISPLAY, temp_buffer);
               command_index++;
             }
           }
-          else if(command_index == 0 && current_command[0] == '%') //comand specifier was typed
+          else if(command_index == 0 && current_command[0] == '%') //command specifier was typed
           {
             current_command[0] = '%';
             command_index++;
             command_specifier = 1;
-
-            RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
-            temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
-            header -> length = msg_hdr_size + 2;
-            header -> type = DISPLAY;
-            send_msg(TID_DISPLAY, temp_buffer);
           }
-          else //Not a command, simply echo keystroke
-          {
-            RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
-            temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
-            header -> length = msg_hdr_size + 2;
-            header -> type = DISPLAY;
-            send_msg(TID_DISPLAY, temp_buffer);
-          }
+          //Else we simply do nothing since it is not a command
 					mem_dealloc(temp_buffer);
       }
     }
