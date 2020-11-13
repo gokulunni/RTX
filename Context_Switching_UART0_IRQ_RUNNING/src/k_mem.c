@@ -11,7 +11,7 @@
 #ifdef DEBUG_MEM
 #include "printf.h"
 #endif /* ! DEBUG_MEM */
-#define CEIL(x,y) ((x+y-1)/y)
+#define CEIL(x,y) (((x)+(y)-1)/(y))
 
 /* The final memory map of IRAM1 looks like the following. 
    Refer to k_task.c for initilization function details.
@@ -255,12 +255,19 @@ void *first_fit_mem_alloc(size_t size) {
                 cur_node->prev->next = new_node;
             }
 
+            if (cur_node->next != NULL) {
+                cur_node->next->prev = new_node;
+            }
+
             #ifdef DEBUG_MEM
             printf("first_fit_mem_alloc: New free node address 0x%x after splitting\r\n", new_node);
             printf("first_fit_mem_alloc: New free node size 0x%x after splitting\r\n", new_node->size);
             printf("first_fit_mem_alloc: New free node prev 0x%x after splitting\r\n", new_node->prev);
             printf("first_fit_mem_alloc: New free node next 0x%x after splitting\r\n", new_node->next);
             #endif /* DEBUG_MEM */
+
+            cur_node->next = NULL;
+            cur_node->prev = NULL;
 
             ret_node = (used_mem_node_t *) cur_node;
             ret_node->size = mem_chunk_size - sizeof(used_mem_node_t);
@@ -294,8 +301,12 @@ void *first_fit_mem_alloc(size_t size) {
                 cur_node->prev->next = cur_node->next;
             }
 
+            cur_node->next = NULL;
+            cur_node->prev = NULL;
+
             ret_node = (used_mem_node_t *) cur_node;
-            ret_node->size = cur_node->size;
+            ret_node->size = cur_node->size + sizeof(node_t) - sizeof(used_mem_node_t);
+
             if (gp_current_task) {
                 ret_node->owner_tid = gp_current_task->tid;
             } else {
@@ -388,6 +399,7 @@ int first_fit_mem_dealloc(void *ptr) {
                 new_node->prev = cur_node;
                 new_node->next = NULL;
                 cur_node->next = new_node;
+                break;
             }
 
             cur_node = cur_node->next;
@@ -401,7 +413,15 @@ int first_fit_mem_dealloc(void *ptr) {
 
                 new_node->prev->size = new_node->prev->size + new_node->size + sizeof(node_t);
                 new_node->prev->next = new_node->next;
-                new_node->next->prev = new_node->prev;
+
+                if (new_node->next) {
+                    new_node->next->prev = new_node->prev;
+                }
+
+                new_node->size = 0;
+                new_node->next = NULL;
+                new_node->prev = NULL;
+
                 new_node = new_node->prev;
 
                 #ifdef DEBUG_MEM
@@ -418,11 +438,15 @@ int first_fit_mem_dealloc(void *ptr) {
                 #endif /* DEBUG_MEM */
 
                 new_node->size = new_node->size + new_node->next->size + sizeof(node_t);
-                new_node->next = new_node->next->next;
 
                 if (new_node->next->next) {
                     new_node->next->next->prev = new_node;
                 }
+
+                new_node->next->size = 0;
+                new_node->next->prev = NULL;
+
+                new_node->next = new_node->next->next;
 
                 #ifdef DEBUG_MEM
                 printf("first_fit_mem_dealloc: coalesced node address 0x%x\r\n", new_node);
