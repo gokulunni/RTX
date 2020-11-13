@@ -10,10 +10,11 @@
 #include "rtx.h"
 #include "uart_polling.h"
 #include "usr_tasks.h"
-
-#ifdef DEBUG_0
 #include "printf.h"
-#endif /* DEBUG_0 */
+
+/* #ifdef DEBUG_0
+#include "printf.h"
+#endif  DEBUG_0 */
 
 /* the following arrays can also be dynamic allocated 
    They do not have to be global buffers. 
@@ -21,6 +22,9 @@
 U8 g_buf1[256];
 U8 g_buf2[256];
 task_t g_tasks[MAX_TASKS];
+int passed = 0;
+int total_tests = 0;
+int tests_completed = 0;
 
 /**
  * @brief: fill the tasks array with information 
@@ -30,6 +34,33 @@ task_t g_tasks[MAX_TASKS];
  *       during testing, if we want to initialize a user task at boot time
  *       we will write a similar function to provide task info. to kernel.
  */
+ 
+void print_test_result(int test_num, int result, char *test_name)
+{
+	if(result == RTX_OK)
+	{
+		passed++;
+		printf("G04_test: test %d (%s) OK\n", test_num, test_name);
+	}
+	else
+		printf("G04_test: test %d (%s) FAIL\n", test_num, test_name);
+	
+	tests_completed++;
+}
+
+void print_test_start(int suite_num)
+{
+	printf("G04_test - suite_%d: START\n", suite_num);  
+}
+
+void print_final_results()
+{
+	printf("%d/%d OK\n", passed, total_tests);
+  printf("%d/%d FAIL\n", total_tests-passed, total_tests);
+  printf("G04_test: END\n");
+}
+ 
+ 
 int set_usr_task_info(RTX_TASK_INFO *tasks, int num_tasks) {
     for (int i = 0; i < num_tasks; i++ ) {
         tasks[i].u_stack_size = 0x0;
@@ -121,12 +152,17 @@ void send_task(void)
     /* Terminate if you are not a daemon task.
        For a deamon task, it should be in an infinite loop and never terminate.
     */
+		print_test_result(4, RTX_OK, "Scheduling policy test");
 		uart1_put_string ("sent_task: exiting \n\r");
+		
+		print_final_results();
     tsk_exit();
 }
 
 void recieve_task(void)
 {
+	total_tests = 1;
+	print_test_start(1);
     size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
     U8  *buf = &g_buf1[0]; /* buffer is allocated by the caller */
     struct rtx_msg_hdr *ptr = (void *)buf;
@@ -156,5 +192,6 @@ void recieve_task(void)
     */
     tsk_exit();
 }
+
 
 

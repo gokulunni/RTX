@@ -15,8 +15,8 @@
 #endif
 
 
-uint8_t g_buffer[]= "You Typed a Q\n\r";
-uint8_t *gp_buffer = g_buffer;
+extern U8 *TX_buffer;
+uint8_t buffer_index = 0;
 uint8_t g_send_char = 0;
 uint8_t g_char_in;
 uint8_t g_char_out;
@@ -194,7 +194,7 @@ RESTORE
     LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
 	LDR R3, [R3]                        ; Get address of current task
 	MOV R2, #0                          ; clear R2
-	LDRB R2, [R3, #43]                  ; read priv member (344 bits = 43 byte offset)
+	LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
     CMP R2, #1                          ; check if priv level is 1 or 0
     BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
     B user_thread                       ; if 0, handler was invoked by user thread
@@ -234,7 +234,6 @@ void c_UART0_IRQHandler(void)
         uart1_put_char(g_char_in);
         uart1_put_string("\n\r");
 #endif // DEBUG_0
-        g_buffer[12] = g_char_in; // nasty hack
         g_send_char = 1;
         
         /* setting the g_continue_flag */
@@ -251,15 +250,13 @@ void c_UART0_IRQHandler(void)
         header->length = msg_hdr_size + 1;
         header->type = KEY_IN;
         buf[msg_hdr_size] = g_char_in;
-	//			char * test = (char *)mem_alloc(1);
-		//		mem_dealloc(test);
         k_send_msg(TID_KCD, buf);
 				
     } else if (IIR_IntId & IIR_THRE) {
     /* THRE Interrupt, transmit holding register becomes empty */
 
-        if (*gp_buffer != '\0' ) {
-            g_char_out = *gp_buffer;
+        if (TX_buffer[buffer_index]!= '\0' ) {
+            g_char_out = TX_buffer[buffer_index];
 #ifdef DEBUG_0
             //uart1_put_string("Writing a char = ");
             //uart1_put_char(g_char_out);
@@ -269,15 +266,16 @@ void c_UART0_IRQHandler(void)
             printf("Writing a char = %c \n\r", g_char_out);
 #endif // DEBUG_0            
             pUart->THR = g_char_out;
-            gp_buffer++;
+            buffer_index++;
         } else {
 #ifdef DEBUG_0
             uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
 #endif // DEBUG_0
-            pUart->IER ^= IER_THRE | IER_RLS | IER_RBR; // toggle the IER_THRE bit 
-            pUart->THR = '\0';
+            pUart->IER = IER_RLS | IER_RBR;
+            //pUart->IER ^= IER_THRE | IER_RLS | IER_RBR; // toggle the IER_THRE bit 
+            //pUart->THR = '\0';
             g_send_char = 0;
-            gp_buffer = g_buffer;        
+            buffer_index = 0;
         }
           
     } else {  /* not implemented yet */

@@ -32,34 +32,42 @@ extern void lcd_task(void);
 extern void kcd_task(void);
 extern void null_task(void);
 
-int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
-
-    if (num_tasks !=3) {
-        return RTX_ERR;
-    }
+int suite1() {
+	
+		RTX_TASK_INFO task_info[5];
     
-    tasks[0].ptask = &lcd_task;
-    tasks[0].u_stack_size = 0x100;
-    tasks[0].prio = HIGH;
-    tasks[0].priv = 1;
+    task_info[0].ptask = &lcd_task;
+    task_info[0].u_stack_size = 0x0;
+    task_info[0].prio = HIGH;
+    task_info[0].priv = 1;
     
-    tasks[1].ptask = &kcd_task;
-    tasks[1].u_stack_size = 0x100;
-    tasks[1].prio = HIGH;
-    tasks[1].priv = 0;
+    task_info[1].ptask = &kcd_task;
+    task_info[1].u_stack_size = 0x100;
+    task_info[1].prio = HIGH;
+    task_info[1].priv = 0;
     
-    tasks[2].ptask = &null_task;
-    tasks[2].u_stack_size = 0x100;
-    tasks[2].prio = PRIO_NULL;
-    tasks[2].priv = 0;
-		
-		
+    task_info[2].ptask = &null_task;
+    task_info[2].u_stack_size = 0x100;
+    task_info[2].prio = PRIO_NULL;
+    task_info[2].priv = 0;
+	
+	task_info[3].ptask = &recieve_task;
+	task_info[3].u_stack_size = 0x100;
+	task_info[3].prio = HIGH;
+	task_info[3].priv = 0;
+	
+	task_info[4].ptask = &send_task;
+	task_info[4].u_stack_size = 0x100;
+	task_info[4].prio = MEDIUM;
+	task_info[4].priv = 0;
+	
+		rtx_init(32, FIRST_FIT, task_info, 5);
 
     return RTX_OK;
 }
-int main() 
+int main_1() 
 {      
-    RTX_TASK_INFO task_info[5];    /* 5 tasks, only 2 are used in uncommented code */
+    //RTX_TASK_INFO task_info[5];    /* 5 tasks, only 2 are used in uncommented code */
    
     /* CMSIS system initialization */
     SystemInit();  /* initialize the system */
@@ -77,10 +85,10 @@ int main()
     printf("Read PSP = 0x%x\r\n", __get_PSP());
 #endif /*DEBUG_0*/    
     /* sets task information */
-    set_task_info(task_info, 2);
-    set_fixed_tasks(task_info + 2, 3);  /* kcd, lcd, null tasks */
-    /* start the RTX and built-in tasks */
-    rtx_init(32, FIRST_FIT, task_info, 5); 
+    //set_task_info(task_info, 2);
+    //set_fixed_tasks(task_info + 2, 3);  /* kcd, lcd, null tasks */
+    suite1();
+		/* start the RTX and built-in tasks */ 
     /* We should never reach here!!! */
     return RTX_ERR;  
 }
