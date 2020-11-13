@@ -149,24 +149,22 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         int j;
         TCB *p_tcb;
 							
-        if(p_taskinfo -> ptask == &kcd_task)
-        {
+        if(p_taskinfo -> ptask == &kcd_task) {
             p_tcb = &g_tcbs[TID_KCD];
             p_tcb->tid = TID_KCD;
 			i--;
-        }
-        else if(p_taskinfo -> ptask == &lcd_task)
-        {
+        } else if(p_taskinfo -> ptask == &lcd_task) {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
 	        i--;
-        }
-        else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) 
-        {
+        } else if(p_tcb->prio == PRIO_NULL) {
+            p_tcb = &g_tcbs[PID_NULL];
+            p_tcb->tid = PID_NULL;
+            k_null_tsk = &g_tcbs[0];
+            i--;
+        } else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) {
             continue;
-        }
-        else
-        {
+        } else {
             p_tcb = &g_tcbs[i+1];
             p_tcb->tid = i+1;
         }
@@ -182,10 +180,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         //CHECK CREATE FUNCTION
 
         p_tcb->prio = p_taskinfo->prio;
-        // TODO: can we skip NULL_PRIO task? can we ignore user provided NULL TASK and use our own
-        if (p_tcb->prio == PRIO_NULL) {
-            continue;
-        }
 
         if (p_taskinfo->priv == 0) { /* unprivileged task */
             p_tcb->priv = 0;
