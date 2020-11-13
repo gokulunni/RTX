@@ -144,29 +144,27 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    // TODO: if PRIO is NULL, skip that task
-    for (i = 0; i < num_tasks; i++) { // TODO: check that num task less than max
+    int p = 0;
+    for (i = 0; p < num_tasks; i++, p++) {
         int j;
         TCB *p_tcb;
 							
-        if(p_taskinfo -> ptask == &kcd_task)
-        {
+        if(p_taskinfo -> ptask == &kcd_task) {
             p_tcb = &g_tcbs[TID_KCD];
             p_tcb->tid = TID_KCD;
 			i--;
-        }
-        else if(p_taskinfo -> ptask == &lcd_task)
-        {
+        } else if(p_taskinfo -> ptask == &lcd_task) {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
 	        i--;
-        }
-        else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) 
-        {
+        } else if(p_tcb->prio == PRIO_NULL) {
+            p_tcb = &g_tcbs[PID_NULL];
+            p_tcb->tid = PID_NULL;
+            k_null_tsk = &g_tcbs[0];
+            i--;
+        } else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) {
             continue;
-        }
-        else
-        {
+        } else {
             p_tcb = &g_tcbs[i+1];
             p_tcb->tid = i+1;
         }
@@ -182,10 +180,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         //CHECK CREATE FUNCTION
 
         p_tcb->prio = p_taskinfo->prio;
-        // TODO: can we skip NULL_PRIO task? can we ignore user provided NULL TASK and use our own
-        if (p_tcb->prio == PRIO_NULL) {
-            continue;
-        }
 
         if (p_taskinfo->priv == 0) { /* unprivileged task */
             p_tcb->priv = 0;
@@ -332,9 +326,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (state == NEW) {
         if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {
-						if(p_tcb_old -> state != BLK_MSG){
-							p_tcb_old->state = READY; 
-						}
+            if(p_tcb_old -> state != BLK_MSG){
+                p_tcb_old->state = READY;
+            }
             p_tcb_old->msp = (U32 *) __get_MSP();
             p_tcb_old->psp = (U32 *) __get_PSP();
         }
@@ -349,9 +343,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (gp_current_task != p_tcb_old) {
         if (state == READY) {
-						if(p_tcb_old -> state != BLK_MSG){
-							p_tcb_old->state = READY; 
-						}
+            if(p_tcb_old -> state != BLK_MSG){
+                p_tcb_old->state = READY;
+            }
             p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
             p_tcb_old->psp = (U32 *) __get_PSP();
             gp_current_task->state = RUNNING;
@@ -476,10 +470,10 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->priv = 0;
     new_task->has_mailbox=NULL;
     //Initialize mailbox to NULL values
-		new_task->mailbox.buffer_start = NULL;
-		new_task->mailbox.buffer_end = NULL;
-		new_task->mailbox.head = NULL;
-		new_task->mailbox.tail = NULL;
+    new_task->mailbox.buffer_start = NULL;
+    new_task->mailbox.buffer_end = NULL;
+    new_task->mailbox.head = NULL;
+    new_task->mailbox.tail = NULL;
 
     new_task->psp_size = stack_size;
     new_task->psp_hi = alloc_user_stack(stack_size);
@@ -732,9 +726,9 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 }
 
 int k_tsk_ls(task_t *buf, int count){
-	#ifdef DEBUG_0
+	  #ifdef DEBUG_0
     printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
-	#endif /* DEBUG_0 */
+    #endif /* DEBUG_0 */
 	
 	int actual_count = 0;
 	int buf_index = 0;
