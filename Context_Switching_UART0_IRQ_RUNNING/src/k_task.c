@@ -157,7 +157,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
 	        i--;
-        } else if(p_tcb->prio == PRIO_NULL) {
+        } else if(p_tcb->prio == PRIO_NULL || p_taskinfo->ptask == &null_task) {
             p_tcb = &g_tcbs[PID_NULL];
             p_tcb->tid = PID_NULL;
             k_null_tsk = &g_tcbs[0];
@@ -221,7 +221,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         }
 
         //Add task to the priority queue for NEW tasks
-        push(&ready_queue_head, p_tcb);
+        if (p_tcb->tid != PID_NULL) {
+            push(&ready_queue_head, p_tcb);
+        }
 
         p_taskinfo++;
     }
@@ -371,7 +373,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head != NULL && p_tcb_old != NULL && ready_queue_head->prio <= p_tcb_old->prio) {
+    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG)) {
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
