@@ -144,8 +144,8 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    // TODO: if PRIO is NULL, skip that task
-    for (i = 0; i < num_tasks; i++) { // TODO: check that num task less than max
+    int p = 0;
+    for (i = 0; p < num_tasks; i++, p++) {
         int j;
         TCB *p_tcb;
 							
@@ -326,9 +326,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (state == NEW) {
         if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {
-						if(p_tcb_old -> state != BLK_MSG){
-							p_tcb_old->state = READY; 
-						}
+            if(p_tcb_old -> state != BLK_MSG){
+                p_tcb_old->state = READY;
+            }
             p_tcb_old->msp = (U32 *) __get_MSP();
             p_tcb_old->psp = (U32 *) __get_PSP();
         }
@@ -343,9 +343,9 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (gp_current_task != p_tcb_old) {
         if (state == READY) {
-						if(p_tcb_old -> state != BLK_MSG){
-							p_tcb_old->state = READY; 
-						}
+            if(p_tcb_old -> state != BLK_MSG){
+                p_tcb_old->state = READY;
+            }
             p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
             p_tcb_old->psp = (U32 *) __get_PSP();
             gp_current_task->state = RUNNING;
@@ -470,10 +470,10 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->priv = 0;
     new_task->has_mailbox=NULL;
     //Initialize mailbox to NULL values
-		new_task->mailbox.buffer_start = NULL;
-		new_task->mailbox.buffer_end = NULL;
-		new_task->mailbox.head = NULL;
-		new_task->mailbox.tail = NULL;
+    new_task->mailbox.buffer_start = NULL;
+    new_task->mailbox.buffer_end = NULL;
+    new_task->mailbox.head = NULL;
+    new_task->mailbox.tail = NULL;
 
     new_task->psp_size = stack_size;
     new_task->psp_hi = alloc_user_stack(stack_size);
@@ -717,7 +717,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 int k_tsk_ls(task_t *buf, int count){
     #ifdef DEBUG_0
     printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
-#endif /* DEBUG_0 */
+    #endif /* DEBUG_0 */
 	
 	int actual_count = 0;
 	int buf_index = 0;
