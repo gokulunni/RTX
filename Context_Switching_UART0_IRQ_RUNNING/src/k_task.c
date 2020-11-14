@@ -144,29 +144,27 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
-    int p = 0;
-    for (i = 0; p < num_tasks; i++, p++) {
+    i = 0;
+    for (int p = 0; p < num_tasks; p++) {
         int j;
         TCB *p_tcb;
 							
         if(p_taskinfo -> ptask == &kcd_task) {
             p_tcb = &g_tcbs[TID_KCD];
             p_tcb->tid = TID_KCD;
-			i--;
         } else if(p_taskinfo -> ptask == &lcd_task) {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
-	        i--;
         } else if(p_tcb->prio == PRIO_NULL || p_taskinfo->ptask == &null_task) {
             p_tcb = &g_tcbs[PID_NULL];
             p_tcb->tid = PID_NULL;
             k_null_tsk = &g_tcbs[0];
-            i--;
         } else if((i + 1) == TID_KCD || (i + 1) == TID_DISPLAY) {
             continue;
         } else {
             p_tcb = &g_tcbs[i+1];
             p_tcb->tid = i+1;
+            i++;
         }
         
         p_tcb->state = NEW;
@@ -519,19 +517,18 @@ void k_tsk_exit(void) {
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
-				
-				//Dellocate mailbox if it exists. ownership of mailbox is deallocating task
-				if (gp_current_task->has_mailbox){
-					if (k_mem_dealloc(gp_current_task->mailbox.buffer_start) == RTX_ERR)
-						{
-							#ifdef DEBUG_0
-								printf("k_task_exit: could not deallocate pointer to mailbox");
-							#endif /* DEBUG_0 */
-						}
-				}
 
         TCB *prev_current_task = gp_current_task;
         gp_current_task = &kernal_task;
+
+        //Dellocate mailbox if it exists. ownership of mailbox is deallocating task
+        if (prev_current_task->has_mailbox){
+            if (k_mem_dealloc(prev_current_task->mailbox.buffer_start) == RTX_ERR) {
+                #ifdef DEBUG_0
+                printf("k_task_exit: could not deallocate pointer to mailbox");
+                #endif /* DEBUG_0 */
+            }
+        }
 
         // If its unpriviledged task, dealloc user stack
         if (prev_current_task->priv == 0) {
@@ -553,8 +550,11 @@ void k_tsk_exit(void) {
         new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
-        pop_task_by_id(&ready_queue_head, 0);
-        gp_current_task = &g_tcbs[0];
+//        pop_task_by_id(&ready_queue_head, 0);
+//        gp_current_task = &g_tcbs[0];
+
+//        __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack
+//        __set_PSP((U32)gp_current_task->psp);
 
         k_tsk_yield();
     }
