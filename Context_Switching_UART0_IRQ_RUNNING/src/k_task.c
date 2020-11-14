@@ -17,9 +17,9 @@
 #include "linked_list.h"
 #include "k_mem.h"
 
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
 #include "printf.h"
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
 
 /* ----- Global Variables ----- */
 TCB *gp_current_task;    /* always point to the current RUN process */
@@ -111,23 +111,23 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	gp_current_task = NULL;
 
     if (num_tasks <= 0 || num_tasks > MAX_TASKS) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_init: invalid num_tasks\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task_info == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_init: no initial kernel tasks to run\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (k_null_tsk != NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_init: init has been run before\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 	  
@@ -182,9 +182,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             p_tcb->psp_hi = alloc_user_stack(p_taskinfo->u_stack_size);
 
             if (p_tcb->psp_hi == NULL) {
-                #ifdef DEBUG_0
+                #ifdef DEBUG_TSK
                 printf("[ERROR] k_tsk_init: failed to allocate init's task user stack\n\r");
-                #endif /* DEBUG_0 */
+                #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
 
@@ -232,9 +232,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 				
         INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_init: tid failed to allocate memory\n\r");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
             return RTX_ERR;
         }
 				
@@ -253,9 +253,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         k_null_tsk->psp_hi = alloc_user_stack(0x44);
         if (k_null_tsk->psp_hi == NULL) {
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_init: failed to allocate memory for null task's user stack\n\r");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
             return RTX_ERR;
         }
         k_null_tsk->psp_size = 0x44;
@@ -301,9 +301,9 @@ TCB *dummy_scheduler(void) {
     }
 
     if (gp_current_task == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] dummy_scheduler: gp_current_task is NULL\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         pop_task_by_id(&ready_queue_head, 0);
         gp_current_task = &g_tcbs[0];
     }
@@ -378,33 +378,33 @@ int k_tsk_yield(void) {
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
 
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
 
         if (gp_current_task == NULL){
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_yield: No next task available");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
             gp_current_task=p_tcb_old;
             return RTX_ERR;
         }
         if (p_tcb_old == NULL){
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
             p_tcb_old = gp_current_task;
         }
         print_prio_queue(ready_queue_head);
         if (task_switch(p_tcb_old) == RTX_ERR) {
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
             #endif
         }
     } else {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
     }
 
     return RTX_OK;
@@ -412,34 +412,34 @@ int k_tsk_yield(void) {
 
 
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size) {
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_create: entering...\n\r");
     printf("task = 0x%x, task_entry = 0x%x, prio=%d, stack_size = %d\n\r", task, task_entry, prio, stack_size);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
 
     if (prio == PRIO_NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: attempted to create NULL task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     } else if (!(prio >= 0 && prio <= 4)) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: prio outside of task priority bounds\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 		
     if (stack_size <= 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: invalid stack_size entered\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (free_tid_head == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: no available TID\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -448,17 +448,17 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     INT_LL_NODE_T *popped_tid = pop_tid(&free_tid_head);
     if (popped_tid == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: no available TID\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     int tid = popped_tid->tid;
     if (k_mem_dealloc(popped_tid) == RTX_ERR) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: error in deallocating tid\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -479,9 +479,9 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->psp_size = stack_size;
     new_task->psp_hi = alloc_user_stack(stack_size);
     if (new_task->psp_hi == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: could not allocate stack for new task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -512,9 +512,9 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
 
 void k_tsk_exit(void) {
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_exit: exiting...\n\r");
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
     // A PRIO_NULL task cannot exit
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
@@ -525,18 +525,18 @@ void k_tsk_exit(void) {
         //Dellocate mailbox if it exists. ownership of mailbox is deallocating task
         if (prev_current_task->has_mailbox){
             if (k_mem_dealloc(prev_current_task->mailbox.buffer_start) == RTX_ERR) {
-                #ifdef DEBUG_0
+                #ifdef DEBUG_TSK
                 printf("k_task_exit: could not deallocate pointer to mailbox");
-                #endif /* DEBUG_0 */
+                #endif /* DEBUG_TSK */
             }
         }
 
         // If its unpriviledged task, dealloc user stack
         if (prev_current_task->priv == 0) {
             if (dealloc_user_stack(prev_current_task->psp_hi, prev_current_task->psp_size) == RTX_ERR) {
-                #ifdef DEBUG_0
+                #ifdef DEBUG_TSK
                 printf("[ERROR] k_tsk_exit: failed to deallocate user stack for task %d\n\r", prev_current_task->tid);
-                #endif /* DEBUG_0 */
+                #endif /* DEBUG_TSK */
             }
             prev_current_task->psp = NULL;
         }
@@ -544,9 +544,9 @@ void k_tsk_exit(void) {
 
         INT_LL_NODE_T *new_tid = k_mem_alloc(sizeof(INT_LL_NODE_T));
         if (new_tid == NULL) {
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_exit: could not allocate memory for new_tid\n\r");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
         }
         new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
@@ -560,35 +560,35 @@ void k_tsk_exit(void) {
 
 
 int k_tsk_set_prio(task_t task_id, U8 prio) {
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
 
     if (prio == PRIO_NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_NULL\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     } else if (!(prio >= 0 && prio <= 4)) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: prio outside of task priority bounds\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
     if (task_id == 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: cannot change prio of NULL task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task_id >= MAX_TASKS || task_id < 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -602,24 +602,24 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     }
 
     if (task == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: task with tid %d not found\n\r", task_id);
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->state == DORMANT) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: task with tid %d is DORMANT\n\r", task_id);
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
     if (task->prio == PRIO_NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: cannot change prio of NULL task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -642,7 +642,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
                 push(&ready_queue_head, p_tcb_old);
                 gp_current_task = task;
                 if (task_switch(p_tcb_old) == RTX_ERR) {
-                    #ifdef DEBUG_0
+                    #ifdef DEBUG_TSK
                     printf("[ERROR] k_tsk_set_prio: could not switch task, same task resuming");
                     #endif
                     return RTX_ERR;
@@ -670,10 +670,10 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
 }
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_get: entering...\n\r");
     printf("task_id = %d, buffer = 0x%x.\n\r", task_id, buffer);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
 
     if (buffer == NULL) {
         return RTX_ERR;
@@ -681,16 +681,16 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 
     // TODO: what if we try to access non-existent task, DORMANT
     if (task_id >= MAX_TASKS || task_id < 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_get: task ID outside of TID domain\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (tid_is_available(free_tid_head, task_id) == 1) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -724,23 +724,23 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 }
 
 int k_tsk_ls(task_t *buf, int count){
-	  #ifdef DEBUG_0
+	  #ifdef DEBUG_TSK
     printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
 	
 	int actual_count = 0;
 	int buf_index = 0;
 	
 	if (buf == NULL) {
-		#ifdef DEBUG_0
+		#ifdef DEBUG_TSK
     printf("k_tsk_ls: can not pass in NULL task elements");
-		#endif /* DEBUG_0 */
+		#endif /* DEBUG_TSK */
 		return RTX_ERR;
 	}
 	if (count < 0) {
-		#ifdef DEBUG_0
+		#ifdef DEBUG_TSK
     printf("k_tsk_ls: invalid count passed in");
-		#endif /* DEBUG_0 */
+		#endif /* DEBUG_TSK */
 		return RTX_ERR;
 	}
 	
