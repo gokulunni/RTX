@@ -109,9 +109,6 @@ void null_task_func() {
  */
 int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	gp_current_task = NULL;
-	/* Default is MSP when calling tsk_init(), set to PSP */
-	  //__set_PSP((U32) __get_MSP());
-		//__set_CONTROL((U32)3);
 
     if (num_tasks <= 0 || num_tasks > MAX_TASKS) {
         #ifdef DEBUG_0
@@ -140,6 +137,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
   
     // Create fake kernal task with ID = MAX_TASKS+1
     kernal_task.tid = MAX_TASKS + 1;
+		kernal_task.priv = 1;
     gp_current_task = &kernal_task;
 
     /* Pretend an exception happened, by adding exception stack frame */
