@@ -15,28 +15,28 @@ extern TCB *ready_queue_head;
 extern TCB g_tcbs[MAX_TASKS];
 extern TCB kernal_task;
 extern INT_LL_NODE_T *free_tid_head;
-#ifdef DEBUG_0
+#ifdef DEBUG_MSG
 #include "printf.h"
-#endif /* ! DEBUG_0 */
+#endif /* ! DEBUG_MSG */
 
 int k_mbx_create(size_t size) {
-#ifdef DEBUG_0
+#ifdef DEBUG_MSG
     printf("k_mbx_create: size = %d\r\n", size);
-		printf("creating mailbox for tid: %d\r\n",gp_current_task->tid );
-#endif /* DEBUG_0 */
+    printf("creating mailbox for tid: %d\r\n",gp_current_task->tid );
+#endif /* DEBUG_MSG */
 
     if (size<=0||size<MIN_MBX_SIZE){
-				#ifdef DEBUG_0
+				#ifdef DEBUG_MSG
             printf("size is smaller than MIN_MBX_SIZE: size = %d\r\n", size);
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         return RTX_ERR;
     }
 
     //Assume it is not the NULL task running
     if (gp_current_task->has_mailbox ){ //MailBox already Exists
-				#ifdef DEBUG_0
+				#ifdef DEBUG_MSG
             printf("mailbox is found when initializing mailbox");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         return RTX_ERR;    
     }
 
@@ -46,9 +46,9 @@ int k_mbx_create(size_t size) {
     void* mailbox_buffer=k_mem_alloc(size);
 
     if (!mailbox_buffer){
-        #ifdef DEBUG_0
+        #ifdef DEBUG_MSG
             printf("Insufficent size during mem alloc: size = %d\r\n", size);
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         return RTX_ERR;
     }
     
@@ -65,20 +65,20 @@ int k_mbx_create(size_t size) {
 }
 
 int k_send_msg(task_t receiver_tid, const void *buf) {
-#ifdef DEBUG_0
+#ifdef DEBUG_MSG
     printf("k_send_msg: receiver_tid = %d, buf=0x%x\r\n", receiver_tid, buf);
     printf("sending from tid: %d\r\n",gp_current_task->tid );
     printf("sending to mailbox from for tid: %d\r\n",receiver_tid );
-#endif /* DEBUG_0 */
+#endif /* DEBUG_MSG */
 
     //Trap kernel
     //No interrupts
     //__disable_irq();
 
     if (!buf){
-        #ifdef DEBUG_0
+        #ifdef DEBUG_MSG
             printf("k_send_msg: buf is NULL\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //__enable_irq();
         return RTX_ERR;
     }
@@ -90,9 +90,9 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 		
 		//Check if task is avaliable use is avalible
 		if (tid_is_available(free_tid_head, receiver_tid) == 1) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_MSG
         printf("[ERROR] k_tsk_get: task ID does not exist or dormant\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
 			//__enable_irq();
         return RTX_ERR;
     }
@@ -101,18 +101,18 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //DOUBLE CHECK WHAT STATE IT SHOULD BE IN (RECIVEING TASK)
     if(task->state == DORMANT){
         //Check that the status of the sending task is not dormant
-        #ifdef DEBUG_0
+        #ifdef DEBUG_MSG
             printf("k_send_msg: reciever_tid is not running\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //__enable_irq();
         return RTX_ERR;
     }
      
      //Change to variable
     if(!task->has_mailbox){
-				 #ifdef DEBUG_0
+				 #ifdef DEBUG_MSG
             printf("k_send_msg: reciever_tid has no mailbox running\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //No mailbox for task
         //__enable_irq();
         return RTX_ERR;
@@ -124,27 +124,27 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Check example of casting 
 
     if (length < MIN_MSG_SIZE){
-				 #ifdef DEBUG_0
+				 #ifdef DEBUG_MSG
             printf("k_send_msg: Length of mailbox is less tha MIN_MSG_SIZE\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //__enable_irq();
         return RTX_ERR;
     }
 
 		//Commenting out for testing purposes
     if(is_circ_buf_full(&task->mailbox,length)){
-			 #ifdef DEBUG_0
+			 #ifdef DEBUG_MSG
             printf("k_send_msg: circular buffer is full for recieving tid\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //__enable_irq();
         return RTX_ERR;
     }
 
     //check that this doesn't conflict with pre emption
     if(task->state ==BLK_MSG){
-				#ifdef DEBUG_0
+				#ifdef DEBUG_MSG
 					printf("k_send_msg: unblocking mailbox after sending message to blocked TID");
-				#endif /* DEBUG_0 */
+				#endif /* DEBUG_MSG */
         task->state = READY;
         //Add state back to ready_queue
         push(&ready_queue_head, task);
@@ -154,9 +154,9 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         //Does enqueue_msg read the header from the buffer?
         //Assuming i can just do deep copy and have logic
         //Inside of enqueue calculate length
-			 #ifdef DEBUG_0
+			 #ifdef DEBUG_MSG
             printf("k_send_msg: could not enqueue message\r\n");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_MSG */
         //__enable_irq();
         return RTX_ERR;
     }
@@ -181,21 +181,21 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
 }
 
 int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
-	#ifdef DEBUG_0
+	#ifdef DEBUG_MSG
         printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-  #endif /* DEBUG_0 */
+  #endif /* DEBUG_MSG */
 	
     if ( !(len > 0)) {
-			#ifdef DEBUG_0
+			#ifdef DEBUG_MSG
         printf("k_recv_msg: invalid len entered");
-			#endif /* DEBUG_0 */
+			#endif /* DEBUG_MSG */
         return RTX_ERR;
     }
 		
 		if (buf == NULL) {
-			#ifdef DEBUG_0
+			#ifdef DEBUG_MSG
         printf("k_recv_msg: can not pass in unallocated pointer for buf");
-			#endif /* DEBUG_0 */
+			#endif /* DEBUG_MSG */
 			return RTX_ERR;
 		}
 
@@ -208,9 +208,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     if (!gp_current_task->has_mailbox)
     {
-			#ifdef DEBUG_0
+			#ifdef DEBUG_MSG
         printf("k_recv_msg: current task does NOT have a mailbox");
-			#endif /* DEBUG_0 */
+			#endif /* DEBUG_MSG */
 			//__enable_irq();
 			return RTX_ERR;
     }
@@ -219,9 +219,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     {
 				
         gp_current_task->state = BLK_MSG;
-				#ifdef DEBUG_0
+				#ifdef DEBUG_MSG
 					printf("k_recv_msg: blocking task due to empty mailbox");
-				#endif /* DEBUG_0 */
+				#endif /* DEBUG_MSG */
 				//__enable_irq();
         k_tsk_yield();
 				//__disable_irq();
@@ -230,9 +230,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     if (dequeue_msg( &(gp_current_task->mailbox), buf, len) == RTX_ERR)
     {
-			#ifdef DEBUG_0
+			#ifdef DEBUG_MSG
         printf("k_recv_msg: error dequeueing message from mailbox");
-			#endif /* DEBUG_0 */
+			#endif /* DEBUG_MSG */
 			//__enable_irq();
 			return RTX_ERR;
     }
@@ -245,9 +245,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 			*sender_tid = sender->tid;
 		}
 		if (k_mem_dealloc(sender) == RTX_ERR) {
-			#ifdef DEBUG_0
+			#ifdef DEBUG_MSG
 			printf("k_recv_msg: could not deallocate pointer to sender");
-			#endif /* DEBUG_0 */
+			#endif /* DEBUG_MSG */
 		}
 		
     //atomicity off / enable interrupts
@@ -255,32 +255,32 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
     //__enable_irq();
 		
-		#ifdef DEBUG_0
+		#ifdef DEBUG_MSG
         printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_MSG */
 
 
     return 0;
 }
 
 int k_mbx_ls(task_t *buf, int count) {
-	#ifdef DEBUG_0
+	#ifdef DEBUG_MSG
     printf("k_mbx_ls: buf=0x%x, count=%d\r\n", buf, count);
-	#endif /* DEBUG_0 */
+	#endif /* DEBUG_MSG */
 	
 	int actual_count = 0;
 	int buf_index = 0;
 	
 	if (buf == NULL) {
-		#ifdef DEBUG_0
+		#ifdef DEBUG_MSG
     printf("k_mbx_ls: can not pass in NULL task elements");
-		#endif /* DEBUG_0 */
+		#endif /* DEBUG_MSG */
 		return RTX_ERR;
 	}
 	if (count < 0) {
-		#ifdef DEBUG_0
+		#ifdef DEBUG_MSG
     printf("k_mbx_ls: invalid count passed in");
-		#endif /* DEBUG_0 */
+		#endif /* DEBUG_MSG */
 		return RTX_ERR;
 	}
 	

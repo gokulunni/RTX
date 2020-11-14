@@ -325,7 +325,7 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
     state = gp_current_task->state;
 
     if (state == NEW) {
-        if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW) {
+        if (gp_current_task != p_tcb_old && p_tcb_old->state != NEW && p_tcb_old->state != DORMANT) {
             if(p_tcb_old -> state != BLK_MSG){
                 p_tcb_old->state = READY;
             }
@@ -343,11 +343,15 @@ int task_switch(TCB *p_tcb_old) { // TODO: confirm both p_tcb_old and gp_current
 
     if (gp_current_task != p_tcb_old) {
         if (state == READY) {
-            if(p_tcb_old -> state != BLK_MSG){
+            if(p_tcb_old -> state != BLK_MSG && p_tcb_old->state != DORMANT){
                 p_tcb_old->state = READY;
             }
-            p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
-            p_tcb_old->psp = (U32 *) __get_PSP();
+
+            if (p_tcb_old->state != DORMANT) {
+                p_tcb_old->msp = (U32 *) __get_MSP(); // save the old process's sp
+                p_tcb_old->psp = (U32 *) __get_PSP();
+            }
+
             gp_current_task->state = RUNNING;
             __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack 
             __set_PSP((U32)gp_current_task->psp);
@@ -371,7 +375,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG)) {
+    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT)) {
 
         //Pop the next task in queue
         gp_current_task = dummy_scheduler();
@@ -399,7 +403,6 @@ int k_tsk_yield(void) {
             printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
             #endif
         }
-
     } else {
         #ifdef DEBUG_0
         printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
@@ -550,12 +553,7 @@ void k_tsk_exit(void) {
         new_tid->tid = prev_current_task->tid;
         push_tid(&free_tid_head, new_tid);
 
-//        pop_task_by_id(&ready_queue_head, 0);
-//        gp_current_task = &g_tcbs[0];
-
-//        __set_MSP((U32) gp_current_task->msp); //switch to the new proc's stack
-//        __set_PSP((U32)gp_current_task->psp);
-
+        gp_current_task = prev_current_task;
         k_tsk_yield();
     }
 
