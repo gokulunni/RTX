@@ -1,0 +1,10 @@
+.\objects\sim\k_msg.o: src\k_msg.c
+.\objects\sim\k_msg.o: src\k_msg.h
+.\objects\sim\k_msg.o: src\k_rtx.h
+.\objects\sim\k_msg.o: src\common.h
+.\objects\sim\k_msg.o: src\circular_buffer.h
+.\objects\sim\k_msg.o: src\k_task.h
+.\objects\sim\k_msg.o: src\k_mem.h
+.\objects\sim\k_msg.o: src\linked_list.h
+.\objects\sim\k_msg.o: src\printf.h
+.\objects\sim\k_msg.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
