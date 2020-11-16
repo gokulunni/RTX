@@ -130,9 +130,9 @@ void kcd_task(void)
                 // Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = tsk_ls(tids, MAX_TASKS);
-                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 5);
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 4*num_tasks + 1); //upper bound on size
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + 4;
+                header -> length = msg_hdr_size;
                 header -> type = DISPLAY;
 								
                 //Convert the tids to char for displaying, and display each in a new line
@@ -140,24 +140,22 @@ void kcd_task(void)
                 {
                   if(tids[i] > 9)
                   {
-                    header -> length = msg_hdr_size + 5;
                     int first_digit = 1;
 										int second_digit = tids[i] - 10;
-                    display_buffer[msg_hdr_size] = digits[first_digit];
-                    display_buffer[msg_hdr_size + 1] = digits[second_digit];
-                    display_buffer[msg_hdr_size + 2] = '\n';
-                    display_buffer[msg_hdr_size + 3] = '\r';
-                    display_buffer[msg_hdr_size + 4] = '\0';
+                    display_buffer[(header -> length)++] = digits[first_digit];
+                    display_buffer[(header -> length)++] = digits[second_digit];
+                    display_buffer[(header -> length)++] = '\n';
+                    display_buffer[(header -> length)++] = '\r';
                   }
                   else
                   {
-                    display_buffer[msg_hdr_size] = digits[tids[i]];
-                    display_buffer[msg_hdr_size + 1] = '\n';
-                    display_buffer[msg_hdr_size + 2] = '\r';
-                    display_buffer[msg_hdr_size + 3] = '\0';
+                    display_buffer[(header -> length)++] = digits[tids[i]];
+                    display_buffer[(header -> length)++] = '\n';
+                    display_buffer[(header -> length)++] = '\r';
                   }
-									send_msg(TID_DISPLAY, display_buffer);
                 }
+                display_buffer[(header -> length)++] = '\0';
+                send_msg(TID_DISPLAY, display_buffer);
                 mem_dealloc(display_buffer);
               }
               else if(str_cmp(current_command + 1, "LM") == 0)
@@ -165,33 +163,31 @@ void kcd_task(void)
                 // Send list of tids to LCD task
                 task_t tids[MAX_TASKS];
                 int num_tasks = mbx_ls(tids, MAX_TASKS);
-                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 5);
+                char *display_buffer = (char *)mem_alloc(msg_hdr_size + 4*num_tasks + 1); //upper bound on size
                 header = (void *)display_buffer;
-                header -> length = msg_hdr_size + 4;
+                header -> length = msg_hdr_size;
                 header -> type = DISPLAY;
                 //Conver the tids to char for displaying, and display each in a new line
                 for(int i = 0; i < num_tasks; i++)
                 {
                   if(tids[i] > 9)
                   {
-                    header -> length = msg_hdr_size + 5;
                     int first_digit = 1;
 										int second_digit = tids[i] - 10;
-                    display_buffer[msg_hdr_size] = digits[first_digit];
-                    display_buffer[msg_hdr_size + 1] = digits[second_digit];
-                    display_buffer[msg_hdr_size + 2] = '\n';
-                    display_buffer[msg_hdr_size + 3] = '\r';
-                    display_buffer[msg_hdr_size + 4] = '\0';
+                    display_buffer[(header -> length)++] = digits[first_digit];
+                    display_buffer[(header -> length)++] = digits[second_digit];
+                    display_buffer[(header -> length)++] = '\n';
+                    display_buffer[(header -> length)++] = '\r';
                   }
                   else
                   {
-                    display_buffer[msg_hdr_size] = digits[tids[i]];
-                    display_buffer[msg_hdr_size + 1] = '\n';
-                    display_buffer[msg_hdr_size + 2] = '\r';
-                    display_buffer[msg_hdr_size + 3] = '\0';
+                    display_buffer[(header -> length)++] = digits[tids[i]];
+                    display_buffer[(header -> length)++] = '\n';
+                    display_buffer[(header -> length)++] = '\r';
                   }
-									send_msg(TID_DISPLAY, display_buffer);
                 }
+                display_buffer[(header -> length)++] = '\0';
+                send_msg(TID_DISPLAY, display_buffer);
                 mem_dealloc(display_buffer);
               }
               else if(cmd != NULL) /* Registered command */
