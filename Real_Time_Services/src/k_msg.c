@@ -117,9 +117,9 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         //__enable_irq();
         return RTX_ERR;
     }
-
-    //Can i cast like this lmfao???
+		
     U32 length = *((U32 *) buf);
+		U32 type = *((U32 *) ((char *)buf + 4));
     //Try this U32 length = *((U32 *) msg); struct rtx_msg_hdr *ptr = (void *)buf;
     //Check example of casting 
 
@@ -149,6 +149,14 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         //Add state back to ready_queue
         push(&ready_queue_head, task);
     }
+		
+		if (task->prio = PRIO_RT)
+		{
+			//U32 length and type created for msg
+			//how do i check mailbox's predefined length and type
+			//peek_msg_type and peek_msg_length are predefined?
+			//how do we predefine real-time task's mailboxes
+		}
 
     if (enqueue_msg( &(task->mailbox), (void*)buf)==RTX_ERR){
         //Does enqueue_msg read the header from the buffer?
@@ -260,6 +268,70 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
     #endif /* DEBUG_MSG */
 
 
+    return 0;
+}
+
+int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
+	#ifdef DEBUG_MSG
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+  #endif /* DEBUG_MSG */
+	
+    if ( !(len > 0)) {
+			#ifdef DEBUG_MSG
+        printf("k_recv_msg: invalid len entered");
+			#endif /* DEBUG_MSG */
+        return RTX_ERR;
+    }
+		
+		if (buf == NULL) {
+			#ifdef DEBUG_MSG
+        printf("k_recv_msg: can not pass in unallocated pointer for buf");
+			#endif /* DEBUG_MSG */
+			return RTX_ERR;
+		}
+
+    if (!gp_current_task->has_mailbox)
+    {
+			#ifdef DEBUG_MSG
+        printf("k_recv_msg: current task does NOT have a mailbox");
+			#endif /* DEBUG_MSG */
+			//__enable_irq();
+			return RTX_ERR;
+    }
+    
+    if (is_circ_buf_empty( &(gp_current_task->mailbox))) {
+				return RTX_ERR;
+    }
+		
+
+    if (dequeue_msg( &(gp_current_task->mailbox), buf, len) == RTX_ERR)
+    {
+			#ifdef DEBUG_MSG
+        printf("k_recv_msg: error dequeueing message from mailbox");
+			#endif /* DEBUG_MSG */
+			//__enable_irq();
+			return RTX_ERR;
+    }
+		
+		TCB *prev_current_task = gp_current_task;
+    gp_current_task = &kernal_task;
+		
+		INT_LL_NODE_T* sender = pop_tid((INT_LL_NODE_T**) &(prev_current_task->msg_sender_head));
+		if (sender_tid != NULL) {
+			*sender_tid = sender->tid;
+		}
+		if (k_mem_dealloc(sender) == RTX_ERR) {
+			#ifdef DEBUG_MSG
+			printf("k_recv_msg: could not deallocate pointer to sender");
+			#endif /* DEBUG_MSG */
+		}
+		
+    //atomicity off / enable interrupts
+		gp_current_task = prev_current_task;
+		
+		#ifdef DEBUG_MSG
+        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+    #endif /* DEBUG_MSG */
     return 0;
 }
 
