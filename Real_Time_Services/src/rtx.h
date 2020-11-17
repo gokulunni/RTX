@@ -59,7 +59,19 @@ extern int k_tsk_ls(task_t *buf, int count);
 #define tsk_ls(buf, count) _tsk_ls((U32)k_tsk_ls, buf, count);
 extern int __SVC_0 _tsk_ls(U32 p_func, task_t *buf, int count);
 
+/* real-time task */
 
+extern int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_msgs);
+#define tsk_create_rt(tid, task, msg_hdr, num_msgs) _tsk_create_rt((U32)k_tsk_create_rt, tid, task, msg_hdr, num_msgs)
+extern int __SVC_0 _tsk_create_rt(U32 p_func, task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_msgs);
+
+extern void k_tsk_done_rt(void);
+#define tsk_done_rt() _tsk_done_rt((U32)k_tsk_done_rt)
+extern void __SVC_0 _tsk_done_rt(U32 p_func);
+
+extern void k_tsk_suspend(struct timeval_rt *tv);
+#define tsk_suspend(tv) _tsk_suspend((U32) k_tsk_suspend, tv)
+extern void __SVC_0 _tsk_suspend(U32 p_func, struct timeval_rt *tv);
 
 /* message passing */
 extern int k_mbx_create(size_t size);
@@ -74,7 +86,19 @@ extern int k_recv_msg(task_t *tid, void *buf, size_t len);
 #define recv_msg(tid, buf, len) _recv_msg((U32)k_recv_msg, tid, buf, len)
 extern int __SVC_0 _recv_msg(U32 p_func, task_t *tid, void *buf, size_t len);
 
+extern int k_recv_msg_nb(task_t *tid, void *buf, size_t len);
+#define recv_msg_nb(tid, buf, len) _recv_msg_nb((U32)k_recv_msg_nb, tid, buf, len)
+extern int __SVC_0 _recv_msg_nb(U32 p_func, task_t *tid, void *buf, size_t len);
+
 extern int k_mbx_ls(task_t *buf, int count);
 #define mbx_ls(buf, count) _mbx_ls((U32)k_mbx_ls, buf, count);
 extern int __SVC_0 _mbx_ls(U32 p_func, task_t *buf, int count);
+
+/* Timing Functions */
+extern int k_get_time(struct timeval_rt *tv);
+#define get_time(tv) _get_time((U32)k_get_time, tv)
+extern int __SVC_0 _get_time(U32 p_func, struct timeval_rt *tv);
+
+
+
 #endif // !_RTX_H_
