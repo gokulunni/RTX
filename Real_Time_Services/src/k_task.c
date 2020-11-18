@@ -16,6 +16,7 @@
 #include "k_task.h"
 #include "linked_list.h"
 #include "k_mem.h"
+#include "k_msg.h"
 
 #ifdef DEBUG_TSK
 #include "printf.h"
@@ -166,7 +167,9 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         }
         
         p_tcb->state = NEW;
-        p_tcb->has_mailbox=NULL;
+
+        p_tcb->msg_sender_head = NULL;
+        p_tcb->has_mailbox=FALSE;
         //Initialize mailbox to NULL values
         p_tcb->mailbox.buffer_start = NULL;
         p_tcb->mailbox.buffer_end = NULL;
@@ -469,7 +472,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->next = NULL;
     new_task->prio = prio;
     new_task->priv = 0;
-    new_task->has_mailbox=NULL;
+    new_task->msg_sender_head = NULL;
+    new_task->has_mailbox=FALSE;
     //Initialize mailbox to NULL values
     new_task->mailbox.buffer_start = NULL;
     new_task->mailbox.buffer_end = NULL;
@@ -669,6 +673,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     return RTX_OK;    
 }
 
+
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     #ifdef DEBUG_TSK
     printf("k_tsk_get: entering...\n\r");
@@ -723,6 +728,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     return RTX_OK;     
 }
 
+
 int k_tsk_ls(task_t *buf, int count){
 	  #ifdef DEBUG_TSK
     printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
@@ -755,4 +761,230 @@ int k_tsk_ls(task_t *buf, int count){
 		}
 	}
     return actual_count;
+}
+
+
+/* real-time task */
+
+/**
+ * @brief The tsk_create_rt() is a non-blocking system call that creates a new real- time task.
+ * The priority of the new task is set to PRIO_RT. The task argument defines the real-time task parameters.
+ * @return RTX_ERR on error and zero on success
+ * POST: gp_current_task gets updated to next to run process
+ */
+int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_msgs) {
+    #ifdef DEBUG_TSK
+    printf("k_tsk_create_rt: entering...\n\r");
+    printf("task = 0x%x, msg_hdr = 0x%x, prio=%d, num_msgs = %d\n\r", task, msg_hdr, num_msgs);
+    #endif /* DEBUG_TSK */
+
+    if (task == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: task == NULL\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (task->p_n.sec == 0 && task->p_n.usec == 0) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: p_n < 1\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (task->task_entry == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: task_entry == NULL\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (task->task_entry == &null_task) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: task_entry == &null_task\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (task->task_entry == &kcd_task) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: task_entry == &kcd_task\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (task->task_entry == &lcd_task) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: task_entry == &lcd_task\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+
+    // TODO: confirm that rt task cannot be NULL task or KCD task or LCD task
+
+
+    if (!(task->u_stack_size > 0)) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: u_stack_size < 1\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (!(task->priv == 0 || task->priv == 1)) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: priv is not 0 or 1\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (msg_hdr != NULL && num_msgs <= 0) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: num_msgs <= 0\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    if (free_tid_head == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: no available TID\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    TCB *prev_current_task = gp_current_task;
+    gp_current_task = &kernal_task;
+
+    INT_LL_NODE_T *popped_tid = pop_tid(&free_tid_head);
+    if (popped_tid == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: no available TID\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    int task_tid = popped_tid->tid;
+
+    if (k_mem_dealloc(popped_tid) == RTX_ERR) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: error in deallocating tid\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    TCB *new_task = &g_tcbs[task_tid];
+
+    new_task->tid = task_tid;
+    new_task->state = NEW;
+    new_task->next = NULL;
+    new_task->prio = PRIO_RT;
+    new_task->priv = task->priv;
+
+    new_task->msg_sender_head = NULL;
+    new_task->has_mailbox = FALSE;
+    //Initialize mailbox to NULL values
+    new_task->mailbox.buffer_start = NULL;
+    new_task->mailbox.buffer_end = NULL;
+    new_task->mailbox.head = NULL;
+    new_task->mailbox.tail = NULL;
+
+    if (msg_hdr != NULL) {
+        new_task->has_mailbox = TRUE;
+    }
+
+    if (new_task->prio == 0) { // Unprivileged task
+
+        new_task->psp_hi = alloc_user_stack(task->u_stack_size);
+
+        if (new_task->psp_hi == NULL) {
+            #ifdef DEBUG_TSK
+            printf("[ERROR] k_tsk_create_rt: not enough space for user stack\n\r");
+            #endif /* DEBUG_TSK */
+            return RTX_ERR;
+        }
+
+        U32 *sp = new_task->psp_hi;
+        *(--sp) = INITIAL_xPSR;
+        *(--sp) = (U32)(task->task_entry);
+        for (int j = 0; j < 6; j++) {
+            *(--sp) = 0x0;
+        }
+
+        new_task->psp = sp;
+        new_task->psp_size = task->u_stack_size;
+        new_task->msp_hi = g_k_stacks[task_tid] + (KERN_STACK_SIZE >> 2);
+        new_task->msp = new_task->msp_hi;
+
+    } else { // privileged task
+        new_task->msp_hi = g_k_stacks[task_tid] + (KERN_STACK_SIZE >> 2);
+        U32 *sp = new_task->msp_hi; /* stacks grows down, so get the high addr. */
+        *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
+        *(--sp)  = (U32)(task->task_entry); 					/* PC contains the entry point of the task */
+        for (int j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
+            *(--sp) = 0x0;
+        }
+
+        new_task->msp = sp;
+        new_task->psp = new_task->msp;
+        new_task->psp_hi = NULL;
+        new_task->psp_size = 0;
+    }
+
+    if (msg_hdr != NULL) {
+        if (num_msgs > 0) {
+            if (k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length)) == RTX_ERR) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_create_rt: not enough space for mailbox\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
+        }
+    }
+
+    // RT Task attributes
+    new_task->num_msgs = num_msgs;
+
+    new_task->p_n.sec = task->p_n.sec;
+    new_task->p_n.usec = task->p_n.usec;
+
+    new_task->tv_cpu.sec = 0;
+    new_task->tv_cpu.usec = 0;
+    new_task->tv_wall.sec = 0;
+    new_task->tv_wall.usec = 0;
+
+    // TODO: remember to dealloc when suspending a task
+    new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+    if (new_task->msg_hdr == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
+    new_task->msg_hdr->length = msg_hdr->length;
+    new_task->msg_hdr->type = msg_hdr->type;
+
+    gp_current_task = prev_current_task;
+
+// TODO: implement logic of pushing RT tasks into Ready queue
+
+//    push(&ready_queue_head, new_task);
+//    print_prio_queue(ready_queue_head);
+//
+//    if(gp_current_task->prio > new_task->prio)  {
+//        //must run immediately
+//        k_tsk_yield();
+//    }
+//
+    *tid = new_task->tid;
+
+    return RTX_OK;
+}
+
+void k_tsk_done_rt(void) {
+    return;
+}
+
+void k_tsk_suspend(struct timeval_rt *tv) {
+    return;
 }

@@ -27,6 +27,10 @@ int k_tsk_set_prio(task_t task_id, U8 prio);
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer);
 int k_tsk_ls(task_t *buf, int count);
 
+int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_msgs);
+void k_tsk_done_rt(void);
+void k_tsk_suspend(struct timeval_rt *tv);
+
 extern void __rte(void);               /* pop exception stack frame */
 
 /* we do not implement these tasks in the starter code */
