@@ -778,6 +778,13 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     printf("task = 0x%x, msg_hdr = 0x%x, prio=%d, num_msgs = %d\n\r", task, msg_hdr, num_msgs);
     #endif /* DEBUG_TSK */
 
+    if (tid == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: tid == NULL\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
     if (task == NULL) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task == NULL\n\r");
