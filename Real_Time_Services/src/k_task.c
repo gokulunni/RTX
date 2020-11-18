@@ -986,6 +986,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->tv_wall.usec = 0;
 
     // TODO: remember to dealloc when suspending a task
+    // TODO: check with Irene
     new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
     if (new_task->msg_hdr == NULL) {
         #ifdef DEBUG_TSK
