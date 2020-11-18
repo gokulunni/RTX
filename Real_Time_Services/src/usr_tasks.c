@@ -72,6 +72,15 @@ int set_usr_task_info(RTX_TASK_INFO *tasks, int num_tasks) {
     return 2;
 }    
 
+void getTimeTask(void)
+{
+		uart1_put_string ("getTimeTask: entering \n\r");
+		struct timeval_rt *tv = mem_alloc(sizeof(tv));
+		get_time(tv);
+		uart1_put_char('0'+ tv->sec);
+	
+}
+
 /**
  * @brief: a dummy task1
  */

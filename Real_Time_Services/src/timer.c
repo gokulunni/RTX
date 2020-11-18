@@ -12,7 +12,8 @@
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
-
+volatile uint32_t seconds=0;
+volatile uint32_t millionSeconds=0;
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
@@ -78,6 +79,9 @@ uint32_t timer_init(uint8_t n_timer)
     pTimer->MCR = BIT(0) | BIT(1);
 
     g_timer_count = 0;
+		
+		seconds=0;
+		
 
     /* Step 4.4: CSMSIS enable timer0 IRQ */
     NVIC_EnableIRQ(TIMER0_IRQn);
@@ -114,5 +118,10 @@ void c_TIMER0_IRQHandler(void)
     LPC_TIM0->IR = BIT(0);  
     
     g_timer_count++ ;
+		if (g_timer_count==1000000){
+			seconds++;
+			g_timer_count=0;
+		}
+	
 }
 

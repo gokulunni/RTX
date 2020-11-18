@@ -16,6 +16,7 @@
 #endif /* SIM_TARGET */
 
 int set_usr_task_info(RTX_TASK_INFO *tasks,int num_tasks);
+void getTimeTask(void);
 void task1(void);
 void task2(void);
 void send_task(void);

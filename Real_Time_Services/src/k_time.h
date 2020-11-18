@@ -5,11 +5,11 @@
  * @date:   2020/09/20
  */
  
-#ifndef K_MEM_H_
-#define K_MEM_H_
+#ifndef K_TIME_H_
+#define K_TIME_H_
 
 #include "k_rtx.h"
 /* ----- Functions ------ */
-int k_get_time(size_t blk_size, int algo);
+int k_get_time(struct timeval_rt *tv);
 
-
+#endif /* ! K_TIME_H_ */
