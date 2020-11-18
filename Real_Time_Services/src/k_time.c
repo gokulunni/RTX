@@ -39,22 +39,3 @@ int k_get_time(struct timeval_rt *tv){
 }
 
 
-
-/*
-*  get time function
-*/
-
-
-//int get_time(struct timeval_rt *tv) {
-//		if (tv==NULL){
-//			#ifdef DEBUG_TIME
-//      printf("k_get_time: argument is null");
-//			return RTX_ERR;
-//			#endif /* DEBUG_TIME */
-//		}
-//		
-//		tv->sec=seconds;
-//		tv->usec=g_timer_count;
-//		
-//    return RTX_OK;
-//}

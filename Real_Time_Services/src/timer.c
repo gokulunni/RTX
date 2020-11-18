@@ -13,7 +13,6 @@
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
 volatile uint32_t seconds=0;
-volatile uint32_t millionSeconds=0;
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
