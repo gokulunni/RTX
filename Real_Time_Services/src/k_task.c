@@ -579,7 +579,11 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         printf("[ERROR] k_tsk_set_prio: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
-    }
+    } else if (prio == PRIO_RT) {
+				#ifdef DEBUG_TSK
+				printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_RT\n\r");
+        #endif /* DEBUG_TSK */
+		}
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
     if (task_id == 0) {
@@ -620,12 +624,19 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
     }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
+		// The priority of a Real-Time task cannot be changed and remains at level PRIO_RT.
     if (task->prio == PRIO_NULL) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: cannot change prio of NULL task\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
+		else if (task->prio == PRIO_RT) {
+				#ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_set_prio: cannot change prio of Real-Time task\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+		}
 
     // An unprivileged task may change the priority of any other unprivileged task (including itself).
     // A privileged task may change the priority of any other task (including itself).
@@ -712,6 +723,21 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->k_stack_size = KERN_STACK_SIZE;
     buffer->k_sp = __get_MSP();
     buffer->k_stack_hi = (U32) task->msp_hi;
+		//TO DO: confirm that non-Real-Time tasks have a cpu and wall time field - implies in the manual
+		buffer->tv_cpu = task->tv_cpu;
+		buffer->tv_wall = task->tv_wall;
+		if (task->prio == PRIO_RT) {
+			buffer->p_n = task->p_n;
+			buffer->msg_hdr->length = task->msg_hdr->length;
+			buffer->msg_hdr->type = task->msg_hdr->type;
+			buffer->num_msgs = task->num_msgs;
+		}
+		else {
+			buffer->p_n.sec = 0;
+			buffer->p_n.usec = 0;
+			buffer->msg_hdr = NULL;
+			buffer->num_msgs = 0;
+		}
 
     if (task->priv == 0) {
         buffer->u_stack_size = task->psp_size;
