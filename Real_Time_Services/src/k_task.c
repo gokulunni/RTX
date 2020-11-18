@@ -772,50 +772,50 @@ int k_tsk_ls(task_t *buf, int count){
  * POST: gp_current_task gets updated to next to run process
  */
 int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_msgs) {
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_create_rt: entering...\n\r");
     printf("task = 0x%x, msg_hdr = 0x%x, prio=%d, num_msgs = %d\n\r", task, msg_hdr, num_msgs);
-    #endif /* DEBUG_0 */
+    #endif /* DEBUG_TSK */
 
     if (task == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task == NULL\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->p_n.sec == 0 && task->p_n.usec == 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: p_n < 1\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->task_entry == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task_entry == NULL\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->task_entry == &null_task) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task_entry == &null_task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->task_entry == &kcd_task) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task_entry == &kcd_task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (task->task_entry == &lcd_task) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: task_entry == &lcd_task\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -824,30 +824,30 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
 
     if (!(task->u_stack_size > 0)) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: u_stack_size < 1\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (!(task->priv == 0 || task->priv == 1)) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: priv is not 0 or 1\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (msg_hdr != NULL && num_msgs <= 0) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: num_msgs <= 0\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     if (free_tid_head == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: no available TID\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -856,18 +856,18 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     INT_LL_NODE_T *popped_tid = pop_tid(&free_tid_head);
     if (popped_tid == NULL) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: no available TID\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
     int task_tid = popped_tid->tid;
 
     if (k_mem_dealloc(popped_tid) == RTX_ERR) {
-        #ifdef DEBUG_0
+        #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: error in deallocating tid\n\r");
-        #endif /* DEBUG_0 */
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -896,9 +896,9 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         new_task->psp_hi = alloc_user_stack(task->u_stack_size);
 
         if (new_task->psp_hi == NULL) {
-            #ifdef DEBUG_0
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_create_rt: not enough space for user stack\n\r");
-            #endif /* DEBUG_0 */
+            #endif /* DEBUG_TSK */
             return RTX_ERR;
         }
 
