@@ -278,14 +278,14 @@ int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
 	
     if ( !(len > 0)) {
 			#ifdef DEBUG_MSG
-        printf("k_recv_msg: invalid len entered");
+        printf("k_recv_msg_nb: invalid len entered");
 			#endif /* DEBUG_MSG */
         return RTX_ERR;
     }
 		
 		if (buf == NULL) {
 			#ifdef DEBUG_MSG
-        printf("k_recv_msg: can not pass in unallocated pointer for buf");
+        printf("k_recv_msg_nb: can not pass in unallocated pointer for buf");
 			#endif /* DEBUG_MSG */
 			return RTX_ERR;
 		}
@@ -293,7 +293,7 @@ int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
     if (!gp_current_task->has_mailbox)
     {
 			#ifdef DEBUG_MSG
-        printf("k_recv_msg: current task does NOT have a mailbox");
+        printf("k_recv_msg_nb: current task does NOT have a mailbox");
 			#endif /* DEBUG_MSG */
 			//__enable_irq();
 			return RTX_ERR;
@@ -308,7 +308,7 @@ int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
     if (dequeue_msg( &(gp_current_task->mailbox), buf, len) == RTX_ERR)
     {
 			#ifdef DEBUG_MSG
-        printf("k_recv_msg: error dequeueing message from mailbox");
+        printf("k_recv_msg_nb: error dequeueing message from mailbox");
 			#endif /* DEBUG_MSG */
 			//__enable_irq();
 			return RTX_ERR;
@@ -323,16 +323,12 @@ int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
 		}
 		if (k_mem_dealloc(sender) == RTX_ERR) {
 			#ifdef DEBUG_MSG
-			printf("k_recv_msg: could not deallocate pointer to sender");
+			printf("k_recv_msg_nb: could not deallocate pointer to sender");
 			#endif /* DEBUG_MSG */
 		}
 		
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
-		
-		#ifdef DEBUG_MSG
-        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-    #endif /* DEBUG_MSG */
     return 0;
 }
 
