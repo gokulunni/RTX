@@ -8,10 +8,11 @@
 #include <LPC17xx.h>
 #include "timer.h"
 #include "uart_polling.h"  
+#include "rtx.h"
 
 extern volatile uint32_t g_timer_count;
-
-int main () {
+extern volatile uint32_t seconds;
+int main1() {
 
     volatile uint8_t sec = 0;
 
@@ -21,12 +22,33 @@ int main () {
     uart1_init();  /* uart1 is polling */
     __enable_irq();
    
+	
+		int lastSecond=0;
+
+
+		struct timeval_rt *tv = mem_alloc(sizeof(tv));
+		uart1_put_char('E');
     while (1) {
         /* g_timer_count gets updated every 1 usec */
-        if (g_timer_count == 1000000) { 
-            uart1_put_char('0'+ sec);
-            sec = (sec + 1)%10;
-            g_timer_count = 0; /* reset the counter */
-        }     
+        
+//				if (g_timer_count == 1000000) { 
+//            uart1_put_char('0'+ sec);
+//            sec = (sec + 1)%10;
+//            g_timer_count = 0; /* reset the counter */
+//        }
+			
+			
+			if (lastSecond!=seconds){
+				lastSecond=seconds;
+				get_time(tv);
+				uart1_put_char('0'+ sec);
+				uart1_put_char('0'+ tv->sec);
+        sec = (sec + 1)%10;
+				
+
+				
+			}
     }
+		
+		
 }
