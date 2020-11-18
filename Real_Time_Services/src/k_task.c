@@ -728,6 +728,13 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
 		buffer->tv_wall = task->tv_wall;
 		if (task->prio == PRIO_RT) {
 			buffer->p_n = task->p_n;
+			buffer->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+			if (buffer->msg_hdr == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_get: not enough space for msg_hdr\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+			}
 			buffer->msg_hdr->length = task->msg_hdr->length;
 			buffer->msg_hdr->type = task->msg_hdr->type;
 			buffer->num_msgs = task->num_msgs;
