@@ -723,13 +723,20 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->k_stack_size = KERN_STACK_SIZE;
     buffer->k_sp = __get_MSP();
     buffer->k_stack_hi = (U32) task->msp_hi;
+		//TO DO: confirm that non-Real-Time tasks have a cpu and wall time field - implies in the manual
 		buffer->tv_cpu = task->tv_cpu;
 		buffer->tv_wall = task->tv_wall;
-		if (task->prio == PRIO_RT)
-		{
+		if (task->prio == PRIO_RT) {
 			buffer->p_n = task->p_n;
-			buffer->msg_hdr = task->msg_hdr;
+			buffer->msg_hdr->length = task->msg_hdr->length;
+			buffer->msg_hdr->type = task->msg_hdr->type;
 			buffer->num_msgs = task->num_msgs;
+		}
+		else {
+			buffer->p_n.sec = 0;
+			buffer->p_n.usec = 0;
+			buffer->msg_hdr = NULL;
+			buffer->num_msgs = 0;
 		}
 
     if (task->priv == 0) {
