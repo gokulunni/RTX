@@ -31,6 +31,7 @@
 extern void lcd_task(void);
 extern void kcd_task(void);
 extern void null_task(void);
+extern void wall_clock_task(void);
 
 int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
@@ -53,7 +54,10 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
     tasks[2].prio = PRIO_NULL;
     tasks[2].priv = 0;
 		
-		
+		//tasks[3].ptask = &wall_clock_task;
+		//tasks[3].u_stack_size = 0x100;
+		//tasks[3].prio = HIGH;
+		//tasks[2].priv = 0;
 
     return RTX_OK;
 }
