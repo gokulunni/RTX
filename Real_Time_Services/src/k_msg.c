@@ -260,14 +260,6 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 		
     //atomicity off / enable interrupts
 		gp_current_task = prev_current_task;
-
-    //__enable_irq();
-		
-		#ifdef DEBUG_MSG
-        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
-    #endif /* DEBUG_MSG */
-
-
     return 0;
 }
 
