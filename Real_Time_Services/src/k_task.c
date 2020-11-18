@@ -933,6 +933,9 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     if (msg_hdr != NULL) {
         if (num_msgs > 0) {
             if (k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length)) == RTX_ERR) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_create_rt: not enough space for mailbox\n\r");
+                #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
         }
@@ -951,6 +954,13 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     // TODO: remember to dealloc when suspending a task
     new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+    if (new_task->msg_hdr == NULL) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    }
+
     new_task->msg_hdr->length = msg_hdr->length;
     new_task->msg_hdr->type = msg_hdr->type;
 
