@@ -16,6 +16,7 @@
 #include "k_task.h"
 #include "linked_list.h"
 #include "k_mem.h"
+#include "k_msg.h"
 
 #ifdef DEBUG_TSK
 #include "printf.h"
@@ -929,7 +930,28 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         new_task->psp_size = 0;
     }
 
-    // TODO: create mailbox;
+    if (msg_hdr != NULL) {
+        if (num_msgs > 0) {
+            k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length));
+        }
+    }
+
+    // RT Task attributes
+    new_task->num_msgs = num_msgs;
+
+    new_task->p_n.sec = task->p_n.sec;
+    new_task->p_n.usec = task->p_n.usec;
+
+    new_task->tv_cpu.sec = 0;
+    new_task->tv_cpu.usec = 0;
+    new_task->tv_wall.sec = 0;
+    new_task->tv_wall.usec = 0;
+
+    new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+    new_task->msg_hdr->length = msg_hdr->length;
+    new_task->msg_hdr->type = msg_hdr->type;
+
+    gp_current_task = prev_current_task;
 
 // TODO: implement logic of pushing RT tasks into Ready queue
 
