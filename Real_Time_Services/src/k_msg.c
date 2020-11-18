@@ -150,12 +150,12 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
         push(&ready_queue_head, task);
     }
 		
-		if (task->prio = PRIO_RT)
+		//return error if trying to send to a real-time task with a msg_header not matching
+		if (task->prio == PRIO_RT)
 		{
-			//U32 length and type created for msg
-			//how do i check mailbox's predefined length and type
-			//peek_msg_type and peek_msg_length are predefined?
-			//how do we predefine real-time task's mailboxes
+			if (length != task->msg_hdr->length || type != task->msg_hdr->type) {
+				return RTX_ERR;
+			}
 		}
 
     if (enqueue_msg( &(task->mailbox), (void*)buf)==RTX_ERR){
@@ -273,7 +273,7 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 
 int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
 	#ifdef DEBUG_MSG
-        printf("k_recv_msg: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
+        printf("k_recv_msg_nb: sender_tid  = 0x%x, buf=0x%x, len=%d\r\n", sender_tid, buf, len);
   #endif /* DEBUG_MSG */
 	
     if ( !(len > 0)) {
@@ -299,6 +299,7 @@ int k_recv_msg_nb(task_t *sender_tid, void *buf, size_t len) {
 			return RTX_ERR;
     }
     
+		//NON-BLOCKING:
     if (is_circ_buf_empty( &(gp_current_task->mailbox))) {
 				return RTX_ERR;
     }
