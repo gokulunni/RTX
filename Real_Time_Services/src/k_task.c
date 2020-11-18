@@ -932,7 +932,9 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     if (msg_hdr != NULL) {
         if (num_msgs > 0) {
-            k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length));
+            if (k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length)) == RTX_ERR) {
+                return RTX_ERR;
+            }
         }
     }
 
