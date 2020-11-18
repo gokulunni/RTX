@@ -8,6 +8,7 @@
 char *TX_buffer;
 extern TCB kernal_task;
 extern TCB *gp_current_task;
+extern uint8_t buffer_index;
 
 void lcd_task(void)
 {
@@ -32,12 +33,13 @@ void lcd_task(void)
                 LPC_UART_TypeDef * pUart = (LPC_UART_TypeDef *) LPC_UART0;
                 U32 length = (((RTX_MSG_HDR *)temp_buffer) -> length) - 8;
 
+								while(buffer_index != 0){}; //wait until prev info is written
                 pUart->THR = temp_buffer[8]; //prime the THR buffer with first char in msg
                 //copy remaining contents of buffer to internal kernel buffer for UART
                 mem_cpy(TX_buffer, temp_buffer + 9, length - 1);
 
                 //Enable UART Transmit interrupt
-				pUart->IER = IER_THRE | IER_RLS | IER_RBR;
+								pUart->IER = IER_THRE | IER_RLS | IER_RBR;
             }            
         }
     }
