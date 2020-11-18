@@ -456,7 +456,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         return RTX_ERR;
     }
 
-    int task_tid = popped_tid->tid;
+    int tid = popped_tid->tid;
     if (k_mem_dealloc(popped_tid) == RTX_ERR) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: error in deallocating tid\n\r");
@@ -464,9 +464,9 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         return RTX_ERR;
     }
 
-    TCB *new_task = &g_tcbs[task_tid];
+    TCB *new_task = &g_tcbs[tid];
 
-    new_task->tid = task_tid;
+    new_task->tid = tid;
     new_task->state = NEW;
     new_task->next = NULL;
     new_task->prio = prio;
@@ -498,7 +498,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     }
     new_task->psp = sp;
 
-    new_task->msp_hi = g_k_stacks[task_tid] + (KERN_STACK_SIZE >> 2);
+    new_task->msp_hi = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
     new_task->msp = new_task->msp_hi;
 
     push(&ready_queue_head, new_task);
@@ -508,7 +508,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         //must run immediately
         k_tsk_yield();
     }
-    *tid = new_task->tid;
+    *task = new_task->tid;
 
     return RTX_OK;
 }
@@ -862,7 +862,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         return RTX_ERR;
     }
 
-    int tid = popped_tid->tid;
+    int task_tid = popped_tid->tid;
 
     if (k_mem_dealloc(popped_tid) == RTX_ERR) {
         #ifdef DEBUG_0
@@ -871,9 +871,9 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         return RTX_ERR;
     }
 
-    TCB *new_task = &g_tcbs[tid];
+    TCB *new_task = &g_tcbs[task_tid];
 
-    new_task->tid = tid;
+    new_task->tid = task_tid;
     new_task->state = NEW;
     new_task->next = NULL;
     new_task->prio = PRIO_RT;
@@ -911,11 +911,11 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
         new_task->psp = sp;
         new_task->psp_size = task->u_stack_size;
-        new_task->msp_hi = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
+        new_task->msp_hi = g_k_stacks[task_tid] + (KERN_STACK_SIZE >> 2);
         new_task->msp = new_task->msp_hi;
 
     } else { // privileged task
-        new_task->msp_hi = g_k_stacks[tid] + (KERN_STACK_SIZE >> 2);
+        new_task->msp_hi = g_k_stacks[task_tid] + (KERN_STACK_SIZE >> 2);
         U32 *sp = new_task->msp_hi; /* stacks grows down, so get the high addr. */
         *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
         *(--sp)  = (U32)(task->task_entry); 					/* PC contains the entry point of the task */
