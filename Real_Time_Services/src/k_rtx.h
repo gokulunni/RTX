@@ -33,6 +33,7 @@ typedef struct tcb
     struct timeval_rt tv_cpu;  /* task execution cpu time */
     struct timeval_rt tv_wall; /* task execution wall clock time */
     struct timeval_rt p_n;    /* period in seconds and microseconds */ //REAL-TIME ONLY
+    struct timeval_rt deadline; //REAL-TIME ONLY
     struct timeval_rt timeout; //REAL-TIME ONLY
     RTX_MSG_HDR *msg_hdr;     /* real-time task message header      */ //REAL-TIME ONLY
     U32 *msp;    /* msp of the task */
