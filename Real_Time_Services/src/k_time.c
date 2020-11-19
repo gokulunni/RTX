@@ -19,8 +19,6 @@ int get_time(struct timeval_rt *tv);
 
 
 int k_get_time(struct timeval_rt *tv){
-    U32 end_addr;
-
     #ifdef DEBUG_TIME
     printf("******************************************************\r\n");
     #endif /* DEBUG_TIME */
@@ -32,8 +30,8 @@ int k_get_time(struct timeval_rt *tv){
         return RTX_ERR;
     }
 		
-		tv->sec=seconds;
-		tv->usec=g_timer_count;
+    tv->sec = seconds;
+    tv->usec = g_timer_count;
     
     return RTX_OK;
 }
