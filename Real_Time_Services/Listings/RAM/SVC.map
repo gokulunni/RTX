@@ -114,7 +114,7 @@ Section Cross References
     k_task.o(i.k_tsk_set_prio) refers to linked_list.o(i.print_prio_queue) for print_prio_queue
     k_task.o(i.k_tsk_set_prio) refers to k_task.o(.data) for gp_current_task
     k_task.o(i.k_tsk_set_prio) refers to k_task.o(.conststring) for .conststring
-    k_task.o(i.k_tsk_yield) refers to k_task.o(i.dummy_scheduler) for dummy_scheduler
+    k_task.o(i.k_tsk_yield) refers to k_task.o(i.dummy_scheduler) for scheduler
     k_task.o(i.k_tsk_yield) refers to printf.o(i.tfp_printf) for tfp_printf
     k_task.o(i.k_tsk_yield) refers to linked_list.o(i.print_prio_queue) for print_prio_queue
     k_task.o(i.k_tsk_yield) refers to k_task.o(i.task_switch) for task_switch

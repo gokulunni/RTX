@@ -290,7 +290,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
  *      No other effect on other global variables.
  */
 
-TCB *dummy_scheduler(void) {
+TCB *scheduler(void) {
 	//This should never be false except if the NULL_PRIO task is running
     if(!is_empty(ready_queue_head)) {
         TCB *popped = pop(&ready_queue_head);

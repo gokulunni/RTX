@@ -645,8 +645,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_recv_msg
 </UL>
 
-<P><STRONG><a name="[79]"></a>dummy_scheduler</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, k_task.o(i.dummy_scheduler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<P><STRONG><a name="[79]"></a>scheduler</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, k_task.o(i.scheduler))
+<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pop_task_by_id
 <LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pop
@@ -705,7 +705,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[7a]"></a>is_empty</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, linked_list.o(i.is_empty))
-<BR><BR>[Called By]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<BR><BR>[Called By]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 </UL>
 
 <P><STRONG><a name="[3a]"></a>k_mbx_create</STRONG> (Thumb, 80 bytes, Stack size 16 bytes, k_msg.o(i.k_mbx_create))
@@ -761,7 +761,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[3b]"></a>k_recv_msg</STRONG> (Thumb, 178 bytes, Stack size 24 bytes, k_msg.o(i.k_recv_msg))
-<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = k_recv_msg &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = k_recv_msg &rArr; k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pop_tid
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;is_circ_buf_empty
@@ -787,7 +787,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> main_svc.o(i.main)
 </UL>
 <P><STRONG><a name="[38]"></a>k_send_msg</STRONG> (Thumb, 228 bytes, Stack size 32 bytes, k_msg.o(i.k_send_msg))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = k_send_msg &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = k_send_msg &rArr; k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;push_tid
 <LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;push
@@ -802,7 +802,7 @@ Global Symbols
 <LI> kcd_task.o(i.kcd_task)
 </UL>
 <P><STRONG><a name="[43]"></a>k_tsk_create</STRONG> (Thumb, 352 bytes, Stack size 48 bytes, k_task.o(i.k_tsk_create))
-<BR><BR>[Stack]<UL><LI>Max Depth = 184<LI>Call Chain = k_tsk_create &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 184<LI>Call Chain = k_tsk_create &rArr; k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;print_prio_queue
 <LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;alloc_user_stack
@@ -816,7 +816,7 @@ Global Symbols
 <LI> usr_tasks.o(i.task1)
 </UL>
 <P><STRONG><a name="[4c]"></a>k_tsk_exit</STRONG> (Thumb, 124 bytes, Stack size 16 bytes, k_task.o(i.k_tsk_exit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = k_tsk_exit &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = k_tsk_exit &rArr; k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pop_task_by_id
 <LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dealloc_user_stack
@@ -860,7 +860,7 @@ Global Symbols
 <LI> kcd_task.o(i.kcd_task)
 </UL>
 <P><STRONG><a name="[45]"></a>k_tsk_set_prio</STRONG> (Thumb, 340 bytes, Stack size 24 bytes, k_task.o(i.k_tsk_set_prio))
-<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = k_tsk_set_prio &rArr; k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = k_tsk_set_prio &rArr; k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;print_prio_queue
 <LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pop_task_by_id
@@ -873,11 +873,11 @@ Global Symbols
 <LI> usr_tasks.o(i.task1)
 </UL>
 <P><STRONG><a name="[41]"></a>k_tsk_yield</STRONG> (Thumb, 122 bytes, Stack size 8 bytes, k_task.o(i.k_tsk_yield))
-<BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = k_tsk_yield &rArr; dummy_scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
+<BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = k_tsk_yield &rArr; scheduler &rArr; tfp_printf &rArr; tfp_format &rArr; putchw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;print_prio_queue
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task_switch
-<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 <LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;tfp_printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_set_prio
@@ -944,7 +944,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[7b]"></a>pop</STRONG> (Thumb, 24 bytes, Stack size 0 bytes, linked_list.o(i.pop))
-<BR><BR>[Called By]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<BR><BR>[Called By]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 </UL>
 
 <P><STRONG><a name="[7d]"></a>pop_task_by_id</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, linked_list.o(i.pop_task_by_id))
@@ -952,7 +952,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_set_prio
 <LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_exit
-<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 </UL>
 
 <P><STRONG><a name="[8a]"></a>pop_tid</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, linked_list.o(i.pop_tid))
@@ -1001,7 +1001,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_set_prio
 <LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_create
-<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 <LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_init
 <LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_send_msg
 </UL>
@@ -1092,7 +1092,7 @@ Global Symbols
 <LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_get
 <LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_exit
 <LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_create
-<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dummy_scheduler
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;scheduler
 <LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_tsk_init
 <LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_recv_msg
 <LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;k_mbx_ls
