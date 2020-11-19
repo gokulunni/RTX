@@ -4,9 +4,9 @@
 
 #include "linked_list.h"
 #include "k_rtx.h"
-#ifdef DEBUG_PRIO_Q
+#ifdef DEBUG_QUEUE
 #include "printf.h"
-#endif /* ! DEBUG_PRIO_Q */
+#endif /* ! DEBUG_QUEUE */
 
 /**
  * Free TID Linked List
@@ -154,10 +154,10 @@ void push(TCB **prio_queue_head, TCB *task) {
 
 
 /**
- * @brief print priority queue when DEBUG_PRIO_Q
+ * @brief print priority queue when DEBUG_QUEUE
  */
 void print_prio_queue(TCB *prio_queue_head) {
-#ifdef DEBUG_PRIO_Q
+#ifdef DEBUG_QUEUE
     printf("******************************************************\r\n");
 	printf("PRINT_PRIO_QUEUE\r\n");
 
@@ -200,7 +200,7 @@ void print_prio_queue(TCB *prio_queue_head) {
     }
 
     printf("******************************************************\r\n");
-#endif /* DEBUG_PRIO_Q */
+#endif /* DEBUG_QUEUE */
 }
 
 
@@ -210,4 +210,20 @@ void print_prio_queue(TCB *prio_queue_head) {
  */
 int is_empty(TCB *prio_queue_head) {
     return prio_queue_head == NULL;
+}
+
+TCB *pop_edf_queue(TCB **edf_queue_head) {
+
+}
+
+void push_edf_queue(TCB **edf_queue_head, TCB *task) {
+
+}
+
+int is_empty(TCB *edf_queue_head) {
+
+}
+
+void print_edf_queue(TCB *edf_queue_head) {
+
 }

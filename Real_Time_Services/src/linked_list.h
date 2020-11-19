@@ -23,4 +23,9 @@ void push(TCB **prio_queue_head, TCB *task);
 int is_empty(TCB *prio_queue_head);
 void print_prio_queue(TCB *prio_queue_head);
 
+TCB *pop_edf_queue(TCB **edf_queue_head);
+void push_edf_queue(TCB **edf_queue_head, TCB *task);
+int is_empty(TCB *edf_queue_head);
+void print_edf_queue(TCB *edf_queue_head);
+
 #endif //ECE350_LINKED_LIST_H
