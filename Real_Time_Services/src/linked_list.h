@@ -20,16 +20,14 @@ int tid_is_available(INT_LL_NODE_T *free_tid_head, int tid);
 TCB *pop(TCB **prio_queue_head);
 TCB *pop_task_by_id(TCB **prio_queue_head, U8 tid);
 void push(TCB **prio_queue_head, TCB *task);
-int is_empty(TCB *prio_queue_head);
 
 TCB *pop_edf_queue(TCB **edf_queue_head);
 void push_edf_queue(TCB **edf_queue_head, TCB *task);
-int is_edf_queue_empty(TCB *edf_queue_head);
 
 TCB *pop_timeout_queue(TCB **timeout_queue_head);
 void push_timeout_queue(TCB **timeout_queue_head, TCB *task);
-int is_timeout_queue_empty(TCB *timeout_queue_head);
 
+int is_empty(TCB *queue_head);
 void print_queue(TCB *queue_head);
 
 #endif //ECE350_LINKED_LIST_H

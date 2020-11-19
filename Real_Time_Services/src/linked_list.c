@@ -156,7 +156,7 @@ void push(TCB **prio_queue_head, TCB *task) {
  * @brief checks if priority queue is empty or not
  * @return 1 if priority queue is not empty
  */
-int is_empty(TCB *prio_queue_head) {
+int is_empty(TCB *queue_head) {
     return prio_queue_head == NULL;
 }
 
@@ -168,19 +168,11 @@ void push_edf_queue(TCB **edf_queue_head, TCB *task) {
 
 }
 
-int is_edf_queue_empty(TCB *edf_queue_head) {
-
-}
-
 TCB *pop_timeout_queue(TCB **timeout_queue_head) {
 
 }
 
 void push_timeout_queue(TCB **timeout_queue_head, TCB *task) {
-
-}
-
-int is_timeout_queue_empty(TCB *timeout_queue_head) {
 
 }
 

@@ -34,6 +34,9 @@ TCB kernal_task;
 TCB *k_null_tsk = NULL;
 
 TCB *ready_queue_head = NULL;
+TCB *ready_rt_queue_head = NULL;
+TCB *timeout_queue_head = NULL;
+TCB *timeout_rt_queue_head = NULL;
 INT_LL_NODE_T *free_tid_head = NULL;
 volatile U32 g_switch_flag = 0;  /* whether to continue to run the process before the UART receive interrupt */
 void *alloc_user_stack(size_t size);
@@ -291,21 +294,35 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
  */
 
 TCB *scheduler(void) {
-	//This should never be false except if the NULL_PRIO task is running
-    if(!is_empty(ready_queue_head)) {
-        TCB *popped = pop(&ready_queue_head);
-
-        // If there is a current task, push current task back on ready queue
-        if (gp_current_task && gp_current_task -> state != BLK_MSG) {
-            push(&ready_queue_head, gp_current_task);
-        }
-
-        gp_current_task = popped;
+    TCB *next_task = NULL;
+    if (!is_empty(ready_rt_queue_head)) {
+        next_task = pop_edf_queue(&ready_rt_queue_head);
+    } else if (!is_empty(ready_queue_head)){
+        next_task = pop(&ready_queue_head);
     }
+
+    // If there is a current task, push current task back on ready queue
+    if (gp_current_task && gp_current_task -> state != BLK_MSG) {
+        if (gp_current_task->prio == PRIO_RT) {
+            if (gp_current_task->state == SUSPENDED) {
+                push_timeout_queue(&timeout_rt_queue_head, gp_current_task);
+            } else {
+                push_edf_queue(&ready_rt_queue_head, gp_current_task);
+            }
+        } else {
+            if (gp_current_task->state == SUSPENDED) {
+                push_timeout_queue(&timeout_queue_head, gp_current_task);
+            } else {
+                push(&ready_queue_head, gp_current_task);
+            }
+        }
+    }
+
+    gp_current_task = next_task;
 
     if (gp_current_task == NULL) {
         #ifdef DEBUG_TSK
-        printf("[ERROR] dummy_scheduler: gp_current_task is NULL\n");
+        printf("[ERROR] scheduler: gp_current_task is NULL\n");
         #endif /* DEBUG_TSK */
         pop_task_by_id(&ready_queue_head, 0);
         gp_current_task = &g_tcbs[0];
@@ -379,7 +396,7 @@ int k_tsk_yield(void) {
     if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT)) {
 
         //Pop the next task in queue
-        gp_current_task = dummy_scheduler();
+        gp_current_task = scheduler();
 
         #ifdef DEBUG_TSK
         printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
