@@ -246,7 +246,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 	}
 
     print_free_tids(free_tid_head);
-    print_prio_queue(ready_queue_head);
+    print_queue(ready_queue_head);
 
 
     if (k_null_tsk == NULL) {
@@ -398,7 +398,7 @@ int k_tsk_yield(void) {
             #endif /* DEBUG_TSK */
             p_tcb_old = gp_current_task;
         }
-        print_prio_queue(ready_queue_head);
+        print_queue(ready_queue_head);
         if (task_switch(p_tcb_old) == RTX_ERR) {
             #ifdef DEBUG_TSK
             printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
@@ -503,7 +503,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->msp = new_task->msp_hi;
 
     push(&ready_queue_head, new_task);
-    print_prio_queue(ready_queue_head);
+    print_queue(ready_queue_head);
 
     if(gp_current_task->prio > new_task->prio)  {
         //must run immediately
@@ -668,7 +668,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
 
     }
 
-    print_prio_queue(ready_queue_head);
+    print_queue(ready_queue_head);
 
     return RTX_OK;    
 }
@@ -969,7 +969,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 // TODO: implement logic of pushing RT tasks into Ready queue
 
 //    push(&ready_queue_head, new_task);
-//    print_prio_queue(ready_queue_head);
+//    print_queue(ready_queue_head);
 //
 //    if(gp_current_task->prio > new_task->prio)  {
 //        //must run immediately

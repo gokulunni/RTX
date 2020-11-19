@@ -152,58 +152,6 @@ void push(TCB **prio_queue_head, TCB *task) {
     }
 }
 
-
-/**
- * @brief print priority queue when DEBUG_QUEUE
- */
-void print_prio_queue(TCB *prio_queue_head) {
-#ifdef DEBUG_QUEUE
-    printf("******************************************************\r\n");
-	printf("PRINT_PRIO_QUEUE\r\n");
-
-    TCB *iterator = prio_queue_head;
-    int counter = 0;
-
-    while (iterator != NULL) {
-        printf("Node %d: TID = %d\r\n", counter, iterator->tid);
-        printf("Node %d: MSP = 0x%x\r\n", counter, iterator->msp);
-        printf("Node %d: PSP = 0x%x\r\n", counter, iterator->psp);
-
-        switch (iterator->prio) {
-            case HIGH:
-                printf("Node %d: PRIO = HIGH\r\n", counter);
-                break;
-            case MEDIUM:
-                printf("Node %d: PRIO = MEDIUM\r\n", counter);
-                break;
-            case LOW:
-                printf("Node %d: PRIO = LOW\r\n", counter);
-                break;
-            case LOWEST:
-                printf("Node %d: PRIO = LOWEST\r\n", counter);
-                break;
-            case PRIO_NULL:
-                printf("Node %d: PRIO = NULL\r\n", counter);
-                break;
-        }
-
-        printf("Node %d: STATE = %d\r\n", counter, iterator->state);
-
-        if (iterator->priv) {
-            printf("Node %d: Privileged\r\n", counter);
-        } else {
-            printf("Node %d: Unprivileged\r\n", counter);
-        }
-
-        counter++;
-        iterator = iterator->next;
-    }
-
-    printf("******************************************************\r\n");
-#endif /* DEBUG_QUEUE */
-}
-
-
 /**
  * @brief checks if priority queue is empty or not
  * @return 1 if priority queue is not empty
@@ -237,5 +185,90 @@ int is_timeout_queue_empty(TCB *timeout_queue_head) {
 }
 
 void print_queue(TCB *queue_head) {
+    #ifdef DEBUG_QUEUE
+    printf("******************************************************\r\n");
+	printf("PRINT_PRIO_QUEUE\r\n");
 
+    TCB *iterator = queue_head;
+    int counter = 0;
+
+    while (iterator != NULL) {
+        printf("Node %d: TID = %d\r\n", counter, iterator->tid);
+        printf("Node %d: MSP = 0x%x\r\n", counter, iterator->msp);
+        printf("Node %d: MSP_HI = 0x%x\r\n", counter, iterator->msp_hi);
+        printf("Node %d: PSP = 0x%x\r\n", counter, iterator->psp);
+        printf("Node %d: PSP_HI = 0x%x\r\n", counter, iterator->psp_hi);
+        printf("Node %d: PSP_SIZE = 0x%x\r\n", counter, iterator->psp_size);
+
+        if (iterator->priv) {
+            printf("Node %d: Privileged\r\n", counter);
+        } else {
+            printf("Node %d: Unprivileged\r\n", counter);
+        }
+
+        switch (iterator->prio) {
+            case PRIO_RT:
+                printf("Node %d: PRIO = PRIO_RT\r\n", counter);
+                break;
+            case HIGH:
+                printf("Node %d: PRIO = HIGH\r\n", counter);
+                break;
+            case MEDIUM:
+                printf("Node %d: PRIO = MEDIUM\r\n", counter);
+                break;
+            case LOW:
+                printf("Node %d: PRIO = LOW\r\n", counter);
+                break;
+            case LOWEST:
+                printf("Node %d: PRIO = LOWEST\r\n", counter);
+                break;
+            case PRIO_NULL:
+                printf("Node %d: PRIO = NULL\r\n", counter);
+                break;
+        }
+
+        printf("Node %d: STATE = %d\r\n", counter, iterator->state);
+
+        switch (iterator->state) {
+            case READY:
+                printf("Node %d: STATE = READY\r\n", counter);
+                break;
+            case RUNNING:
+                printf("Node %d: STATE = RUNNING\r\n", counter);
+                break;
+            case BLK_MEM:
+                printf("Node %d: STATE = BLK_MEM\r\n", counter);
+                break;
+            case BLK_MSG:
+                printf("Node %d: STATE = BLK_MSG\r\n", counter);
+                break;
+            case SUSPENDED:
+                printf("Node %d: STATE = SUSPENDED\r\n", counter);
+                break;
+            case NEW:
+                printf("Node %d: STATE = NEW\r\n", counter);
+                break;
+            case DORMANT:
+                printf("Node %d: STATE = DORMANT\r\n", counter);
+                break;
+        }
+
+        printf("Node %d: MAILBOX = %d\r\n", counter, iterator->has_mailbox);
+
+        printf("Node %d: tv_cpu.sec = %d, tv_cpu.usec = %d\r\n", counter, iterator->tv_cpu.sec, iterator->tv_cpu.usec);
+        printf("Node %d: tv_wall.sec = %d, tv_wall.usec = %d\r\n", counter, iterator->tv_wall.sec, iterator->tv_wall.usec);
+
+        if (iterator->prio == PRIO_RT) {
+            printf("Node %d: period.sec = %d, period.usec = %d\r\n", counter, iterator->tv_cpu.sec, iterator->tv_cpu.usec);
+            printf("Node %d: timeout.sec = %d, timeout.usec = %d\r\n", counter, msg_hdr, iterator->tv_wall.usec);
+            printf("Node %d: msg type = %d, msg length = %d\r\n", counter, *((U32 *) ((char *) msg_hdr + 4)), *((U32 *) msg_hdr));
+            printf("Node %d: num_msgs = %d\r\n", counter, iterator->num_msgs);
+        }
+
+        counter++;
+        iterator = iterator->next;
+    }
+
+    printf("******************************************************\r\n");
+    #endif /* DEBUG_QUEUE */
 }
