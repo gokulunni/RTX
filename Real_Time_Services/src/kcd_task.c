@@ -45,12 +45,12 @@ void push_cmd(REGISTERED_CMD_T **registered_cmd_head, REGISTERED_CMD_T *new_cmd)
 	}		
 }
 
-REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char *cmd)
+REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char cmd)
 {
 	REGISTERED_CMD_T *tmp = registered_cmd_head;
 	while(tmp != NULL)
 	{
-		if(str_cmp(tmp -> cmd, cmd) == 0)
+		if(tmp -> cmd == cmd)
 		{
 			return tmp;
 		}
@@ -86,44 +86,57 @@ void kcd_task(void)
       //KCD_REG
       if((U32)temp_buffer[4] == KCD_REG)
       {
+        U32 cmd_length = ((U32)temp_buffer[0]) - msg_hdr_size;
+        if(cmd_length != 1)
+        {
+          #ifdef DEBUG_KCD
+          printf("Command cannot be registered - Incorrect Length.\n");
+          #endif
+        }
+        char cmd = temp_buffer[msg_hdr_size];
+        if(cmd == 'L')
+        {
+          #ifdef DEBUG_KCD
+          printf("'L' is a reserved command - Registration Failed.\n");
+          #endif
+        }
+
         REGISTERED_CMD_T *new_cmd =(REGISTERED_CMD_T *)mem_alloc(sizeof(REGISTERED_CMD_T));
         new_cmd -> handler_tid = sender_tid;
-        U32 string_length = ((U32)temp_buffer[0]) - msg_hdr_size;
-        new_cmd -> cmd = (char *)mem_alloc(sizeof(string_length));
-        mem_cpy(new_cmd -> cmd, temp_buffer + msg_hdr_size, string_length);
+        new_cmd -> cmd = cmd;
         push_cmd(&registered_cmd_head, new_cmd);
       }
 
       //KEY_IN
       else if((U32)temp_buffer[4] == KEY_IN)
       {
-					current_command[command_index] = temp_buffer[msg_hdr_size]; //add typed char to current cmd string
+        current_command[command_index] = temp_buffer[msg_hdr_size]; //add typed char to current cmd string
 
-          //ALWAYS echo the character
-					//Replace carriage return with new line on output
-          RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
-          header -> type = DISPLAY;
-					if(current_command[command_index] == '\r')
-          {
-						temp_buffer[msg_hdr_size] = '\n';
-            temp_buffer[msg_hdr_size + 1] = '\r';
-            temp_buffer[msg_hdr_size + 2] = '\0'; //null terminate the string 
-            header -> length = msg_hdr_size + 3;
-            send_msg(TID_DISPLAY, temp_buffer);
-          }
-					else
-          {
-            temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
-            header -> length = msg_hdr_size + 2;
-            send_msg(TID_DISPLAY, temp_buffer);
-          }
+        //ALWAYS echo the character
+        //Replace carriage return with new line on output
+        RTX_MSG_HDR *header = (RTX_MSG_HDR *)temp_buffer;
+        header -> type = DISPLAY;
+        if(current_command[command_index] == '\r')
+        {
+          temp_buffer[msg_hdr_size] = '\n';
+          temp_buffer[msg_hdr_size + 1] = '\r';
+          temp_buffer[msg_hdr_size + 2] = '\0'; //null terminate the string 
+          header -> length = msg_hdr_size + 3;
+          send_msg(TID_DISPLAY, temp_buffer);
+        }
+        else
+        {
+          temp_buffer[msg_hdr_size + 1] = '\0'; //null terminate the string 
+          header -> length = msg_hdr_size + 2;
+          send_msg(TID_DISPLAY, temp_buffer);
+        }
           
         if(command_specifier) //check if '%' was typed already
         {
           if(current_command[command_index] == '\r')
           {
               current_command[command_index] = '\0'; //null terminate string for comparison
-							REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command + 1); //get registered cmd
+							REGISTERED_CMD_T *cmd = get_cmd(registered_cmd_head, current_command[1]); //get registered cmd
 						
               if(str_cmp(current_command + 1, "LT") == 0)
               {														
@@ -211,11 +224,8 @@ void kcd_task(void)
 								mem_dealloc(buf);
               }
 
-              //TODO: Confirm that we can reuse buffer and don't need to reallocate
-              //mem_dealloc(temp_buffer);
-              //temp_buffer = (U8 *)mem_alloc(msg_hdr_size + 3);
-
-              command_index = 0; //reset the buffer since 'ENTER' was pressed
+              //reset the command buffer since 'ENTER' was pressed
+              command_index = 0; 
               command_specifier = 0;
             }
             else //wait for next character
@@ -229,7 +239,7 @@ void kcd_task(void)
             command_index++;
             command_specifier = 1;
           }
-          //Else we simply do nothing since it is not a command
+          //Else we simply do nothing since it is not a command and we already echoed char
 					mem_dealloc(temp_buffer);
       }
     }

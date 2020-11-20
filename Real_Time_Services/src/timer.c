@@ -8,11 +8,17 @@
 
 #include <LPC17xx.h>
 #include "timer.h"
+#include "wall_clock_task.h"
 
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
 volatile uint32_t seconds=0;
+
+volatile U32 g_timer_count_wall = 0;
+extern struct time_t time;
+extern int wall_clock_enabled;
+
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
@@ -65,10 +71,11 @@ uint32_t timer_init(uint8_t n_timer)
        TC (Timer Counter) toggles b/w 0 and 1 every 50 PCLKs
        see MR setting below 
     */
+
     pTimer->PR = 499999;  
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
-    pTimer->MR0 = 1;
+    pTimer->MR0 = 1; //Setting Match register 0 to 1, so interrupt occurs when counter == MR0 == 1us
 
     /* Step 4.3: MCR setting, see table 429 on pg496 of LPC17xx_UM.
        Interrupt on MR0: when MR0 mathches the value in the TC, 
@@ -114,14 +121,41 @@ __asm void TIMER0_IRQHandler(void)
 void c_TIMER0_IRQHandler(void)
 {
     /* ack interrupt, see section  21.6.1 on pg 493 of LPC17XX_UM */
-    LPC_TIM0->IR = BIT(0);  
+    LPC_TIM0->IR = BIT(0);  //Writing 1 to MR0 interrupt resets the interrupt
     
     g_timer_count++ ;
+
 		if (g_timer_count==100){
 			seconds++;
 			g_timer_count=0;
 		}
-	
+  
+    if(wall_clock_enabled) 
+    {
+        g_timer_count_wall++;
+
+        //Update wall clock time value
+        if(g_timer_count_wall == 1000000)
+        {
+            (time.sec)++;
+            if(time.sec == 60)
+            {
+                time.sec = 0;
+                time.min++;
+
+                if(time.min == 60)
+                {
+                    time.min = 0;
+                    time.hr++;
+                    if(time.hr == 24)
+                    {
+                        time.hr = 0;
+                    }
+                }
+            }
+            send_time(); //send to LCD for display
+        }
+    }
 }
 
 
