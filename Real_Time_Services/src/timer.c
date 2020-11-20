@@ -65,7 +65,7 @@ uint32_t timer_init(uint8_t n_timer)
        TC (Timer Counter) toggles b/w 0 and 1 every 50 PCLKs
        see MR setting below 
     */
-    pTimer->PR = 4999;  
+    pTimer->PR = 499999;  
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1;
@@ -117,7 +117,7 @@ void c_TIMER0_IRQHandler(void)
     LPC_TIM0->IR = BIT(0);  
     
     g_timer_count++ ;
-		if (g_timer_count==10000){
+		if (g_timer_count==100){
 			seconds++;
 			g_timer_count=0;
 		}
