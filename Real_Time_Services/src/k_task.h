@@ -18,7 +18,7 @@
 /* ----- Functions ----- */
 
 int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks);    /* initialize all tasks in the system */
-TCB *dummy_scheduler(void);      /* pick the tid of the next to run task */
+TCB *scheduler(void);      /* pick the tid of the next to run task */
 int k_tsk_yield(void);           /* kernel tsk_yield function */
 
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size);

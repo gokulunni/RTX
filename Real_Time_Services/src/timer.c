@@ -13,7 +13,7 @@
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
-volatile uint32_t seconds=0;
+volatile uint32_t seconds = 0;
 
 volatile U32 g_timer_count_wall = 0;
 extern struct time_t time;
@@ -72,7 +72,7 @@ uint32_t timer_init(uint8_t n_timer)
        see MR setting below 
     */
 
-    pTimer->PR = 499999;  
+    pTimer->PR = 499999;
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1; //Setting Match register 0 to 1, so interrupt occurs when counter == MR0 == 1us
@@ -85,8 +85,7 @@ uint32_t timer_init(uint8_t n_timer)
     pTimer->MCR = BIT(0) | BIT(1);
 
     g_timer_count = 0;
-		
-		seconds=0;
+    seconds = 0;
 		
 
     /* Step 4.4: CSMSIS enable timer0 IRQ */
@@ -125,12 +124,12 @@ void c_TIMER0_IRQHandler(void)
     
     g_timer_count++ ;
 
-		if (g_timer_count==100){
-			seconds++;
-			g_timer_count=0;
-		}
-  
-    if(wall_clock_enabled) 
+    if (g_timer_count==100){
+        seconds++;
+        g_timer_count=0;
+    }
+
+    if(wall_clock_enabled)
     {
         g_timer_count_wall++;
 
@@ -163,7 +162,7 @@ void c_TIMER0_IRQHandler(void)
 
 /* a free running counter set up, no interrupt fired */
 
-uint32_t timer_init_100MHZ(uint8_t n_timer) 
+uint32_t timer_init_100MHZ(uint8_t n_timer)
 {
     LPC_TIM_TypeDef *pTimer;
     if (n_timer == 1) {
@@ -173,17 +172,17 @@ uint32_t timer_init_100MHZ(uint8_t n_timer)
     }
 
 
-    /* Step 1. Prescale Register PR setting 
+    /* Step 1. Prescale Register PR setting
        CCLK = 100 MHZ, PCLK = CCLK
        Prescalar counter increments every PCLK tick: (1/100)* 10^(-6) s = 10 ns
        TC increments every (PR + 1) PCLK cycles
-       TC increments every (MR0 + 1) * (PR + 1) PCLK cycles 
+       TC increments every (MR0 + 1) * (PR + 1) PCLK cycles
     */
-    pTimer->PR = 4000000000 - 1; /* increment timer counter every 4*10^9 PCLK ticks, which is 40 sec */ 
+    pTimer->PR = 4000000000 - 1; /* increment timer counter every 4*10^9 PCLK ticks, which is 40 sec */
 
     /* Step 2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     /* Effectively, using timer1 as a counter to measure time, there is no overflow in TC in 4K-5K years */
-    pTimer->MR0 = 0xFFFFFFFF - 1;  
+    pTimer->MR0 = 0xFFFFFFFF - 1;
 
     /* Step 3: MCR setting, see table 429 on pg496 of LPC17xx_UM.
        Reset on MR0: Reset TC if MR0 mathches it. No interrupt triggered on match.
@@ -198,9 +197,9 @@ uint32_t timer_init_100MHZ(uint8_t n_timer)
 
 void start_timer1(){
 	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-	pTimer->TCR = 2;  // disable counter, reset counters     
+	pTimer->TCR = 2;  // disable counter, reset counters
   pTimer->TCR = 1;  //enable counter
-	
+
 	//pTimer->TCR = 0;
 	//int e_tc = pTimer->TC;
   //int e_pc = pTimer->PC;
@@ -211,7 +210,7 @@ int get_timer1(){
 	pTimer->TCR = 0; //disable counter
   int e_tc = pTimer->TC;
   int e_pc = pTimer->PC;
-	
+
 }
 
 int end_timer1(){

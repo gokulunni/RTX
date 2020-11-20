@@ -119,7 +119,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     }
 		
     U32 length = *((U32 *) buf);
-		U32 type = *((U32 *) ((char *)buf + 4));
+    U32 type = *((U32 *) ((char *)buf + 4));
     //Try this U32 length = *((U32 *) msg); struct rtx_msg_hdr *ptr = (void *)buf;
     //Check example of casting 
 

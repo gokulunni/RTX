@@ -515,7 +515,7 @@ Image Symbol Table
     dealloc_user_stack                       0x00000f1b   Thumb Code    22  k_task.o(.text)
     null_task_func                           0x00000f31   Thumb Code     4  k_task.o(.text)
     k_tsk_init                               0x00000f35   Thumb Code   650  k_task.o(.text)
-    dummy_scheduler                          0x000011bf   Thumb Code    86  k_task.o(.text)
+    scheduler                          0x000011bf   Thumb Code    86  k_task.o(.text)
     task_switch                              0x00001215   Thumb Code   554  k_task.o(.text)
     k_tsk_yield                              0x0000143f   Thumb Code   122  k_task.o(.text)
     k_tsk_create                             0x000014b9   Thumb Code   352  k_task.o(.text)
