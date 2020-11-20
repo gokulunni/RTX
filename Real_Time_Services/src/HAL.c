@@ -28,8 +28,10 @@ __asm void __rte(void)
 __asm void SVC_Handler (void) 
 {
   PRESERVE8             ; 8 bytes alignement of the stack
+	IMPORT start_timer1
+	IMPORT end_timer1
   CPSID I               ; disable interrupt
-	
+	BL start_timer1
 	MRS R0, PSP           ; Read PSP into R0
 	CMP LR, 0xFFFFFFF9    ;Check LR value to see if MSP, privileged
 	BNE  normal_operation 
@@ -79,12 +81,14 @@ SVC_EXIT
 kernel_thread
 	MOV R3, #0                 ; 
 	MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+	BL end_timer1
   CPSIE I                    ; enable interrupt
   BX   LR
 
 user_thread
 	MOV R3, #1                 ; 
 	MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
+	BL end_timer1
   CPSIE I                    ; enable interrupt
   BX   LR
 }

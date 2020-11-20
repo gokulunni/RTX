@@ -12,6 +12,7 @@
 #include "k_rtx.h"
 #ifdef DEBUG_0
 #include "printf.h"
+#include "timer.h"
 #endif
 
 
@@ -167,10 +168,13 @@ int uart_irq_init(int n_uart) {
 __asm void UART0_IRQHandler(void)
 {
     PRESERVE8
+		IMPORT start_timer1
+		IMPORT end_timer1
     IMPORT c_UART0_IRQHandler
     IMPORT k_tsk_yield
     CPSID I
     PUSH{r4-r11, lr}
+		BL start_timer1
     BL c_UART0_IRQHandler
     LDR R4, =__cpp(&g_switch_flag)
     LDR R4, [R4]
@@ -193,12 +197,14 @@ RESTORE
 kernel_thread
 		MOV R3, #0                 ; 
 		MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+		BL end_timer1
 		CPSIE I                    ; enable interrupt
 		BX   LR
 
 user_thread
 		MOV R3, #1                 ; 
 		MSR CONTROL, R3            ; set control bit[0] to 1 (unprivileged)
+		BL end_timer1
 		CPSIE I                    ; enable interrupt
 		BX   LR
 } 
