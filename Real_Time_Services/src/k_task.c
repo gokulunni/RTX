@@ -709,6 +709,9 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     #endif /* DEBUG_TSK */
 
     if (buffer == NULL) {
+				#ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_get: buffer has not allocated memory \n\r");
+        #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
 
@@ -740,7 +743,6 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->k_stack_size = KERN_STACK_SIZE;
     buffer->k_sp = __get_MSP();
     buffer->k_stack_hi = (U32) task->msp_hi;
-		//TO DO: confirm that non-Real-Time tasks have a cpu and wall time field - implies in the manual
 		buffer->tv_cpu = task->tv_cpu;
 		buffer->tv_wall = task->tv_wall;
 		if (task->prio == PRIO_RT) {
