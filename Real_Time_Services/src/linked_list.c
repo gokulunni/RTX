@@ -161,19 +161,96 @@ int is_empty(TCB *queue_head) {
 }
 
 TCB *pop_edf_queue(TCB **edf_queue_head) {
+    TCB *popped = *edf_queue_head;
 
+    if (popped) {
+        *edf_queue_head = (*edf_queue_head)->next;
+        popped->next = NULL;
+    } else {
+        *edf_queue_head = NULL;
+    }
+
+    return popped;
 }
 
 void push_edf_queue(TCB **edf_queue_head, TCB *task) {
+    // TODO: implement is_greater
+    if (*edf_queue_head == NULL || is_greater((*edf_queue_head)->deadline, task->deadline)) {
+        task->next = *edf_queue_head;
+        *edf_queue_head = task;
+    } else {
+        TCB *iterator = *edf_queue_head;
 
+        // TODO: implement is_less
+        while (iterator->next != NULL && is_less_equal(iterator->next->deadline, task->deadline)) {
+            iterator = iterator->next;
+        }
+
+        task->next = iterator->next;
+        iterator->next = task;
+    }
 }
 
 TCB *pop_timeout_queue(TCB **timeout_queue_head) {
+    TCB *popped = *timeout_queue_head;
 
+    if (popped) {
+        *timeout_queue_head = (*timeout_queue_head)->next;
+        popped->next = NULL;
+    } else {
+        *timeout_queue_head = NULL;
+    }
+
+    return popped;
 }
 
-void push_timeout_queue(TCB **timeout_queue_head, TCB *task) {
+void push_timeout_queue(TCB **timeout_queue_head, TCB *task, struct timeval_rt timeout) {
+    // TODO: implement is_greater
 
+
+    if (*timeout_queue_head == NULL) {
+        task->timeout.sec = timeout.sec;
+        task->timeout.usec = timeout.usec;
+        *timeout_queue_head = task;
+        task->next = NULL;
+    } else if (is_greater((*timeout_queue_head)->timeout, task->deadline)) {
+        task->timeout.sec = timeout.sec;
+        task->timeout.usec = timeout.usec;
+        task->next = *timeout_queue_head;
+        sub(task->next->timeout, task->next->timeout, timeout);
+        *timeout_queue_head = task;
+    } else {
+        struct timeval_rt timeout_sum = {0, 0};
+
+        TCB *iterator = *timeout_queue_head;
+        add(timeout_sum, timeout_sum, iterator->timeout);
+        while (iterator->next != NULL) {
+            add(timeout_sum, timeout_sum, iterator->next->timeout);
+            if (is_greater(timeout_sum, timeout)) {
+                break;
+            }
+            iterator = iterator->next;
+        }
+
+        sub(task->timeout, timeout, timeout_sum);
+        task->next = iterator->next;
+        iterator->next = task;
+        iterator = task->next;
+
+        while (iterator != NULL) {
+            sub(iterator->timeout, iterator->timeout, task->timeout);
+            iterator = iterator->next;
+        }
+    }
+}
+
+int update_timeout(TCB **timeout_queue_head, struct timeval_rt passed_time) {
+    if (*timeout_queue_head == NULL) {
+        return 0;
+    }
+
+    sub((*timeout_queue_head)->timeout, (*timeout_queue_head)->timeout, passed_time);
+    return 1;
 }
 
 void print_queue(TCB *queue_head) {
