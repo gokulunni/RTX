@@ -1105,6 +1105,8 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->msg_hdr->length = msg_hdr->length;
     new_task->msg_hdr->type = msg_hdr->type;
 
+
+    // TODO: ADD SYSTEM TIME TO DEADLINE
     new_task->deadline = {task->p_n.sec, task->p_n.usec};
     new_task->timeout = {0, 0};
 
