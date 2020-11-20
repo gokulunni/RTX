@@ -12,6 +12,9 @@ void send_time()
 {
     size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
     U8 buf[19]; //msg_hdr (8) display time length (8) + new line + carriage return + null termination
+    struct rtx_msg_hdr *header = (void *)buf;
+    header -> length = msg_hdr_size + 8 + 3;
+    header -> type = DISPLAY;
 
     //HH:
     buf[msg_hdr_size] = time.hr/10;
@@ -30,7 +33,7 @@ void send_time()
     buf[msg_hdr_size + 9] = '\r';
     buf[msg_hdr_size + 10] = '\0';
 
-    send_msg(TID_DISPLAY, buf);
+    k_send_msg(TID_DISPLAY, buf);
 }
 
 void wall_clock_task(void)
