@@ -14,12 +14,15 @@ void sub(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt tim
         dest->usec = 0;
         dest->sec = 0;
     }
-    if (time1.usec < time2.usec) {
+    else
+    {
+        if (time1.usec < time2.usec) {
         time1.sec--;
         time1.usec += 1000000;
+        }
+        dest->usec = (time1.usec - time2.usec);
+        dest->sec = (time1.sec - time2.sec);
     }
-    dest->usec = (time1.usec - time2.usec);
-    dest->sec = (time1.sec - time2.sec);
 }
 
 int is_equal(struct timeval_rt time1, struct timeval_rt time2)
