@@ -147,6 +147,10 @@ void c_TIMER0_IRQHandler(void)
                 {
                     time.min = 0;
                     time.hr++;
+                    if(time.hr == 24)
+                    {
+                        time.hr = 0;
+                    }
                 }
             }
             send_time(); //send to LCD for display

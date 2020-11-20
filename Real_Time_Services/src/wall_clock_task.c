@@ -11,7 +11,7 @@ int wall_clock_enabled = 0;
 void send_time()
 {
     size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
-    U8 *buf = (U8 *)mem_alloc(msg_hdr_size + 8 + 3); //display time length + new line + carriage return + null termination
+    U8 buf[19]; //msg_hdr (8) display time length (8) + new line + carriage return + null termination
 
     //HH:
     buf[msg_hdr_size] = time.hr/10;
@@ -31,7 +31,6 @@ void send_time()
     buf[msg_hdr_size + 10] = '\0';
 
     send_msg(TID_DISPLAY, buf);
-    mem_dealloc(buf);
 }
 
 void wall_clock_task(void)
