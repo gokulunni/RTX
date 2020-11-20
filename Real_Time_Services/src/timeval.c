@@ -10,7 +10,10 @@ void add(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt tim
 
 void sub(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt time2)
 {
-    //TO DO: check if time2 > time1?
+    if (is_less_equal(time1, time2)) {
+        dest->usec = 0;
+        dest->sec = 0;
+    }
     if (time1.usec < time2.usec) {
         time1.sec--;
         time1.usec += 1000000;
@@ -24,37 +27,37 @@ int is_equal(struct timeval_rt time1, struct timeval_rt time2)
     if (time1.sec == time2.sec && time1.usec == time2.usec) {
         return 1;
     }
-    return -1;
+    return 0;
 }
 
 int is_greater(struct timeval_rt time1, struct timeval_rt time2)
 {
-    if (time1.sec > time2.sec   ||  (time1.sec == time2.sec && time2.usec > time2.usec)) {
+    if (time1.sec > time2.sec   ||  (time1.sec == time2.sec && time1.usec > time2.usec)) {
         return 1;
     }
-    return -1;
+    return 0;
 }
 
 int is_less(struct timeval_rt time1, struct timeval_rt time2)
 {
-    if (time1.sec < time2.sec   ||  (time1.sec == time2.sec && time2.usec < time2.usec)) {
+    if (time1.sec < time2.sec   ||  (time1.sec == time2.sec && time1.usec < time2.usec)) {
         return 1;
     }
-    return -1;
+    return 0;
 }
 
 int is_greater_equal(struct timeval_rt time1, struct timeval_rt time2)
 {
-    if (time1.sec >= time2.sec   ||  (time1.sec == time2.sec && time2.usec >= time2.usec)) {
+    if (time1.sec >= time2.sec   ||  (time1.sec == time2.sec && time1.usec >= time2.usec)) {
         return 1;
     }
-    return -1;
+    return 0;
 }
 
 int is_less_equal(struct timeval_rt time1, struct timeval_rt time2)
 {
-    if (time1.sec <= time2.sec   ||  (time1.sec == time2.sec && time2.usec <= time2.usec)) {
+    if (time1.sec <= time2.sec   ||  (time1.sec == time2.sec && time1.usec <= time2.usec)) {
         return 1;
     }
-    return -1;
+    return 0;
 }
