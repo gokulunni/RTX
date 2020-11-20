@@ -5,9 +5,9 @@
 
 struct time_t 
 {
-    U32 sec;
-    U32 min;
-    U32 hr;
+    U8 sec;
+    U8 min;
+    U8 hr;
 };
 
 void send_time();
