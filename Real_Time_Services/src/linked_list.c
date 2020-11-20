@@ -4,6 +4,7 @@
 
 #include "linked_list.h"
 #include "k_rtx.h"
+#include "timeval.h"
 #ifdef DEBUG_QUEUE
 #include "printf.h"
 #endif /* ! DEBUG_QUEUE */
@@ -205,40 +206,46 @@ TCB *pop_timeout_queue(TCB **timeout_queue_head) {
 }
 
 void push_timeout_queue(TCB **timeout_queue_head, TCB *task, struct timeval_rt timeout) {
-    // TODO: implement is_greater
+    struct timeval_rt timeout_sum = {0, 0};
+    TCB *iterator = *timeout_queue_head;
+
     if (*timeout_queue_head == NULL) {
         task->timeout.sec = timeout.sec;
         task->timeout.usec = timeout.usec;
         *timeout_queue_head = task;
         task->next = NULL;
+        return;
     } else if (is_greater((*timeout_queue_head)->timeout, task->deadline)) {
         task->timeout.sec = timeout.sec;
         task->timeout.usec = timeout.usec;
         task->next = *timeout_queue_head;
-        sub(task->next->timeout, task->next->timeout, timeout);
+        sub(&(task->next->timeout), task->next->timeout, timeout);
         *timeout_queue_head = task;
-    } else {
-        struct timeval_rt timeout_sum = {0, 0};
 
-        TCB *iterator = *timeout_queue_head;
-        add(timeout_sum, timeout_sum, iterator->timeout);
+        iterator = task->next;
+        while (iterator != NULL) {
+            sub(&(iterator->timeout), iterator->timeout, task->timeout);
+            iterator = iterator->next;
+        }
+    } else {
+        add(&timeout_sum, timeout_sum, iterator->timeout);
         while (iterator->next != NULL) {
-            add(timeout_sum, timeout_sum, iterator->next->timeout);
+            add(&timeout_sum, timeout_sum, iterator->next->timeout);
             if (is_greater(timeout_sum, timeout)) {
                 break;
             }
             iterator = iterator->next;
         }
 
-        sub(task->timeout, timeout, timeout_sum);
+        sub(&(task->timeout), timeout, timeout_sum);
         task->next = iterator->next;
         iterator->next = task;
-        iterator = task->next;
+    }
 
-        while (iterator != NULL) {
-            sub(iterator->timeout, iterator->timeout, task->timeout);
-            iterator = iterator->next;
-        }
+    iterator = task->next;
+    while (iterator != NULL) {
+        sub(&(iterator->timeout), iterator->timeout, task->timeout);
+        iterator = iterator->next;
     }
 }
 
@@ -247,7 +254,7 @@ int update_timeout(TCB **timeout_queue_head, struct timeval_rt passed_time) {
         return 0;
     }
 
-    sub((*timeout_queue_head)->timeout, (*timeout_queue_head)->timeout, passed_time);
+    sub(&((*timeout_queue_head)->timeout), (*timeout_queue_head)->timeout, passed_time);
     return 1;
 }
 
