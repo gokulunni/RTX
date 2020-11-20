@@ -7,12 +7,12 @@
 
 #include "common.h"
 
-void add(timeval_rt dest, timeval_rt time1, timeval_rt time2);
-void sub(timeval_rt dest, timeval_rt time1, timeval_rt time2);
-int is_equal(timeval_rt time1, timeval_rt time2);
-int is_greater(timeval_rt time1, timeval_rt time2);
-int is_less(timeval_rt time1, timeval_rt time2);
-int is_greater_equal(timeval_rt time1, timeval_rt time2);
-int is_less_equal(timeval_rt time1, timeval_rt time2);
+void add(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt time2);
+void sub(struct timeval_rt* dest,struct timeval_rt time1, struct timeval_rt time2);
+int is_equal(struct timeval_rt time1, struct timeval_rt time2);
+int is_greater(struct timeval_rt time1, struct timeval_rt time2);
+int is_less(struct timeval_rt time1, struct timeval_rt time2);
+int is_greater_equal(struct timeval_rt time1, struct timeval_rt time2);
+int is_less_equal(struct timeval_rt time1, struct timeval_rt time2);
 
 #endif //ECE350_TIMEVAL_H
