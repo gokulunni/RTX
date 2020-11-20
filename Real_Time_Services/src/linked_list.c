@@ -158,7 +158,7 @@ void push(TCB **prio_queue_head, TCB *task) {
  * @return 1 if priority queue is not empty
  */
 int is_empty(TCB *queue_head) {
-    return prio_queue_head == NULL;
+    return queue_head == NULL;
 }
 
 TCB *pop_edf_queue(TCB **edf_queue_head) {

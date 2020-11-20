@@ -292,23 +292,23 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
                 return RTX_ERR;
             }
 
-            p_tcb->p_n = {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
-            p_tcb->deadline = {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
-            p_tcb->timeout = {0, 0};
+            p_tcb->p_n = (struct timeval_rt) {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
+            p_tcb->deadline = (struct timeval_rt) {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
+            p_tcb->timeout = (struct timeval_rt) {0, 0};
         } else {
             p_tcb->msg_hdr->length = 0;
             p_tcb->msg_hdr->type = 0;
             p_tcb->num_msgs = 0;
             p_tcb->has_mailbox = FALSE;
 
-            p_tcb->p_n = {0, 0};
-            p_tcb->deadline = {0, 0};
-            p_tcb->timeout = {0, 0};
+            p_tcb->p_n = (struct timeval_rt) {0, 0};
+            p_tcb->deadline = (struct timeval_rt) {0, 0};
+            p_tcb->timeout = (struct timeval_rt) {0, 0};
         }
 
-        p_tcb->tv_cpu = {0, 0};
-        p_tcb->tv_wall = {0, 0};
-        p_tcb->timeout = {0, 0};
+        p_tcb->tv_cpu = (struct timeval_rt) {0, 0};
+        p_tcb->tv_wall = (struct timeval_rt) {0, 0};
+        p_tcb->timeout = (struct timeval_rt) {0, 0};
 
         //Add task to the priority queue for NEW tasks
         if (p_tcb->tid != PID_NULL) {
@@ -393,13 +393,13 @@ TCB *scheduler(void) {
     if (gp_current_task && gp_current_task -> state != BLK_MSG) {
         if (gp_current_task->prio == PRIO_RT) {
             if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_rt_queue_head, gp_current_task);
+                push_timeout_queue(&timeout_rt_queue_head, gp_current_task, gp_current_task->p_n);
             } else {
                 push_edf_queue(&ready_rt_queue_head, gp_current_task);
             }
         } else {
             if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_queue_head, gp_current_task);
+                push_timeout_queue(&timeout_queue_head, gp_current_task, gp_current_task->p_n);
             } else {
                 push(&ready_queue_head, gp_current_task);
             }
@@ -1107,8 +1107,8 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
 
     // TODO: ADD SYSTEM TIME TO DEADLINE
-    new_task->deadline = {task->p_n.sec, task->p_n.usec};
-    new_task->timeout = {0, 0};
+    new_task->deadline = (struct timeval_rt) {task->p_n.sec, task->p_n.usec};
+    new_task->timeout = (struct timeval_rt) {0, 0};
 
     gp_current_task = prev_current_task;
 
