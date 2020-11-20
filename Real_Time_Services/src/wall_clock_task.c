@@ -47,15 +47,6 @@ void wall_clock_task(void)
     reg_buf[msg_hdr_size] = 'W';
     send_msg(TID_KCD, reg_buf);
 
-    //TODO: Modify registered cmd handling so that this does not need to be done
-    (header -> length)++;
-    reg_buf[msg_hdr_size + 1] = 'R';
-    send_msg(TID_KCD, reg_buf);
-    reg_buf[msg_hdr_size + 1] = 'S';
-    send_msg(TID_KCD, reg_buf);
-    reg_buf[msg_hdr_size + 1] = 'T';
-    send_msg(TID_KCD, reg_buf);
-
     mem_dealloc(reg_buf);
 
     char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};

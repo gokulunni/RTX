@@ -35,7 +35,7 @@ extern void wall_clock_task(void);
 
 int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
-    if (num_tasks !=3) {
+    if (num_tasks !=4) {
         return RTX_ERR;
     }
     
@@ -54,16 +54,16 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
     tasks[2].prio = PRIO_NULL;
     tasks[2].priv = 0;
 		
-		//tasks[3].ptask = &wall_clock_task;
-		//tasks[3].u_stack_size = 0x100;
-		//tasks[3].prio = HIGH;
-		//tasks[2].priv = 0;
+//		tasks[3].ptask = &wall_clock_task;
+//		tasks[3].u_stack_size = 0x100;
+//		tasks[3].prio = HIGH;
+//		tasks[3].priv = 0;
 
     return RTX_OK;
 }
 int main() 
 {      
-    RTX_TASK_INFO task_info[5];    /* 5 tasks, only 2 are used in uncommented code */
+    RTX_TASK_INFO task_info[6];    /* 5 tasks, only 2 are used in uncommented code */
    
     /* CMSIS system initialization */
     SystemInit();  /* initialize the system */
@@ -82,7 +82,7 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     set_task_info(task_info, 2);
-    set_fixed_tasks(task_info + 2, 3);  /* kcd, lcd, null tasks */
+    set_fixed_tasks(task_info + 2, 4);  /* kcd, lcd, null tasks */
     /* start the RTX and built-in tasks */
     rtx_init(32, FIRST_FIT, task_info, 5); 
     /* We should never reach here!!! */
