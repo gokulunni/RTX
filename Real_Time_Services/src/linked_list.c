@@ -206,8 +206,6 @@ TCB *pop_timeout_queue(TCB **timeout_queue_head) {
 
 void push_timeout_queue(TCB **timeout_queue_head, TCB *task, struct timeval_rt timeout) {
     // TODO: implement is_greater
-
-
     if (*timeout_queue_head == NULL) {
         task->timeout.sec = timeout.sec;
         task->timeout.usec = timeout.usec;

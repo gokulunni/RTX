@@ -1017,19 +1017,16 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->msg_hdr->length = msg_hdr->length;
     new_task->msg_hdr->type = msg_hdr->type;
 
+    new_task->deadline = {task->p_n.sec, task->p_n.usec};
+    new_task->timeout = {0, 0};
+
     gp_current_task = prev_current_task;
 
-// TODO: implement logic of pushing RT tasks into Ready queue
-
-//    push(&ready_queue_head, new_task);
-//    print_queue(ready_queue_head);
-//
-//    if(gp_current_task->prio > new_task->prio)  {
-//        //must run immediately
-//        k_tsk_yield();
-//    }
-//
     *tid = new_task->tid;
+
+    push_edf_queue(&ready_rt_queue_head, new_task);
+    // TODO: might require logic to check if yield is needed
+    k_tsk_yield();
 
     return RTX_OK;
 }
