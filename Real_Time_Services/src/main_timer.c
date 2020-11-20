@@ -26,7 +26,7 @@ int main1() {
 		int lastSecond=0;
 
 
-		struct timeval_rt *tv = mem_alloc(sizeof(tv));
+		//struct timeval_rt *tv = mem_alloc(sizeof(tv));
 		uart1_put_char('E');
     while (1) {
         /* g_timer_count gets updated every 1 usec */
@@ -40,9 +40,10 @@ int main1() {
 			
 			if (lastSecond!=seconds){
 				lastSecond=seconds;
-				get_time(tv);
-				uart1_put_char('0'+ sec);
-				uart1_put_char('0'+ tv->sec);
+				//get_time(tv);
+				//uart1_put_char('0'+ sec);
+				//uart1_put_char('0'+ tv->sec);
+        uart1_put_char('0'+ sec);
         sec = (sec + 1)%10;
 				
 
