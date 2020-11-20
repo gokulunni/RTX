@@ -72,9 +72,6 @@ void wall_clock_task(void)
                     time.hr = 0;
                     g_timer_count_wall = 0;
                     wall_clock_enabled = 1;
-
-                    //Display the time
-                    send_time();
                 }
                 //%WS
                 else if(temp_buffer[9] == 'S')
@@ -91,9 +88,6 @@ void wall_clock_task(void)
 
                     //enable clock
                     wall_clock_enabled = 1; 
-
-                    //Display the initial system time
-                    send_time();
                 }
                 //%WT
                 else if(temp_buffer[9] == 'T')
@@ -109,8 +103,6 @@ void wall_clock_task(void)
                     time.sec = (temp_buffer[msg_hdr_size + 9] - '0')*10 + (temp_buffer[msg_hdr_size + 10] - '0');
                     g_timer_count_wall = 0;
                     wall_clock_enabled = 1;
-
-                    send_time();
                 }
                 else
                 {
