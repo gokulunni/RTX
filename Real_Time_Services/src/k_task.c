@@ -141,7 +141,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
   
     // Create fake kernal task with ID = MAX_TASKS+1
     kernal_task.tid = MAX_TASKS + 1;
-		kernal_task.priv = 1;
+    kernal_task.priv = 1;
     gp_current_task = &kernal_task;
 
     /* Pretend an exception happened, by adding exception stack frame */
@@ -170,7 +170,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         }
         
         p_tcb->state = NEW;
-
+        p_tcb->next = NULL;
         p_tcb->msg_sender_head = NULL;
         p_tcb->has_mailbox=FALSE;
         //Initialize mailbox to NULL values
@@ -178,18 +178,37 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         p_tcb->mailbox.buffer_end = NULL;
         p_tcb->mailbox.head = NULL;
         p_tcb->mailbox.tail = NULL;
-			
-        //CHECK CREATE FUNCTION
 
         p_tcb->prio = p_taskinfo->prio;
+        if (p_tcb->prio != PRIO_RT && p_tcb->prio != HIGH && p_tcb->prio != MEDIUM && p_tcb->prio != LOW && p_tcb->prio != LOWEST && p_tcb->prio != PRIO_NULL) {
+            #ifdef DEBUG_TSK
+            printf("[ERROR] k_tsk_init: wrong prio\n\r");
+            #endif /* DEBUG_TSK */
+            return RTX_ERR;
+        }
 
         if (p_taskinfo->priv == 0) { /* unprivileged task */
             p_tcb->priv = 0;
+
+            if (!(p_taskinfo->u_stack_size > 0)) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_init: u_stack_size < 1\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
+
             p_tcb->psp_hi = alloc_user_stack(p_taskinfo->u_stack_size);
 
             if (p_tcb->psp_hi == NULL) {
                 #ifdef DEBUG_TSK
                 printf("[ERROR] k_tsk_init: failed to allocate init's task user stack\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
+
+            if (p_taskinfo->ptask == NULL) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_init: ptask = NULL\n\r");
                 #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
@@ -208,6 +227,13 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         } else { /* privileged task */
             p_tcb->priv = 1;
 
+            if (p_taskinfo->ptask == NULL) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_init: ptask = NULL\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
+
             p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
             sp = p_tcb->msp_hi; /* stacks grows down, so get the high addr. */
             *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
@@ -221,6 +247,68 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             p_tcb->psp_hi = NULL;
             p_tcb->psp_size = 0;
         }
+
+        // TODO: remember to dealloc when suspending a task
+        p_tcb->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+        if (p_tcb->msg_hdr == NULL) {
+            #ifdef DEBUG_TSK
+            printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
+            #endif /* DEBUG_TSK */
+            return RTX_ERR;
+        }
+
+        if (p_tcb->prio == PRIO_RT) {
+            if (p_taskinfo->msg_hdr != NULL) {
+                p_tcb->msg_hdr->length = p_taskinfo->msg_hdr->length;
+                p_tcb->msg_hdr->type = p_taskinfo->msg_hdr->type;
+
+                if (p_taskinfo->num_msgs > 0) {
+                    p_tcb->num_msgs = p_taskinfo->num_msgs;
+                    p_tcb->has_mailbox = TRUE;
+
+                    if (k_mbx_create(p_tcb->num_msgs * p_tcb->msg_hdr->length) == RTX_ERR) {
+                        #ifdef DEBUG_TSK
+                        printf("[ERROR] k_tsk_init: not enough space for mailbox\n\r");
+                        #endif /* DEBUG_TSK */
+                        return RTX_ERR;
+                    }
+                } else {
+                    #ifdef DEBUG_TSK
+                    printf("[ERROR] k_tsk_init: num_msgs < 1\n\r");
+                    #endif /* DEBUG_TSK */
+                    return RTX_ERR;
+                }
+            } else {
+                p_tcb->msg_hdr->length = 0;
+                p_tcb->msg_hdr->type = 0;
+                p_tcb->num_msgs = 0;
+                p_tcb->has_mailbox = FALSE;
+            }
+
+            if (p_taskinfo->p_n.sec == 0 && p_taskinfo->p_n.usec == 0) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_init: p_n < 1\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
+
+            p_tcb->p_n = {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
+            p_tcb->deadline = {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
+            p_tcb->timeout = {0, 0};
+        } else {
+            p_tcb->msg_hdr->length = 0;
+            p_tcb->msg_hdr->type = 0;
+            p_tcb->num_msgs = 0;
+            p_tcb->has_mailbox = FALSE;
+
+            p_tcb->p_n = {0, 0};
+            p_tcb->deadline = {0, 0};
+            p_tcb->timeout = {0, 0};
+        }
+
+        p_tcb->tv_cpu = {0, 0};
+        p_tcb->tv_wall = {0, 0};
+        p_tcb->timeout = {0, 0};
 
         //Add task to the priority queue for NEW tasks
         if (p_tcb->tid != PID_NULL) {
@@ -984,7 +1072,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     if (msg_hdr != NULL) {
         if (num_msgs > 0) {
-            if (k_mbx_create(num_msgs * (sizeof(RTX_MSG_HDR) + msg_hdr->length)) == RTX_ERR) {
+            if (k_mbx_create(num_msgs * msg_hdr->length) == RTX_ERR) {
                 #ifdef DEBUG_TSK
                 printf("[ERROR] k_tsk_create_rt: not enough space for mailbox\n\r");
                 #endif /* DEBUG_TSK */
