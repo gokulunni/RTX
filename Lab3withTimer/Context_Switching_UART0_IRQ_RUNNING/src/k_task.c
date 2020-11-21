@@ -153,7 +153,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         } else if(p_taskinfo -> ptask == &lcd_task) {
             p_tcb = &g_tcbs[TID_DISPLAY];
             p_tcb-> tid = TID_DISPLAY;
-        } else if(p_tcb->prio == PRIO_NULL || p_taskinfo->ptask == &null_task) {
+        } else if(p_taskinfo->prio == PRIO_NULL || p_taskinfo->ptask == &null_task) {
             p_tcb = &g_tcbs[PID_NULL];
             p_tcb->tid = PID_NULL;
             k_null_tsk = &g_tcbs[0];
@@ -197,12 +197,12 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
             p_tcb->psp = sp;
             p_tcb->psp_size = p_taskinfo->u_stack_size;
-            p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            p_tcb->msp_hi = g_k_stacks[p_tcb->tid] + (KERN_STACK_SIZE >> 2);
             p_tcb->msp = p_tcb->msp_hi;
         } else { /* privileged task */
             p_tcb->priv = 1;
 
-            p_tcb->msp_hi = g_k_stacks[i+1] + (KERN_STACK_SIZE >> 2);
+            p_tcb->msp_hi = g_k_stacks[p_tcb->tid] + (KERN_STACK_SIZE >> 2);
             sp = p_tcb->msp_hi; /* stacks grows down, so get the high addr. */
             *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
             *(--sp)  = (U32)(p_taskinfo->ptask); 					/* PC contains the entry point of the task */

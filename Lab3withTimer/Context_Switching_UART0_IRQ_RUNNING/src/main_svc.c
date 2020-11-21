@@ -78,9 +78,9 @@ int main()
     printf("Read PSP = 0x%x\r\n", __get_PSP());
 #endif /*DEBUG_0*/    
     /* sets task information */
-		//timer_init(0);
-    set_task_info(task_info, 2);
-    set_fixed_tasks(task_info + 2, 3);  /* kcd, lcd, null tasks */
+		//timer_init(0););
+    set_fixed_tasks(task_info, 3);  /* kcd, lcd, null tasks */
+    set_task_info(task_info+3, 2);
     /* start the RTX and built-in tasks */
     rtx_init(32, FIRST_FIT, task_info, 5); 
     /* We should never reach here!!! */
