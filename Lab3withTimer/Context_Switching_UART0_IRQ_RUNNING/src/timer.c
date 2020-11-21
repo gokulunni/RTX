@@ -8,11 +8,13 @@
 
 #include <LPC17xx.h>
 #include "timer.h"
+#include "k_rtx.h"
 
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
-volatile uint32_t seconds=0;
+uint32_t seconds;
+extern TCB *gp_current_task;
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
@@ -65,7 +67,7 @@ uint32_t timer_init(uint8_t n_timer)
        TC (Timer Counter) toggles b/w 0 and 1 every 50 PCLKs
        see MR setting below 
     */
-    pTimer->PR = 4999;  
+    pTimer->PR = 49;  
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1;
@@ -78,9 +80,6 @@ uint32_t timer_init(uint8_t n_timer)
     pTimer->MCR = BIT(0) | BIT(1);
 
     g_timer_count = 0;
-		
-		seconds=0;
-		
 
     /* Step 4.4: CSMSIS enable timer0 IRQ */
     NVIC_EnableIRQ(TIMER0_IRQn);
@@ -105,8 +104,28 @@ __asm void TIMER0_IRQHandler(void)
     CPSID I ; disable interrupts
     PUSH{r4-r11, lr}
     BL c_TIMER0_IRQHandler
-    CPSIE I ; enable interrupts
-    POP{r4-r11, pc}
+		
+	POP{r4-r11, LR}
+	MVN  LR, #:NOT:0xFFFFFFFD           ; set EXC_RETURN value to Thread mode, PSP
+  LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
+	LDR R3, [R3]                        ; Get address of current task
+	MOV R2, #0                          ; clear R2
+	LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
+  CMP R2, #1                          ; check if priv level is 1 or 0
+  BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
+  B user_thread                       ; if 0, handler was invoked by user thread
+
+kernel_thread
+	MOV R3, #0                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+  CPSIE I                    ; enable interrupt
+  BX   LR
+
+user_thread
+	MOV R3, #1                 ; 
+	MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
+  CPSIE I                    ; enable interrupt
+  BX   LR
 } 
 /**
  * @brief: c TIMER0 IRQ Handler
@@ -117,93 +136,5 @@ void c_TIMER0_IRQHandler(void)
     LPC_TIM0->IR = BIT(0);  
     
     g_timer_count++ ;
-		if (g_timer_count==10000){
-			seconds++;
-			g_timer_count=0;
-		}
-	
-}
-
-
-//timer 1
-
-/* a free running counter set up, no interrupt fired */
-
-uint32_t timer_init_100MHZ(uint8_t n_timer) 
-{
-    LPC_TIM_TypeDef *pTimer;
-    if (n_timer == 1) {
-        pTimer = (LPC_TIM_TypeDef *) LPC_TIM1;
-    } else { /* other timer not supported yet */
-        return 1;
-    }
-
-
-    /* Step 1. Prescale Register PR setting 
-       CCLK = 100 MHZ, PCLK = CCLK
-       Prescalar counter increments every PCLK tick: (1/100)* 10^(-6) s = 10 ns
-       TC increments every (PR + 1) PCLK cycles
-       TC increments every (MR0 + 1) * (PR + 1) PCLK cycles 
-    */
-    pTimer->PR = 4000000000 - 1; /* increment timer counter every 4*10^9 PCLK ticks, which is 40 sec */ 
-
-    /* Step 2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
-    /* Effectively, using timer1 as a counter to measure time, there is no overflow in TC in 4K-5K years */
-    pTimer->MR0 = 0xFFFFFFFF - 1;  
-
-    /* Step 3: MCR setting, see table 429 on pg496 of LPC17xx_UM.
-       Reset on MR0: Reset TC if MR0 mathches it. No interrupt triggered on match.
-    */
-    pTimer->MCR = BIT(1);
-
-    /* Step 4: Enable the counter. See table 427 on pg494 of LPC17xx_UM. */
-    pTimer->TCR = 1;
-
-    return 0;
-}
-
-void start_timer1(){
-	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-	
-	    pTimer->PR = 4000000000 - 1; /* increment timer counter every 4*10^9 PCLK ticks, which is 40 sec */ 
-
-    /* Step 2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
-    /* Effectively, using timer1 as a counter to measure time, there is no overflow in TC in 4K-5K years */
-    pTimer->MR0 = 0xFFFFFFFF - 1;  
-
-    /* Step 3: MCR setting, see table 429 on pg496 of LPC17xx_UM.
-       Reset on MR0: Reset TC if MR0 mathches it. No interrupt triggered on match.
-    */
-    pTimer->MCR = BIT(1);
-
-    /* Step 4: Enable the counter. See table 427 on pg494 of LPC17xx_UM. */
-    pTimer->TCR = 1;
-	
-	pTimer->TCR = 2;  // disable counter, reset counters     
-  pTimer->TCR = 1;  //enable counter
-	
-	//pTimer->TCR = 0;
-	//int e_tc = pTimer->TC;
-  //int e_pc = pTimer->PC;
-	return;
-}
-
-void get_timer1(){
-	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-	pTimer->TCR = 0; //disable counter
-  int e_tc = pTimer->TC;
-  int e_pc = pTimer->PC;
-	return;
-}
-
-void end_timer1(){
-	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-	pTimer->TCR = 0;
-	int e_tc = pTimer->TC;
-  int e_pc = pTimer->PC;
-	g_timer_count+=e_pc/1000000;
-	seconds+= g_timer_count/100;
-	g_timer_count= g_timer_count%100;
-	return;
 }
 

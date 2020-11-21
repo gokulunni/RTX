@@ -31,9 +31,10 @@ __asm void SVC_Handler (void)
   CPSID I               ; disable interrupt
 	
 	MRS R0, PSP           ; Read PSP into R0
-	CMP LR, 0xFFFFFFF9    ;Check LR value to see if MSP, privileged
+	MRS R10, MSP					; Save MSP value
+	CMP LR, 0xFFFFFFF9    ;Check LR value to see if MSP was being used 
 	BNE  normal_operation 
-	MRS  R0, MSP          ;since MSP/Privileged, this is 1st invocation, use MSP
+	MRS  R0, MSP          ;since MSP/Privileged, this is 1st invocation, use MSP value
   										
 	
 normal_operation
@@ -54,7 +55,17 @@ normal_operation
  
   LDM  R0, {R0-R3, R12}; Read R0-R3, R12 from stack (no writeback)
                        ; NOTE R0 contains the sp before this instruction
-                       ; ****Need to set MSP back to kernel stack before system call****
+	
+	; ****Need to set MSP back to kernel stack before system call****
+	LDR R9, =__cpp(&gp_current_task)    ; Load R9 with address of pointer to current task
+	LDR R9, [R9]                        ; Get address of current task
+	MOV R8, #0                          ; clear R8
+	LDRB R8, [R9, #45]                  ; read priv member (45 byte offset)
+  CMP R8, #1                          ; check if priv level is 1 or 0
+	BEQ save_regs_and_branch						; if privileged, we are already using kernel stack
+	MSR MSP, R10												; Point MSP back to kernel stack
+	
+save_regs_and_branch
   PUSH {R4-R11, LR}    ; Save other registers
   BLX  R12             ; Call SVC C Function, 
                        ; R12 contains the corresponding 
@@ -75,7 +86,6 @@ SVC_EXIT
   BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
   B user_thread                       ; if 0, handler was invoked by user thread
 
-	//TO DO: Make sure privilege level is set appropriately, currently user task is privileged?
 kernel_thread
 	MOV R3, #0                 ; 
 	MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
