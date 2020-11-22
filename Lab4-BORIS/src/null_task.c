@@ -1,6 +1,5 @@
 /* The null task template file */
 
-void null_task(void)
-{
-    /* not implemented yet */
+void null_task(void) {
+    while (1) {}
 }
