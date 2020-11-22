@@ -183,7 +183,9 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Switch properly at the end (call yeild?)
 		
     //Commenting out for testing purposes.
-		k_tsk_yield();
+		if(task->prio > gp_current_task->prio){
+			k_tsk_yield();
+		}
   
     return RTX_OK;
 }
