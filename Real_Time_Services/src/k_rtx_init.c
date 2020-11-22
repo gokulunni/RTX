@@ -31,6 +31,9 @@ int k_rtx_init(size_t blk_size, int algo, RTX_TASK_INFO *task_info, int num_task
 	if(timer_init(0)!=RTX_OK){
 		return RTX_ERR;
 	}
+	if(timer_init_100MHZ(1)!=RTX_OK){
+		return RTX_ERR;
+	}
 			
     
     /* start the first task */

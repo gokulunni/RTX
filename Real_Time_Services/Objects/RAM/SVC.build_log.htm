@@ -69,6 +69,18 @@ compiling timeval.c...
 src\timeval.c(66): warning:  #1-D: last line of file ends without a newline
   }
 src\timeval.c: 1 warning, 0 errors
+compiling wall_clock_task.c...
+src\wall_clock_task.h(13): warning:  #1295-D: Deprecated declaration send_time - give arg types
+  void send_time();
+src\wall_clock_task.h(15): warning:  #1-D: last line of file ends without a newline
+  #endif /* WALL_CLOCK_TASK_H */
+src\wall_clock_task.c(123): warning:  #1-D: last line of file ends without a newline
+  }
+src\wall_clock_task.c(54): warning:  #177-D: variable "digits"  was declared but never referenced
+      char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+src\wall_clock_task.c(55): warning:  #177-D: variable "pTimer"  was declared but never referenced
+      LPC_TIM_TypeDef *pTimer;
+src\wall_clock_task.c: 5 warnings, 0 errors
 compiling timer.c...
 src\timer.h(16): warning:  #1295-D: Deprecated declaration start_timer1 - give arg types
   extern void start_timer1();
@@ -85,18 +97,6 @@ src\timer.c(214): warning:  #940-D: missing return statement at end of non-void 
 src\timer.c(225): warning:  #940-D: missing return statement at end of non-void function "end_timer1" 
   }
 src\timer.c: 7 warnings, 0 errors
-compiling wall_clock_task.c...
-src\wall_clock_task.h(13): warning:  #1295-D: Deprecated declaration send_time - give arg types
-  void send_time();
-src\wall_clock_task.h(15): warning:  #1-D: last line of file ends without a newline
-  #endif /* WALL_CLOCK_TASK_H */
-src\wall_clock_task.c(123): warning:  #1-D: last line of file ends without a newline
-  }
-src\wall_clock_task.c(54): warning:  #177-D: variable "digits"  was declared but never referenced
-      char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-src\wall_clock_task.c(55): warning:  #177-D: variable "pTimer"  was declared but never referenced
-      LPC_TIM_TypeDef *pTimer;
-src\wall_clock_task.c: 5 warnings, 0 errors
 compiling lcd_task.c...
 compiling priv_tasks.c...
 src\priv_tasks.c(39): warning:  #177-D: variable "x"  was declared but never referenced
@@ -120,6 +120,7 @@ src\kcd_task.c: 4 warnings, 0 errors
 compiling main_svc.c...
 compiling uart_polling.c...
 compiling null_task.c...
+assembling startup_LPC17xx.s...
 compiling usr_tasks.c...
 src\usr_tasks.c(110): warning:  #177-D: variable "sender_tid"  was declared but never referenced
       task_t sender_tid = 0;
@@ -128,10 +129,9 @@ src\usr_tasks.c(143): warning:  #177-D: variable "sender_tid"  was declared but 
 src\usr_tasks.c(175): warning:  #177-D: variable "msg_hdr_size"  was declared but never referenced
       size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
 src\usr_tasks.c: 3 warnings, 0 errors
-assembling startup_LPC17xx.s...
 compiling system_LPC17xx.c...
 linking...
-Program Size: Code=10648 RO-data=236 RW-data=88 ZI-data=10960  
+Program Size: Code=10708 RO-data=236 RW-data=88 ZI-data=10960  
 ".\Objects\RAM\SVC.axf" - 0 Error(s), 36 Warning(s).
 
 <h2>Software Packages used:</h2>
