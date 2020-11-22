@@ -15,5 +15,4 @@
 .\objects\ram\k_task.o: src\circular_buffer.h
 .\objects\ram\k_task.o: src\linked_list.h
 .\objects\ram\k_task.o: src\k_mem.h
-.\objects\ram\k_task.o: src\printf.h
-.\objects\ram\k_task.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\objects\ram\k_task.o: src\k_msg.h

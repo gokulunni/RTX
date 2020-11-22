@@ -3,3 +3,4 @@
 .\objects\ram\linked_list.o: src\k_rtx.h
 .\objects\ram\linked_list.o: src\common.h
 .\objects\ram\linked_list.o: src\circular_buffer.h
+.\objects\ram\linked_list.o: src\timeval.h

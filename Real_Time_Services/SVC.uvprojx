@@ -438,6 +438,26 @@
               <FileType>1</FileType>
               <FilePath>.\src\linked_list.c</FilePath>
             </File>
+            <File>
+              <FileName>k_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\k_time.c</FilePath>
+            </File>
+            <File>
+              <FileName>wall_clock_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\wall_clock_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>timeval.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timeval.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -934,6 +954,26 @@
               <FileName>linked_list.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\linked_list.c</FilePath>
+            </File>
+            <File>
+              <FileName>k_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\k_time.c</FilePath>
+            </File>
+            <File>
+              <FileName>wall_clock_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\wall_clock_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>timeval.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timeval.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timer.c</FilePath>
             </File>
           </Files>
         </Group>

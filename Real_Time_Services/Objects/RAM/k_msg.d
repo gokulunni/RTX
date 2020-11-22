@@ -6,5 +6,3 @@
 .\objects\ram\k_msg.o: src\k_task.h
 .\objects\ram\k_msg.o: src\k_mem.h
 .\objects\ram\k_msg.o: src\linked_list.h
-.\objects\ram\k_msg.o: src\printf.h
-.\objects\ram\k_msg.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
