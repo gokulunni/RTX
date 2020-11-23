@@ -46,22 +46,22 @@ ARM Macro Assembler    Page 1
    28 00000000         ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
    29 00000000         ; </h>
    30 00000000         
-   31 00000000 00000400 
+   31 00000000 00000200 
                        Stack_Size
-                               EQU              0x00000400
+                               EQU              0x00000200
    32 00000000         
    33 00000000                 AREA             STACK, NOINIT, READWRITE, ALIGN
 =3
    34 00000000         Stack_Mem
                                SPACE            Stack_Size
-   35 00000400         __initial_sp
-   36 00000400         
-   37 00000400         
-   38 00000400         ; <h> Heap Configuration
-   39 00000400         ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
-   40 00000400         ; </h>
-   41 00000400         
-   42 00000400 00000000 
+   35 00000200         __initial_sp
+   36 00000200         
+   37 00000200         
+   38 00000200         ; <h> Heap Configuration
+   39 00000200         ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
+   40 00000200         ; </h>
+   41 00000200         
+   42 00000200 00000000 
                        Heap_Size
 
 
@@ -70,8 +70,8 @@ ARM Macro Assembler    Page 2
 
 
                                EQU              0x00000000
-   43 00000400         
-   44 00000400                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
+   43 00000200         
+   44 00000200                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
 3
    45 00000000         __heap_base
    46 00000000         Heap_Mem
@@ -424,7 +424,7 @@ ARM Macro Assembler    Page 7
               00000000 
               00000000 
               00000000 
-              00000400 
+              00000200 
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=.\objects\ram\startup_lpc17xx.d -o.\objects\ram\startup_lpc17xx.o 
@@ -457,7 +457,7 @@ Symbol: Stack_Mem
       At line 277 in file RTE\Device\LPC1768\startup_LPC17xx.s
       At line 279 in file RTE\Device\LPC1768\startup_LPC17xx.s
 
-__initial_sp 00000400
+__initial_sp 00000200
 
 Symbol: __initial_sp
    Definitions
@@ -1022,7 +1022,7 @@ Symbol: Heap_Size
       At line 46 in file RTE\Device\LPC1768\startup_LPC17xx.s
       At line 278 in file RTE\Device\LPC1768\startup_LPC17xx.s
 
-Stack_Size 00000400
+Stack_Size 00000200
 
 Symbol: Stack_Size
    Definitions
