@@ -1144,5 +1144,9 @@ void k_tsk_done_rt(void) {
 }
 
 void k_tsk_suspend(struct timeval_rt *tv) {
+	
+	gp_current_task->state = SUSPENDED;
+	//push_timeout_queue(timout_queue_rt, gp_current_task, *tv);
+	k_tsk_yield();
     return;
 }
