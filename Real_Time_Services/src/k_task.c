@@ -1032,7 +1032,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         new_task->has_mailbox = TRUE;
     }
 
-    if (new_task->prio == 0) { // Unprivileged task
+    if (new_task->priv == 0) { // Unprivileged task
 
         new_task->psp_hi = alloc_user_stack(task->u_stack_size);
 
@@ -1122,9 +1122,31 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 }
 
 void k_tsk_done_rt(void) {
+    if (gp_current_task->prio != PRIO_RT) {
+        return;
+    }
+    if (gp_current_task->priv == 0) {
+        gp_current_task->psp = gp_current_task->psp_hi;
+        gp_current_task->msp = gp_current_task->psp;
+    }
+    else {
+        gp_current_task->msp = gp_current_task->msp_hi;
+        gp_current_task->psp = gp_current_task->msp;
+    }
+    __set_MSP((U32)gp_current_task->msp);
+    __set_PSP((U32)gp_current_task->psp);
+    __rte();
+    //reset task's program counter to task_entry
+    
+    //k_tsk_suspend(gp_current_task->deadline); // suspend 'til start of the next period
+    //for whatever implementation is decided for missed deadline: keep track of number of jobs - update
     return;
 }
 
 void k_tsk_suspend(struct timeval_rt *tv) {
+	
+	gp_current_task->state = SUSPENDED;
+	//push_timeout_queue(timout_queue_rt, gp_current_task, *tv);
+	k_tsk_yield();
     return;
 }

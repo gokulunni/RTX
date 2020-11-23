@@ -398,6 +398,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\uart_irq.c</FilePath>
             </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -444,19 +449,9 @@
               <FilePath>.\src\k_time.c</FilePath>
             </File>
             <File>
-              <FileName>wall_clock_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\wall_clock_task.c</FilePath>
-            </File>
-            <File>
               <FileName>timeval.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\timeval.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\timer.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -512,6 +507,11 @@
               <FileName>usr_tasks.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\usr_tasks.c</FilePath>
+            </File>
+            <File>
+              <FileName>wall_clock_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\wall_clock_task.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -915,6 +915,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\uart_irq.c</FilePath>
             </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -961,19 +966,9 @@
               <FilePath>.\src\k_time.c</FilePath>
             </File>
             <File>
-              <FileName>wall_clock_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\wall_clock_task.c</FilePath>
-            </File>
-            <File>
               <FileName>timeval.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\timeval.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\timer.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1029,6 +1024,11 @@
               <FileName>usr_tasks.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\usr_tasks.c</FilePath>
+            </File>
+            <File>
+              <FileName>wall_clock_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\wall_clock_task.c</FilePath>
             </File>
           </Files>
         </Group>
