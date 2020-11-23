@@ -54,6 +54,7 @@ REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char cmd)
 		{
 			return tmp;
 		}
+		tmp = tmp -> next;
 	}
 	
 	return NULL;
@@ -68,11 +69,11 @@ void kcd_task(void)
   int command_index = 0;
   size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
 
-  //TODO: Do we simply ignore control keys? (i.e. arrows and fn keys)
-  U8 up_arrow[] = {0x1B, 0x41, '\n'};
-  U8 down_arrow[] = {0x1B, 0x42, '\n'};
-  U8 right_arrow[] = {0x1B, 0x43, '\n'};
-  U8 left_arrow[] = {0x1B, 0x44, '\n'};
+  registered_cmd_head =(REGISTERED_CMD_T *)mem_alloc(sizeof(REGISTERED_CMD_T));
+  registered_cmd_head -> handler_tid = TID_KCD;
+  registered_cmd_head -> cmd = 'L';
+	registered_cmd_head -> next = NULL;
+
   char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   
   while(1)
