@@ -200,7 +200,7 @@ int end_timer1(){
     int e_tc = pTimer->TC;
     int e_pc = pTimer->PC;
     g_timer_count+=e_pc/1000000;
-    seconds+= g_timer_count/100;
+    g_timer_seconds+= g_timer_count/100;
     g_timer_count= g_timer_count%100;
 
 }
