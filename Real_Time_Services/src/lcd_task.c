@@ -7,7 +7,6 @@
 
 char *TX_buffer;
 extern TCB kernal_task;
-extern TCB *gp_current_task;
 extern uint8_t buffer_index;
 
 void lcd_task(void)
@@ -16,10 +15,7 @@ void lcd_task(void)
     task_t sender_tid;
     
     /* Allocate internal kernel buffer for use between uart and LCD */
-    TCB *lcdtask= gp_current_task;
-    gp_current_task = &kernal_task;
     TX_buffer = (char *)mem_alloc(64); //TODO: Might not need this much space
-    gp_current_task = lcdtask;
 
     while(1)
     {
