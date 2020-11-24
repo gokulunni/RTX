@@ -10,19 +10,17 @@ extern uint8_t buffer_index;
 
 void lcd_task(void)
 {
+    int ret_val = 0;
     mbx_create(128);
 
-    TX_buffer = (char *)mem_alloc(64);
+    TX_buffer = (char *) mem_alloc(64);
 
-    while(1)
-    {
+    while(1) {
         U8 temp_buffer[40];
-        //copy contents to internal kernel buffer so UART can transmit
-        if(recv_msg(&sender_tid, &temp_buffer , 40) == 0)
-        {
+        ret_val = recv_msg(&sender_tid, &temp_buffer , 40);
+        if(ret_val == 0) {
 
-            if((U32)temp_buffer[4] == DISPLAY)
-            {
+            if((U32)temp_buffer[4] == DISPLAY) {
                 LPC_UART_TypeDef * pUart = (LPC_UART_TypeDef *) LPC_UART0;
                 U32 length = (((RTX_MSG_HDR *)temp_buffer) -> length) - 8;
 
