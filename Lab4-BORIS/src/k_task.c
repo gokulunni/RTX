@@ -14,10 +14,13 @@
 #include <LPC17xx.h>
 #include "uart_polling.h"
 #include "k_task.h"
+#include "linked_list.h"
+#include "k_mem.h"
+#include "k_msg.h"
 
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
 #include "printf.h"
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
 
 /* ----- Global Variables ----- */
 TCB *gp_current_task = NULL;    /* always point to the current RUNNING task */
@@ -197,37 +200,37 @@ int k_tsk_yield(void)
 
 int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size)
 {
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
     printf("k_tsk_create: entering...\n\r");
     printf("task = 0x%x, task_entry = 0x%x, prio=%d, stack_size = %d\n\r", task, task_entry, prio, stack_size);
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
     return RTX_OK;
 
 }
 
 void k_tsk_exit(void) 
 {
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
     printf("k_tsk_exit: entering...\n\r");
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
     return;
 }
 
 int k_tsk_set_prio(task_t task_id, U8 prio) 
 {
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
     printf("k_tsk_set_prio: entering...\n\r");
     printf("task_id = %d, prio = %d.\n\r", task_id, prio);
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
     return RTX_OK;    
 }
 
 int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
 {
-#ifdef DEBUG_0
+#ifdef DEBUG_TSK
     printf("k_tsk_get: entering...\n\r");
     printf("task_id = %d, buffer = 0x%x.\n\r", task_id, buffer);
-#endif /* DEBUG_0 */    
+#endif /* DEBUG_TSK */    
     if (buffer == NULL) {
         return RTX_ERR;
     }
@@ -247,8 +250,8 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer)
 }
 
 int k_tsk_ls(task_t *buf, int count){
-    #ifdef DEBUG_0
+    #ifdef DEBUG_TSK
     printf("k_tsk_ls: buf=0x%x, count=%d\r\n", buf, count);
-#endif /* DEBUG_0 */
+#endif /* DEBUG_TSK */
     return 0;
 }
