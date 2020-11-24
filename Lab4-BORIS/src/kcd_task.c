@@ -48,39 +48,38 @@ REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char cmd) {
 
 
 void kcd_task(void) {
-    mbx_create(128); //TODO: Determine whether this is an appropriate size
+    mbx_create(128);
     task_t sender_tid;
     int command_specifier = 0;
     char current_command[64];
     int command_index = 0;
     size_t msg_hdr_size = sizeof(RTX_MSG_HDR);
 
-    //TODO: Do we simply ignore control keys? (i.e. arrows and fn keys)
-    U8 up_arrow[] = {0x1B, 0x41, '\n'};
-    U8 down_arrow[] = {0x1B, 0x42, '\n'};
-    U8 right_arrow[] = {0x1B, 0x43, '\n'};
-    U8 left_arrow[] = {0x1B, 0x44, '\n'};
+    registered_cmd_head =(REGISTERED_CMD_T *)mem_alloc(sizeof(REGISTERED_CMD_T));
+    registered_cmd_head -> handler_tid = TID_KCD;
+    registered_cmd_head -> cmd = 'L';
+    registered_cmd_head -> next = NULL;
+
     char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
     while(1) {
         char temp_buffer[13];
 
-        if (recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 5) == 0) {
+        if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 5) == 0) {
             //KCD_REG
             if((U32)temp_buffer[4] == KCD_REG) {
                 U32 cmd_length = ((U32)temp_buffer[0]) - msg_hdr_size;
-
                 if(cmd_length != 1) {
-                    #ifdef DEBUG_KCD
+#ifdef DEBUG_KCD
                     printf("Command cannot be registered - Incorrect Length.\n");
-                    #endif
+#endif
                 }
 
                 char cmd = temp_buffer[msg_hdr_size];
                 if(cmd == 'L') {
-                    #ifdef DEBUG_KCD
+#ifdef DEBUG_KCD
                     printf("'L' is a reserved command - Registration Failed.\n");
-                    #endif
+#endif
                 }
 
                 REGISTERED_CMD_T *new_cmd =(REGISTERED_CMD_T *)mem_alloc(sizeof(REGISTERED_CMD_T));
