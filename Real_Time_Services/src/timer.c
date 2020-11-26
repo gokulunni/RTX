@@ -226,17 +226,20 @@ void start_timer1(){
 	//pTimer->TCR = 0;
 	//int e_tc = pTimer->TC;
   //int e_pc = pTimer->PC;
+	
+	return;
 }
 
-int get_timer1(){
+void get_timer1(){
 	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
 	pTimer->TCR = 0; //disable counter
   int e_tc = pTimer->TC;
   int e_pc = pTimer->PC;
-
+	
+	return;
 }
 
-int end_timer1(){
+void end_timer1(){
 	LPC_TIM_TypeDef *pTimer = LPC_TIM1;
 	pTimer->TCR = 0;
 	int e_tc = pTimer->TC;
@@ -245,5 +248,6 @@ int end_timer1(){
 	seconds+= g_timer_count/100;
 	g_timer_count= g_timer_count%100;
 	
+	return;
 }
 
