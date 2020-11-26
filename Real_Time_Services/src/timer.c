@@ -72,7 +72,7 @@ uint32_t timer_init(uint8_t n_timer)
        see MR setting below 
     */
 
-    pTimer->PR = 499999;
+    pTimer->PR = 4999;
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1; //Setting Match register 0 to 1, so interrupt occurs when counter == MR0 == 1us
@@ -124,7 +124,7 @@ void c_TIMER0_IRQHandler(void)
     
     g_timer_count++ ;
 
-    if (g_timer_count==100){
+    if (g_timer_count==10000){
         seconds++;
         g_timer_count=0;
     }
