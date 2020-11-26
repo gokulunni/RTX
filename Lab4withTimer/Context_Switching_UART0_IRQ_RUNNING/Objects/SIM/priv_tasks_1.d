@@ -1,0 +1,10 @@
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\priv_tasks.c
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\uart_polling.h
+.\objects\sim\priv_tasks_1.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\uart_def.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\priv_tasks.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\rtx.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\common.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\usr_tasks.h
+.\objects\sim\priv_tasks_1.o: ..\..\..\ece350Wenson\ECE350\Context_Switching_UART0_IRQ\src\printf.h
+.\objects\sim\priv_tasks_1.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
