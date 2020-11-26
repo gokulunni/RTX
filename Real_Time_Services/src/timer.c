@@ -9,11 +9,13 @@
 #include <LPC17xx.h>
 #include "timer.h"
 #include "wall_clock_task.h"
+#include "k_rtx.h"
 
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
 volatile uint32_t seconds = 0;
+extern TCB *gp_current_task;
 
 volatile U32 g_timer_count_wall = 0;
 extern struct time_t time;
@@ -111,8 +113,29 @@ __asm void TIMER0_IRQHandler(void)
     CPSID I ; disable interrupts
     PUSH{r4-r11, lr}
     BL c_TIMER0_IRQHandler
-    CPSIE I ; enable interrupts
-    POP{r4-r11, pc}
+    
+    POP{r4-r11, LR}
+    LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
+    LDR R3, [R3]                        ; Get address of current task
+    MOV R2, #0                          ; clear R2
+    LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
+    CMP R2, #1                          ; check if priv level is 1 or 0
+    BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
+    B user_thread                       ; if 0, handler was invoked by user thread
+
+kernel_thread
+    MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value to Thread mode, MSP
+    MOV R3, #0                 ; 
+    MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
+
+user_thread
+    MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP  
+    MOV R3, #1                 ; 
+    MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
 } 
 /**
  * @brief: c TIMER0 IRQ Handler
