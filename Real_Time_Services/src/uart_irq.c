@@ -178,29 +178,30 @@ __asm void UART0_IRQHandler(void)
     CMP R4, R5
     BEQ  RESTORE    ; if g_switch_flag == 0, then restore the task that was interrupted
     BL k_tsk_yield  ; otherwise (i.e g_switch_flag == 1, then switch to the other task)
-
+    
 RESTORE
-		POP{r4-r11, lr}
-		MVN  LR, #:NOT:0xFFFFFFFD           ; set EXC_RETURN value to Thread mode, PSP
-		LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
-		LDR R3, [R3]                        ; Get address of current task
-		MOV R2, #0                          ; clear R2
-		LDRB R2, [R3, #81]                  ; read priv member (81 byte offset)
-		CMP R2, #1                          ; check if priv level is 1 or 0
-		BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
-		B user_thread                       ; if 0, handler was invoked by user thread
+    POP{r4-r11, LR}
+    LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
+    LDR R3, [R3]                        ; Get address of current task
+    MOV R2, #0                          ; clear R2
+    LDRB R2, [R3, #81]                  ; read priv member (81 byte offset)
+    CMP R2, #1                          ; check if priv level is 1 or 0
+    BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
+    B user_thread                       ; if 0, handler was invoked by user thread
 
 kernel_thread
-		MOV R3, #0                 ; 
-		MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
-		CPSIE I                    ; enable interrupt
-		BX   LR
+    MVN  LR, #:NOT:0xFFFFFFF9  ; set EXC_RETURN value to Thread mode, MSP
+    MOV R3, #0                 ; 
+    MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
 
 user_thread
-		MOV R3, #1                 ; 
-		MSR CONTROL, R3            ; set control bit[0] to 1 (unprivileged)
-		CPSIE I                    ; enable interrupt
-		BX   LR
+    MVN  LR, #:NOT:0xFFFFFFFD  ; set EXC_RETURN value to Thread mode, PSP  
+    MOV R3, #1                 ; 
+    MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
+    CPSIE I                    ; enable interrupt
+    BX   LR
 } 
 /**
  * @brief: c UART0 IRQ Handler

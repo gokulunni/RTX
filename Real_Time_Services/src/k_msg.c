@@ -15,6 +15,8 @@ extern TCB *ready_queue_head;
 extern TCB g_tcbs[MAX_TASKS];
 extern TCB kernal_task;
 extern INT_LL_NODE_T *free_tid_head;
+extern __asm void __save_registers(void);
+extern __asm void __restore_registers(void);
 #ifdef DEBUG_MSG
 #include "printf.h"
 #endif /* ! DEBUG_MSG */
@@ -183,7 +185,7 @@ int k_send_msg(task_t receiver_tid, const void *buf) {
     //Switch properly at the end (call yeild?)
 		
     //Commenting out for testing purposes.
-		if(task->prio > gp_current_task->prio){
+		if(task->prio < gp_current_task->prio){
 			k_tsk_yield();
 		}
   
@@ -233,7 +235,9 @@ int k_recv_msg(task_t *sender_tid, void *buf, size_t len) {
 					printf("k_recv_msg: blocking task due to empty mailbox");
 				#endif /* DEBUG_MSG */
 				//__enable_irq();
+        __save_registers();
         k_tsk_yield();
+			  __restore_registers();
 				//__disable_irq();
     }
 		
