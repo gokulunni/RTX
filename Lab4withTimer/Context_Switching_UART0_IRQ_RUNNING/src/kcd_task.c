@@ -140,6 +140,11 @@ void kcd_task(void)
           temp_buffer[msg_hdr_size + 2] = '\0'; //null terminate the string 
           header -> length = msg_hdr_size + 3;
           send_msg(TID_DISPLAY, temp_buffer);
+					
+					if(!command_specifier)
+					{
+						print_failed_cmd();
+					}
         }
         else
         {
