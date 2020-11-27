@@ -1126,7 +1126,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
         new_task->msg_hdr->type = msg_hdr->type;
     }
 
-    struct timeval_rt system_time;
+    struct timeval_rt system_time = (struct timeval_rt) {0, 0};;
     k_get_time(&system_time);
     new_task->deadline = (struct timeval_rt) {task->p_n.sec, task->p_n.usec};
     add(&(new_task->deadline), new_task->deadline, system_time);
@@ -1169,8 +1169,8 @@ void k_tsk_done_rt(void) {
 
 
 
-    struct timeval_rt system_time;
-    struct timeval_rt time_left;
+    struct timeval_rt system_time = (struct timeval_rt) {0, 0};;
+    struct timeval_rt time_left = (struct timeval_rt) {0, 0};;
     k_get_time(&system_time);
 
     if (is_less_equal(system_time, gp_current_task->deadline)) { // Didn't miss the deadline
@@ -1217,7 +1217,7 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 
 
 void update_tasks() {
-    struct timeval_rt passed_time;
+    struct timeval_rt passed_time = (struct timeval_rt) {0, 0};;
     passed_time.sec = 0;
     passed_time.usec = 100;
 

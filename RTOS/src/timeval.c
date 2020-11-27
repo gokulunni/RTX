@@ -5,10 +5,13 @@
 #include "timeval.h"
 #include "common.h"
 
-void add(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt time2) {
-    dest->usec = (time1.usec + time2.usec) % 1000000;
+void add(struct timeval_rt *dest, struct timeval_rt time1, struct timeval_rt time2) {
+    struct timeval_rt temp = (struct timeval_rt) {0, 0};
+    temp.usec = (time1.usec + time2.usec) % 1000000;
     U32 carry = (time1.usec + time2.usec) / 1000000;
-    dest->sec = carry + time1.sec + time2.sec;
+    temp.sec = carry + time1.sec + time2.sec;
+    dest->usec = temp.usec;
+    dest->sec = temp.sec/
 }
 
 void sub(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt time2) {
@@ -16,12 +19,13 @@ void sub(struct timeval_rt* dest, struct timeval_rt time1, struct timeval_rt tim
         dest->usec = 0;
         dest->sec = 0;
     } else {
+        struct timeval_rt temp = (struct timeval_rt) {temp1.sec, temp1.usec};
         if (time1.usec < time2.usec) {
-            time1.sec--;
-            time1.usec += 1000000;
+            temp.sec--;
+            temp.usec += 1000000;
         }
-        dest->usec = (time1.usec - time2.usec);
-        dest->sec = (time1.sec - time2.sec);
+        dest->usec = (temp.usec - time2.usec);
+        dest->sec = (temp.sec - time2.sec);
     }
 }
 
