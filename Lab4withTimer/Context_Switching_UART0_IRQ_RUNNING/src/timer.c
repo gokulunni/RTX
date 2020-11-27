@@ -160,7 +160,9 @@ void c_TIMER0_IRQHandler(void)
         //Update wall clock time value
         if(g_timer_count_wall == 10000)
         {
+						g_timer_count_wall = 0;
             (time.sec)++;
+					
             if(time.sec == 60)
             {
                 time.sec = 0;

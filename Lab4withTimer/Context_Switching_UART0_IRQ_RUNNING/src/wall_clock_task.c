@@ -11,6 +11,7 @@ int wall_clock_enabled = 0;
 
 void send_time()
 {
+		char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     size_t msg_hdr_size = sizeof(struct rtx_msg_hdr);
     U8 buf[19]; //msg_hdr (8) display time length (8) + new line + carriage return + null termination
     struct rtx_msg_hdr *header = (void *)buf;
@@ -18,18 +19,18 @@ void send_time()
     header -> type = DISPLAY;
 
     //HH:
-    buf[msg_hdr_size] = time.hr/10;
-    buf[msg_hdr_size + 1] = time.hr%10;
+    buf[msg_hdr_size] = digits[time.hr/10];
+    buf[msg_hdr_size + 1] = digits[time.hr%10];
     buf[msg_hdr_size + 2] = ':';
 
     //MM:
-    buf[msg_hdr_size + 3] = time.min/10;
-    buf[msg_hdr_size + 4] = time.min%10;
+    buf[msg_hdr_size + 3] = digits[time.min/10];
+    buf[msg_hdr_size + 4] = digits[time.min%10];
     buf[msg_hdr_size + 5] = ':';
     
     //SS
-    buf[msg_hdr_size + 6] = time.sec/10;
-    buf[msg_hdr_size + 7] = time.sec%10;
+    buf[msg_hdr_size + 6] = digits[time.sec/10];
+    buf[msg_hdr_size + 7] = digits[time.sec%10];
     buf[msg_hdr_size + 8] = '\n';
     buf[msg_hdr_size + 9] = '\r';
     buf[msg_hdr_size + 10] = '\0';
@@ -78,7 +79,6 @@ void wall_clock_task(void)
 
     mem_dealloc(reg_buf);
 
-    char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     LPC_TIM_TypeDef *pTimer;
     
     while(1)
@@ -97,6 +97,16 @@ void wall_clock_task(void)
                     time.sec = 0;
                     time.min = 0;   
                     time.hr = 0;
+                    g_timer_count_wall = 0;
+                    wall_clock_enabled = 1;
+                }
+								//%WS hh:mm:ss
+                else if(temp_buffer[9] == 'S' && (U32)(temp_buffer[0]) == 19)
+                {
+                    wall_clock_enabled = 0;
+                    time.hr = (temp_buffer[msg_hdr_size + 3] - '0')*10 + (temp_buffer[msg_hdr_size + 4] - '0');
+                    time.min = (temp_buffer[msg_hdr_size + 6] - '0')*10 + (temp_buffer[msg_hdr_size + 7] - '0');
+                    time.sec = (temp_buffer[msg_hdr_size + 9] - '0')*10 + (temp_buffer[msg_hdr_size + 10] - '0');
                     g_timer_count_wall = 0;
                     wall_clock_enabled = 1;
                 }
@@ -120,16 +130,6 @@ void wall_clock_task(void)
                 else if(temp_buffer[9] == 'T')
                 {
                     wall_clock_enabled = 0;
-                }
-                //%WS hh:mm:ss
-                else if(temp_buffer[9] == 'S' && (U32)(temp_buffer) == msg_hdr_size + 11)
-                {
-                    wall_clock_enabled = 0;
-                    time.hr = (temp_buffer[msg_hdr_size + 3] - '0')*10 + (temp_buffer[msg_hdr_size + 4] - '0');
-                    time.min = (temp_buffer[msg_hdr_size + 6] - '0')*10 + (temp_buffer[msg_hdr_size + 7] - '0');
-                    time.sec = (temp_buffer[msg_hdr_size + 9] - '0')*10 + (temp_buffer[msg_hdr_size + 10] - '0');
-                    g_timer_count_wall = 0;
-                    wall_clock_enabled = 1;
                 }
                 else
                 {
