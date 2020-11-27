@@ -864,7 +864,7 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     if (task->state != DORMANT) {
         struct timeval_rt temp = (struct timeval_rt) {0,0};
         k_get_time(&temp);
-        sub(&tv_wall, temp, task->tv_wall);
+        sub(&task->tv_wall, temp, task->tv_wall);
     } else {
         buffer->tv_wall.sec = task->tv_wall.sec;
         buffer->tv_wall.usec = task->tv_wall.usec;
