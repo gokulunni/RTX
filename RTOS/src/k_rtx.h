@@ -31,21 +31,21 @@
 
 typedef struct tcb
 {
-    struct tcb *next; /* next tcb, not used in this example */
     struct timeval_rt tv_cpu;  /* task execution cpu time */
     struct timeval_rt tv_wall; /* task execution wall clock time */
     struct timeval_rt p_n;    /* period in seconds and microseconds */ //REAL-TIME ONLY
     struct timeval_rt deadline; //REAL-TIME ONLY
     struct timeval_rt timeout; //REAL-TIME ONLY
+    CIRCULAR_BUFFER_T mailbox;
+    struct tcb *next; /* next tcb, not used in this example */
     RTX_MSG_HDR *msg_hdr;     /* real-time task message header      */ //REAL-TIME ONLY
     U32 *msp;    /* msp of the task */
     U32 *msp_hi; /* The msp stack starting addr. (high addr.)*/
     U32 *psp;   /* psp of the task */
     U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
+    void *msg_sender_head;
     U32 num_msgs;          /* real-time task mailbox capacity    */ //REAL-TIME ONLY
     U32 num_successful_jobs;
-    CIRCULAR_BUFFER_T mailbox;
-    void *msg_sender_head;
     U16 psp_size;
     U8  tid;     /* task id */
     U8  prio;    /* Execution priority */
