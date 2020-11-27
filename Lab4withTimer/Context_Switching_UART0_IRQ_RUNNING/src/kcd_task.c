@@ -60,6 +60,22 @@ REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char cmd)
 	return NULL;
 }
 
+void print_failed_cmd(void)
+{
+  //Display error message in terminal
+	int msg_hdr_size = 8;
+  char *message = "Command cannot be processed.\n\r"; 
+  size_t string_length = 31; //28 chars + new line + carriage return + null terminator
+  U8 *buf = (U8 *)mem_alloc(msg_hdr_size + string_length);
+  RTX_MSG_HDR *header = (void*)buf;
+  header->length = msg_hdr_size + string_length;
+  header->type = DISPLAY;
+  mem_cpy(buf + msg_hdr_size, message, string_length);
+  
+  send_msg(TID_DISPLAY, buf);
+  mem_dealloc(buf);
+}
+
 void kcd_task(void)
 {
   mbx_create(128); //TODO: Determine whether this is an appropriate size
@@ -80,7 +96,7 @@ void kcd_task(void)
   { 
     char temp_buffer[13];
 
-    if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 5) == 0)
+    if(recv_msg(&sender_tid, temp_buffer , msg_hdr_size + 5) == RTX_OK)
     {
       /* Check the message type */
 
@@ -134,6 +150,11 @@ void kcd_task(void)
           
         if(command_specifier) //check if '%' was typed already
         {
+					//If backspace was entered, go back a character
+					if(current_command[command_index] == 0x7F)
+					{
+						command_index -= 2; 
+					}
           if(current_command[command_index] == '\r')
           {
               current_command[command_index] = '\0'; //null terminate string for comparison
@@ -207,22 +228,17 @@ void kcd_task(void)
               else if(cmd != NULL) /* Registered command */
               {
                 // Send to mailbox of registered task
+								size_t string_length = (command_index + 1) - 2; //disregard '/r' and '%'
+								U8 *buf = (U8 *)mem_alloc(msg_hdr_size + string_length);
+								RTX_MSG_HDR *header = (void*)buf;
+                header->length = msg_hdr_size + string_length;
                 header->type = KCD_CMD;
-                send_msg((g_tcbs[cmd->handler_tid]).tid, temp_buffer);
+                mem_cpy(buf + msg_hdr_size, current_command + 1, string_length);
+                send_msg(cmd->handler_tid, buf);
               }
               else /* unregistered command */
               {
-                //Display error message in terminal
-                char *message = "Command cannot be processed.\n\r"; 
-                size_t string_length = 31; //28 chars + new line + carriage return + null terminator
-                U8 *buf = (U8 *)mem_alloc(msg_hdr_size + string_length);
-                RTX_MSG_HDR *header = (void*)buf;
-                header->length = msg_hdr_size + string_length;
-                header->type = DISPLAY;
-                mem_cpy(buf + msg_hdr_size, message, string_length);
-                
-                send_msg(TID_DISPLAY, buf);
-								mem_dealloc(buf);
+                print_failed_cmd();
               }
 
               //reset the command buffer since 'ENTER' was pressed

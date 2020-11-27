@@ -9,12 +9,17 @@
 #include <LPC17xx.h>
 #include "timer.h"
 #include "k_rtx.h"
+#include "wall_clock_task.h"
 
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; /* increment every 1 us */
 uint32_t seconds;
 extern TCB *gp_current_task;
+
+volatile U32 g_timer_count_wall = 0;
+extern struct time_t time;
+extern int wall_clock_enabled;
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
@@ -109,7 +114,7 @@ __asm void TIMER0_IRQHandler(void)
     LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
     LDR R3, [R3]                        ; Get address of current task
     MOV R2, #0                          ; clear R2
-    LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
+    LDRB R2, [R3, #81]                  ; read priv member (81 byte offset)
     CMP R2, #1                          ; check if priv level is 1 or 0
     BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
     B user_thread                       ; if 0, handler was invoked by user thread
@@ -134,8 +139,39 @@ user_thread
 void c_TIMER0_IRQHandler(void)
 {
     /* ack interrupt, see section  21.6.1 on pg 493 of LPC17XX_UM */
-    LPC_TIM0->IR = BIT(0);  
+    LPC_TIM0->IR = BIT(0);  //Writing 1 to MR0 interrupt resets the interrupt
     
     g_timer_count++ ;
-}
 
+    if (g_timer_count==10000){
+        seconds++;
+        g_timer_count=0;
+    }
+
+    if(wall_clock_enabled)
+    {
+        g_timer_count_wall++;
+
+        //Update wall clock time value
+        if(g_timer_count_wall == 10000)
+        {
+            (time.sec)++;
+            if(time.sec == 60)
+            {
+                time.sec = 0;
+                time.min++;
+
+                if(time.min == 60)
+                {
+                    time.min = 0;
+                    time.hr++;
+                    if(time.hr == 24)
+                    {
+                        time.hr = 0;
+                    }
+                }
+            }
+            send_time(); //send to LCD for display
+        }
+    }
+}
