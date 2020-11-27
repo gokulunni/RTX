@@ -17,7 +17,7 @@
 #include "linked_list.h"
 #include "k_mem.h"
 #include "k_msg.h"
-#include "k_time.c"
+#include "k_time.h"
 #include "timeval.h"
 
 #ifdef DEBUG_TSK
@@ -1141,10 +1141,10 @@ void k_tsk_done_rt(void) {
     //__rte();
     //reset task's program counter to task_entry
 		
-		struct timeval_rt* temp_tv = k_mem_alloc(sizeof(struct timeval_rt));
-		struct timeval_rt* time_left = k_mem_alloc(sizeof(struct timeval_rt));
-		k_get_time(temp_tv);
-		sub(time_left, *temp_tv, gp_current_task->deadline);
+    struct timeval_rt* temp_tv = k_mem_alloc(sizeof(struct timeval_rt));
+    struct timeval_rt* time_left = k_mem_alloc(sizeof(struct timeval_rt));
+    k_get_time(temp_tv);
+    sub(time_left, *temp_tv, gp_current_task->deadline);
     k_tsk_suspend(time_left); // suspend 'til start of the next period
 		
     //for missed deadlines: keep track of number of jobs - update
