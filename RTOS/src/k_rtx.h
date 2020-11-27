@@ -43,6 +43,7 @@ typedef struct tcb
     U32 *psp;   /* psp of the task */
     U32 *psp_hi; /* The psp stack starting addr. (high addr.)*/
     U32 num_msgs;          /* real-time task mailbox capacity    */ //REAL-TIME ONLY
+    U32 num_successful_jobs;
     CIRCULAR_BUFFER_T mailbox;
     void *msg_sender_head;
     U16 psp_size;
