@@ -1221,6 +1221,8 @@ void update_tasks() {
     passed_time.sec = 0;
     passed_time.usec = 100;
 
+    add(&gp_current_task->tv_cpu, gp_current_task->tv_cpu, passed_time);
+
     update_timeout(&timeout_rt_queue_head, passed_time);
     update_timeout(&timeout_queue_head, passed_time);
 
