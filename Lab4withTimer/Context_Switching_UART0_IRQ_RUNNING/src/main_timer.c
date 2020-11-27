@@ -12,7 +12,7 @@
 
 extern volatile uint32_t g_timer_count;
 extern volatile uint32_t seconds;
-int main1() {
+int main() {
 
     volatile uint8_t sec = 0;
 
@@ -48,11 +48,11 @@ int main1() {
         sec = (sec + 1)%10;
 			}
 			
-			//if(lastSecond==5){
-			//	start_timer1();
-			//	end_timer1();
+			if(lastSecond==5){
+				start_timer1();
+				end_timer1();
 				
-			//}
+			}
 			
 			
     }
