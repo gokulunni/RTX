@@ -184,7 +184,7 @@ RESTORE
     LDR R3, =__cpp(&gp_current_task)    ; Load R3 with address of pointer to current task
     LDR R3, [R3]                        ; Get address of current task
     MOV R2, #0                          ; clear R2
-    LDRB R2, [R3, #81]                  ; read priv member (81 byte offset)
+    LDRB R2, [R3, #45]                  ; read priv member (45 byte offset)
     CMP R2, #1                          ; check if priv level is 1 or 0
     BEQ kernel_thread                   ; if 1, handler was invoked by kernel thread
     B user_thread                       ; if 0, handler was invoked by user thread
