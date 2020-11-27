@@ -4,6 +4,7 @@
 
 #include <LPC17xx.h>
 #include "timer.h"
+#include "k_task.h"
 #include "wall_clock_task.h"
 #include "k_rtx.h"
 
