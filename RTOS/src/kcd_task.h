@@ -12,7 +12,6 @@ void push_cmd(REGISTERED_CMD_T **registered_cmd_head, REGISTERED_CMD_T *new_cmd)
 //REGISTERED_CMD_T *pop_cmd(REGISTERED_CMD_T **registered_cmd_head);
 REGISTERED_CMD_T *get_cmd(REGISTERED_CMD_T *registered_cmd_head, char cmd);
 
-int str_cmp(const char *str1, const char *str2);
 void print_failed_cmd(void);
 
 

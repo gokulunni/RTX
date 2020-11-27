@@ -5,6 +5,7 @@
 #include "uart_irq.h"
 #include "k_mem.h"
 #include <LPC17xx.h>
+#include "helpers.h"
 
 char *TX_buffer;
 extern uint8_t buffer_index;

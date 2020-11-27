@@ -4,6 +4,7 @@
 #include "wall_clock_task.h"
 #include "k_mem.h"
 #include "kcd_task.h"
+#include "helpers.h"
 
 struct time_t time; //Wall clock time
 extern volatile U32 g_timer_count_wall;

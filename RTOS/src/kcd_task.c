@@ -3,22 +3,11 @@
 #include "kcd_task.h"
 #include "k_mem.h"
 #include "k_rtx.h"
+#include "helpers.h"
 
 REGISTERED_CMD_T *registered_cmd_head = NULL; //head of linked list of registered tasks
 extern TCB g_tcbs[MAX_TASKS];
 
-int str_cmp(const char *str1, const char *str2)
-{
-    int s1;
-    int s2;
-    do {
-        s1 = *str1++;
-        s2 = *str2++;
-        if (s1 == 0)
-            break;
-    } while (s1 == s2);
-    return (s1 != s2) ? -1 : 0;
-}
 void push_cmd(REGISTERED_CMD_T **registered_cmd_head, REGISTERED_CMD_T *new_cmd)
 {
 	if(registered_cmd_head == NULL)
