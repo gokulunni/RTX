@@ -36,22 +36,6 @@ void send_time()
     buf[msg_hdr_size + 9] = '\r';
     buf[msg_hdr_size + 10] = '\0';
 		
-		//use escape sequence to display on top left
-		char *seq = "\033[H"; 
-		size_t string_length = 7; //6 + null terminator
-		U8 esc_buf[15]; //statically allocate since this is called in timer handler
-		header = (void*)esc_buf;
-		header->length = msg_hdr_size + string_length;
-		header->type = DISPLAY;
-		mem_cpy(esc_buf + msg_hdr_size, seq, string_length);
-		
-		if(k_send_msg(TID_DISPLAY, esc_buf) == RTX_ERR)
-		{
-				#ifdef DEBUG_WALL_CLOCK
-        printf("wall clock task: Message sending to LCD failed\n");
-        #endif
-		}
-
     if(k_send_msg(TID_DISPLAY, buf) == RTX_ERR)
     {
         #ifdef DEBUG_WALL_CLOCK
