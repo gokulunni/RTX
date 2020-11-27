@@ -17,6 +17,8 @@
 #include "linked_list.h"
 #include "k_mem.h"
 #include "k_msg.h"
+#include "k_time.c"
+#include "timeval.h"
 
 #ifdef DEBUG_TSK
 #include "printf.h"
@@ -1135,18 +1137,43 @@ void k_tsk_done_rt(void) {
     }
     __set_MSP((U32)gp_current_task->msp);
     __set_PSP((U32)gp_current_task->psp);
-    __rte();
+		
+    //__rte();
     //reset task's program counter to task_entry
-    
-    //k_tsk_suspend(gp_current_task->deadline); // suspend 'til start of the next period
-    //for whatever implementation is decided for missed deadline: keep track of number of jobs - update
+		
+		struct timeval_rt* temp_tv = k_mem_alloc(sizeof(struct timeval_rt));
+		struct timeval_rt* time_left = k_mem_alloc(sizeof(struct timeval_rt));
+		k_get_time(temp_tv);
+		sub(time_left, *temp_tv, gp_current_task->deadline);
+    k_tsk_suspend(time_left); // suspend 'til start of the next period
+		
+    //for missed deadlines: keep track of number of jobs - update
+		
     return;
 }
 
 void k_tsk_suspend(struct timeval_rt *tv) {
 	
+	if (gp_current_task->state == SUSPENDED) {
+		#ifdef DEBUG_TSK
+		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
+		#endif /* DEBUG_TSK */
+		return;
+	}
+	
+	if ( tv == NULL ) {
+		#ifdef DEBUG_TSK
+		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
+		#endif /* DEBUG_TSK */
+		return;
+	}
+	
 	gp_current_task->state = SUSPENDED;
-	//push_timeout_queue(timout_queue_rt, gp_current_task, *tv);
+	if (gp_current_task->prio == PRIO_RT) {
+		push_timeout_queue(&timeout_rt_queue_head, gp_current_task, *tv);
+	}	else {
+		push_timeout_queue(&timeout_queue_head, gp_current_task, *tv);
+	}
 	k_tsk_yield();
-    return;
+	return;
 }
