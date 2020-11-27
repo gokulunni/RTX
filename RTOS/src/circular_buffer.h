@@ -5,6 +5,8 @@
 #ifndef ECE350_CIRCULAR_BUFFER_H
 #define ECE350_CIRCULAR_BUFFER_H
 
+#include "common.h"
+
 typedef struct circular_buffer {
     void *buffer_start; // DO NOT CHANGE AFTER INIT
     void *buffer_end;   // DO NOT CHANGE AFTER INIT
