@@ -284,8 +284,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
                     return RTX_ERR;
                 }
             } else {
-                p_tcb->msg_hdr->length = 0;
-                p_tcb->msg_hdr->type = 0;
                 p_tcb->num_msgs = 0;
                 p_tcb->has_mailbox = FALSE;
             }
@@ -301,8 +299,6 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
             p_tcb->deadline = (struct timeval_rt) {p_taskinfo->p_n.sec, p_taskinfo->p_n.usec};
             p_tcb->timeout = (struct timeval_rt) {0, 0};
         } else {
-            p_tcb->msg_hdr->length = 0;
-            p_tcb->msg_hdr->type = 0;
             p_tcb->num_msgs = 0;
             p_tcb->has_mailbox = FALSE;
 
@@ -863,8 +859,10 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     if (task->prio == PRIO_RT) {
         buffer->p_n.sec = task->p_n.sec;
         buffer->p_n.usec = task->p_n.usec;
-        buffer->msg_hdr->length = task->msg_hdr->length;
-        buffer->msg_hdr->type = task->msg_hdr->type;
+        if (buffer->msg_hdr) {
+            buffer->msg_hdr->length = task->msg_hdr->length;
+            buffer->msg_hdr->type = task->msg_hdr->type;
+        }
         buffer->num_msgs = task->num_msgs;
     }
     else {
@@ -1115,16 +1113,18 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->tv_wall.sec = 0;
     new_task->tv_wall.usec = 0;
 
-    new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
-    if (new_task->msg_hdr == NULL) {
-        #ifdef DEBUG_TSK
-        printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
-        #endif /* DEBUG_TSK */
-        return RTX_ERR;
-    }
+    if (msg_hdr != NULL) {
+        new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+        if (new_task->msg_hdr == NULL) {
+#ifdef DEBUG_TSK
+            printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
+#endif /* DEBUG_TSK */
+            return RTX_ERR;
+        }
 
-    new_task->msg_hdr->length = msg_hdr->length;
-    new_task->msg_hdr->type = msg_hdr->type;
+        new_task->msg_hdr->length = msg_hdr->length;
+        new_task->msg_hdr->type = msg_hdr->type;
+    }
 
     struct timeval_rt system_time;
     k_get_time(&system_time);
