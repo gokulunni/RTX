@@ -14,6 +14,6 @@ extern uint32_t timer_init ( uint8_t n_timer );  /* initialize timer n_timer */
 extern uint32_t timer_init_100MHZ(uint8_t n_timer);
 
 extern void start_timer1();
-void get_timer1();
-void end_timer1();
+extern void get_timer1();
+extern void end_timer1();
 #endif /* ! _TIMER_H_ */
