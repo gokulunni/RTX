@@ -1135,7 +1135,7 @@ void k_tsk_done_rt(void) {
     }
     __set_MSP((U32)gp_current_task->msp);
     __set_PSP((U32)gp_current_task->psp);
-    __rte();
+    //__rte();
     //reset task's program counter to task_entry
     
     //k_tsk_suspend(gp_current_task->deadline); // suspend 'til start of the next period
@@ -1145,8 +1145,26 @@ void k_tsk_done_rt(void) {
 
 void k_tsk_suspend(struct timeval_rt *tv) {
 	
+	if (gp_current_task->state == SUSPENDED) {
+		#ifdef DEBUG_TSK
+		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
+		#endif /* DEBUG_TSK */
+		return;
+	}
+	
+	if ( tv == NULL ) {
+		#ifdef DEBUG_TSK
+		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
+		#endif /* DEBUG_TSK */
+		return;
+	}
+	
 	gp_current_task->state = SUSPENDED;
-	//push_timeout_queue(timout_queue_rt, gp_current_task, *tv);
+	if (gp_current_task->prio == PRIO_RT) {
+		push_timeout_queue(&timeout_rt_queue_head, gp_current_task, *tv);
+	}	else {
+		push_timeout_queue(&timeout_queue_head, gp_current_task, *tv);
+	}
 	k_tsk_yield();
-    return;
+	return;
 }
