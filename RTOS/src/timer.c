@@ -168,6 +168,10 @@ void c_TIMER0_IRQHandler(void) {
             send_time(); //send to LCD for display
         }
     }
+
+    update_tasks();
+
+
 }
 
 

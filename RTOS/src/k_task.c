@@ -649,6 +649,14 @@ void k_tsk_exit(void) {
                 printf("k_task_exit: could not deallocate pointer to mailbox");
                 #endif /* DEBUG_TSK */
             }
+
+            if (prev_current_task->msg_hdr != NULL) {
+                if (k_mem_dealloc(prev_current_task->msg_hdr) == RTX_ERR) {
+                    #ifdef DEBUG_TSK
+                    printf("k_task_exit: could not deallocate pointer to msg_hdr");
+                    #endif /* DEBUG_TSK */
+                }
+            }
         }
 
         // If its unpriviledged task, dealloc user stack
@@ -981,9 +989,6 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     }
 
 
-    // TODO: confirm that rt task cannot be NULL task or KCD task or LCD task
-
-
     if (!(task->u_stack_size > 0)) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create_rt: u_stack_size < 1\n\r");
@@ -1049,10 +1054,6 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->mailbox.tail = NULL;
     new_task->num_successful_jobs = 0;
 
-    if (msg_hdr != NULL) {
-        new_task->has_mailbox = TRUE;
-    }
-
     if (new_task->priv == 0) { // Unprivileged task
 
         new_task->psp_hi = alloc_user_stack(task->u_stack_size);
@@ -1099,6 +1100,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
                 #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
+            new_task->has_mailbox = TRUE;
         }
     }
 
@@ -1113,8 +1115,6 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->tv_wall.sec = 0;
     new_task->tv_wall.usec = 0;
 
-    // TODO: remember to dealloc when suspending a task
-    // TODO: check with Irene
     new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
     if (new_task->msg_hdr == NULL) {
         #ifdef DEBUG_TSK
@@ -1126,9 +1126,10 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->msg_hdr->length = msg_hdr->length;
     new_task->msg_hdr->type = msg_hdr->type;
 
-
-    // TODO: ADD SYSTEM TIME TO DEADLINE
+    struct timeval_rt system_time;
+    get_time(&system_time);
     new_task->deadline = (struct timeval_rt) {task->p_n.sec, task->p_n.usec};
+    add(&(new_task->deadline), new_task->deadline, system_time);
     new_task->timeout = (struct timeval_rt) {0, 0};
 
     gp_current_task = prev_current_task;
@@ -1136,7 +1137,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     *tid = new_task->tid;
 
     push_edf_queue(&ready_rt_queue_head, new_task);
-    // TODO: might require logic to check if yield is needed
+
     k_tsk_yield();
 
     return RTX_OK;
@@ -1146,33 +1147,50 @@ void k_tsk_done_rt(void) {
     if (gp_current_task->prio != PRIO_RT) {
         return;
     }
+
+    gp_current_task->num_successful_jobs++;
+
     if (gp_current_task->priv == 0) {
         gp_current_task->psp = gp_current_task->psp_hi;
-        gp_current_task->msp = gp_current_task->psp;
+        gp_current_task->msp = gp_current_task->msp_hi;
     }
     else {
         gp_current_task->msp = gp_current_task->msp_hi;
         gp_current_task->psp = gp_current_task->msp;
     }
+
+    // TODO: PUSH STACK
+
     __set_MSP((U32)gp_current_task->msp);
     __set_PSP((U32)gp_current_task->psp);
 		
     //__rte();
     //reset task's program counter to task_entry
-		
-    struct timeval_rt* temp_tv = k_mem_alloc(sizeof(struct timeval_rt));
-    struct timeval_rt* time_left = k_mem_alloc(sizeof(struct timeval_rt));
-    k_get_time(temp_tv);
-    sub(time_left, *temp_tv, gp_current_task->deadline);
-    k_tsk_suspend(time_left); // suspend 'til start of the next period
-		
-    //for missed deadlines: keep track of number of jobs - update
+
+
+
+    struct timeval_rt system_time;
+    struct timeval_rt time_left;
+    k_get_time(&system_time);
+
+    if (is_less_equal(system_time, gp_current_task->deadline)) { // Didn't miss the deadline
+        sub(&time_left, gp_current_task->deadline, system_time);
+        add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
+        k_tsk_suspend(time_left); // suspend 'til start of the next period
+    } else {
+        // TODO: SEND MESSAGE TO LCD
+        //k_send_msg(TID_DISPLAY, )
+//
+//        while (is_less(, system_time)) {
+//            add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
+//        }
+    }
+
 		
     return;
 }
 
 void k_tsk_suspend(struct timeval_rt *tv) {
-	
 	if (gp_current_task->state == SUSPENDED) {
 		#ifdef DEBUG_TSK
 		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
@@ -1180,7 +1198,7 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 		return;
 	}
 	
-	if ( tv == NULL ) {
+	if (tv == NULL) {
 		#ifdef DEBUG_TSK
 		printf("[ERROR] k_tsk_suspend: can not suspend a task that is already suspended\n\r");
 		#endif /* DEBUG_TSK */
@@ -1195,4 +1213,34 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 	}
 	k_tsk_yield();
 	return;
+}
+
+
+void update_tasks() {
+    struct timeval_rt passed_time;
+    passed_time.sec = 0;
+    passed_time.usec = 100;
+
+    update_timeout(&timeout_rt_queue_head, passed_time);
+    update_timeout(&timeout_queue_head, passed_time);
+
+    while (timeout_rt_queue_head && timeout_rt_queue_head->timeout.sec == 0 && timeout_rt_queue_head->timeout.usec == 0) {
+        push_edf_queue(&ready_rt_queue_head, pop_timeout_queue(&timeout_rt_queue_head));
+    }
+
+    while (timeout_queue_head && timeout_queue_head->timeout.sec == 0 && timeout_queue_head->timeout.usec == 0) {
+        push(&ready_queue_head, pop_timeout_queue(&timeout_queue_head));
+    }
+
+    if (ready_rt_queue_head) {
+        if (gp_current_task->prio != PRIO_RT) {
+            k_tsk_yield();
+        } else if (is_less(gp_current_task->deadline, ready_rt_queue_head->deadline) ){
+            k_tsk_yield();
+        }
+    }
+
+    if (ready_queue_head && gp_current_task->prio != PRIO_RT && gp_current_task->prio > ready_queue_head->prio) {
+        k_tsk_yield();
+    }
 }

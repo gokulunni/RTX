@@ -38,4 +38,6 @@ extern void null_task(void);
 extern void kcd_task(void);
 extern void lcd_task(void);
 
+void update_tasks();
+
 #endif /* ! K_TASK_H_ */
