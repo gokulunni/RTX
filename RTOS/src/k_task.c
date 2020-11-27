@@ -215,6 +215,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
                 #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
+            p_tcb->ptask = p_taskinfo->ptask;
 
             sp = p_tcb->psp_hi;
             *(--sp) = INITIAL_xPSR;
@@ -600,6 +601,8 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         #endif /* DEBUG_TSK */
         return RTX_ERR;
     }
+
+    new_task->ptask = task_entry;
 
     gp_current_task = prev_current_task;
 
@@ -1054,6 +1057,8 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->prio = PRIO_RT;
     new_task->priv = task->priv;
 
+    new_task->ptask = task->task_entry;
+
     new_task->msg_sender_head = NULL;
     new_task->has_mailbox = FALSE;
     //Initialize mailbox to NULL values
@@ -1126,9 +1131,9 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     if (msg_hdr != NULL) {
         new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
         if (new_task->msg_hdr == NULL) {
-#ifdef DEBUG_TSK
+            #ifdef DEBUG_TSK
             printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
-#endif /* DEBUG_TSK */
+            #endif /* DEBUG_TSK */
             return RTX_ERR;
         }
 
@@ -1161,23 +1166,36 @@ void k_tsk_done_rt(void) {
     gp_current_task->num_successful_jobs++;
 
     if (gp_current_task->priv == 0) {
-        gp_current_task->psp = gp_current_task->psp_hi;
-        gp_current_task->msp = gp_current_task->msp_hi;
     }
     else {
         gp_current_task->msp = gp_current_task->msp_hi;
         gp_current_task->psp = gp_current_task->msp;
     }
 
-    // TODO: PUSH STACK
+    if (gp_current_task->priv == 0) {
+        U32 *sp = gp_current_task->psp_hi;
+        *(--sp) = INITIAL_xPSR;
+        *(--sp) = (U32)(gp_current_task->ptask);
+        for (int j = 0; j < 6; j++) {
+            *(--sp) = 0x0;
+        }
+
+        gp_current_task->psp = sp;
+        gp_current_task->msp = gp_current_task->msp_hi;
+    } else {
+        U32 *sp = gp_current_task->msp_hi; /* stacks grows down, so get the high addr. */
+        *(--sp)  = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
+        *(--sp)  = (U32)(gp_current_task->ptask); 					/* PC contains the entry point of the task */
+        for (int j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
+            *(--sp) = 0x0;
+        }
+        gp_current_task->msp = sp;
+    }
 
     __set_MSP((U32)gp_current_task->msp);
     __set_PSP((U32)gp_current_task->psp);
 		
-    //__rte();
-    //reset task's program counter to task_entry
-
-
+    gp_current_task->state = NEW;
 
     struct timeval_rt system_time = (struct timeval_rt) {0, 0};;
     struct timeval_rt time_left = (struct timeval_rt) {0, 0};;
@@ -1188,15 +1206,33 @@ void k_tsk_done_rt(void) {
         add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
         k_tsk_suspend(&time_left); // suspend 'til start of the next period
     } else {
-        // TODO: SEND MESSAGE TO LCD
-        //k_send_msg(TID_DISPLAY, )
-//
-//        while (is_less(, system_time)) {
-//            add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
-//        }
+        int msg_hdr_size = 8;
+        char *message = "Deadline missed for task XX! System is overloaded\n\r";
+        size_t string_length = 52;
+        U8 *buf1 = (U8 *) k_mem_alloc(msg_hdr_size + string_length);
+        RTX_MSG_HDR *header = (void*) buf1;
+        header->length = 60;
+        header->type = DISPLAY;
+
+        mem_cpy(buf1 + msg_hdr_size, message, string_length);
+        int tid = 12;
+
+        if(tid >= 10) {
+            buf1[33] = '1';
+        } else {
+            buf1[33] = '0';
+        }
+
+        buf1[34] = (tid)%10 + '0';
+        k_send_msg(TID_DISPLAY, buf1);
+        k_mem_dealloc(buf1);
+
+        while (is_less(gp_current_task->deadline, system_time)) {
+            add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
+        }
+        k_tsk_yield();
     }
 
-		
     return;
 }
 
