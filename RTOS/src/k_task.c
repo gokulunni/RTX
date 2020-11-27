@@ -180,6 +180,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         p_tcb->mailbox.buffer_end = NULL;
         p_tcb->mailbox.head = NULL;
         p_tcb->mailbox.tail = NULL;
+        p_tcb->num_successful_jobs = 0;
 
         p_tcb->prio = p_taskinfo->prio;
         if (p_tcb->prio != PRIO_RT && p_tcb->prio != HIGH && p_tcb->prio != MEDIUM && p_tcb->prio != LOW && p_tcb->prio != LOWEST && p_tcb->prio != PRIO_NULL) {
@@ -251,12 +252,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
         }
 
         // TODO: remember to dealloc when suspending a task
-        p_tcb->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
-        if (p_tcb->msg_hdr == NULL) {
-            #ifdef DEBUG_TSK
-            printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
-            #endif /* DEBUG_TSK */
-            return RTX_ERR;
+        if (p_taskinfo->msg_hdr != NULL) {
+            p_tcb->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
+            if (p_tcb->msg_hdr == NULL) {
+                #ifdef DEBUG_TSK
+                printf("[ERROR] k_tsk_create_rt: not enough space for msg_hdr\n\r");
+                #endif /* DEBUG_TSK */
+                return RTX_ERR;
+            }
         }
 
         if (p_tcb->prio == PRIO_RT) {
@@ -532,7 +535,12 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
         printf("[ERROR] k_tsk_create: attempted to create NULL task\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
-    } else if (!(prio >= 0 && prio <= 4)) {
+    } else if (prio == PRIO_RT || prio == SUSPENDED) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_create: attempted to create NULL task\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    } else if (!(prio >= 0 && prio <= 255)) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_create: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_TSK */
@@ -581,6 +589,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     new_task->priv = 0;
     new_task->msg_sender_head = NULL;
     new_task->has_mailbox=FALSE;
+    new_task->num_successful_jobs = 0;
     //Initialize mailbox to NULL values
     new_task->mailbox.buffer_start = NULL;
     new_task->mailbox.buffer_end = NULL;
@@ -614,7 +623,7 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
 
     if(gp_current_task->prio > new_task->prio)  {
         //must run immediately
-        k_tsk_yield();
+        k_tsk_yield(); // TODO: do we need to save registers?
     }
     *task = new_task->tid;
 
@@ -681,16 +690,21 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_NULL\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
-    } else if (!(prio >= 0 && prio <= 4)) {
+    } else if (prio == SUSPENDED || prio == BLK_MSG) {
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_set_prio: cannot set prio\n\r");
+        #endif /* DEBUG_TSK */
+        return RTX_ERR;
+    } else if (!(prio >= 0 && prio <= 255)) {
         #ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: prio outside of task priority bounds\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
     } else if (prio == PRIO_RT) {
-				#ifdef DEBUG_TSK
-				printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_RT\n\r");
+        #ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_set_prio: cannot set prio to PRIO_RT\n\r");
         #endif /* DEBUG_TSK */
-		}
+    }
 
     // The priority of the null task cannot be changed and remains at level PRIO_NULL.
     if (task_id == 0) {
@@ -737,13 +751,12 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
         printf("[ERROR] k_tsk_set_prio: cannot change prio of NULL task\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
-    }
-		else if (task->prio == PRIO_RT) {
+    } else if (task->prio == PRIO_RT) {
 				#ifdef DEBUG_TSK
         printf("[ERROR] k_tsk_set_prio: cannot change prio of Real-Time task\n\r");
         #endif /* DEBUG_TSK */
         return RTX_ERR;
-		}
+    }
 
     // An unprivileged task may change the priority of any other unprivileged task (including itself).
     // A privileged task may change the priority of any other task (including itself).
@@ -833,20 +846,25 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->k_stack_size = KERN_STACK_SIZE;
     buffer->k_sp = __get_MSP();
     buffer->k_stack_hi = (U32) task->msp_hi;
-		buffer->tv_cpu = task->tv_cpu;
-		buffer->tv_wall = task->tv_wall;
-		if (task->prio == PRIO_RT) {
-			buffer->p_n = task->p_n;
-			buffer->msg_hdr->length = task->msg_hdr->length;
-			buffer->msg_hdr->type = task->msg_hdr->type;
-			buffer->num_msgs = task->num_msgs;
-		}
-		else {
-			buffer->p_n.sec = 0;
-			buffer->p_n.usec = 0;
-			buffer->msg_hdr = NULL;
-			buffer->num_msgs = 0;
-		}
+
+
+    buffer->tv_cpu.sec = task->tv_cpu.sec;
+    buffer->tv_cpu.usec = task->tv_cpu.usec;
+    buffer->tv_wall.sec = task->tv_wall.sec;
+    buffer->tv_wall.usec = task->tv_wall.usec;
+    if (task->prio == PRIO_RT) {
+        buffer->p_n.sec = task->p_n.sec;
+        buffer->p_n.usec = task->p_n.usec;
+        buffer->msg_hdr->length = task->msg_hdr->length;
+        buffer->msg_hdr->type = task->msg_hdr->type;
+        buffer->num_msgs = task->num_msgs;
+    }
+    else {
+        buffer->p_n.sec = 0;
+        buffer->p_n.usec = 0;
+        buffer->msg_hdr = NULL;
+        buffer->num_msgs = 0;
+    }
 
     if (task->priv == 0) {
         buffer->u_stack_size = task->psp_size;
