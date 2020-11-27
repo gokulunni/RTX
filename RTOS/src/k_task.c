@@ -635,6 +635,10 @@ void k_tsk_exit(void) {
     if (gp_current_task->prio != PRIO_NULL) {
         gp_current_task->state = DORMANT;
 
+        struct timeval_rt temp = (struct timeval_rt) {0,0};
+        k_get_time(&temp);
+        sub(&gp_current_task->tv_wall, temp, gp_current_task->tv_wall);
+
         TCB *prev_current_task = gp_current_task;
         gp_current_task = &kernal_task;
 
@@ -851,11 +855,18 @@ int k_tsk_get(task_t task_id, RTX_TASK_INFO *buffer) {
     buffer->k_sp = __get_MSP();
     buffer->k_stack_hi = (U32) task->msp_hi;
 
-
     buffer->tv_cpu.sec = task->tv_cpu.sec;
     buffer->tv_cpu.usec = task->tv_cpu.usec;
-    buffer->tv_wall.sec = task->tv_wall.sec;
-    buffer->tv_wall.usec = task->tv_wall.usec;
+
+    if (task->state != DORMANT) {
+        struct timeval_rt temp = (struct timeval_rt) {0,0};
+        k_get_time(&temp);
+        sub(&tv_wall, temp, task->tv_wall);
+    } else {
+        buffer->tv_wall.sec = task->tv_wall.sec;
+        buffer->tv_wall.usec = task->tv_wall.usec;
+    }
+
     if (task->prio == PRIO_RT) {
         buffer->p_n.sec = task->p_n.sec;
         buffer->p_n.usec = task->p_n.usec;
@@ -1110,8 +1121,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     new_task->tv_cpu.sec = 0;
     new_task->tv_cpu.usec = 0;
-    new_task->tv_wall.sec = 0;
-    new_task->tv_wall.usec = 0;
+    k_get_time(&new_task->tv_wall);
 
     if (msg_hdr != NULL) {
         new_task->msg_hdr = k_mem_alloc(sizeof(RTX_MSG_HDR));
