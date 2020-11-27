@@ -1176,7 +1176,7 @@ void k_tsk_done_rt(void) {
     if (is_less_equal(system_time, gp_current_task->deadline)) { // Didn't miss the deadline
         sub(&time_left, gp_current_task->deadline, system_time);
         add(&gp_current_task->deadline, gp_current_task->deadline, gp_current_task->p_n);
-        k_tsk_suspend(time_left); // suspend 'til start of the next period
+        k_tsk_suspend(&time_left); // suspend 'til start of the next period
     } else {
         // TODO: SEND MESSAGE TO LCD
         //k_send_msg(TID_DISPLAY, )
