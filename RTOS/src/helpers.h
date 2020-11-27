@@ -5,6 +5,8 @@
 #ifndef ECE350_HELPERS_H
 #define ECE350_HELPERS_H
 
+#include "common.h"
+
 int mem_cpy(void *destination, void *source, size_t size);
 int str_cmp(const char *str1, const char *str2);
 
