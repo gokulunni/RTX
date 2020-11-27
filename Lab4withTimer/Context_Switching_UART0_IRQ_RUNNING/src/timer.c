@@ -244,7 +244,7 @@ void end_timer1(){
 	pTimer->TCR = 0;
 	int e_tc = pTimer->TC;
   int e_pc = pTimer->PC;
-	g_timer_count+=e_pc/100;
+	g_timer_count+=e_pc/2497;
 	seconds+= g_timer_count/10000;
 	g_timer_count= g_timer_count%10000;
 	

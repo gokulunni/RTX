@@ -19,7 +19,7 @@ int main() {
     SystemInit();
     __disable_irq();
     timer_init(0); /* initialize timer 0 */
-	timer_init_100MHZ(1);
+		timer_init_100MHZ(1);
     uart1_init();  /* uart1 is polling */
     __enable_irq();
    
