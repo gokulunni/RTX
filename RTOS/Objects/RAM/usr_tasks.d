@@ -1,0 +1,9 @@
+.\objects\ram\usr_tasks.o: src\usr_tasks.c
+.\objects\ram\usr_tasks.o: src\rtx.h
+.\objects\ram\usr_tasks.o: src\common.h
+.\objects\ram\usr_tasks.o: src\uart_polling.h
+.\objects\ram\usr_tasks.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\ram\usr_tasks.o: src\uart_def.h
+.\objects\ram\usr_tasks.o: src\usr_tasks.h
+.\objects\ram\usr_tasks.o: src\printf.h
+.\objects\ram\usr_tasks.o: C:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
