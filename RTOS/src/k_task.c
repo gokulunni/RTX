@@ -1047,6 +1047,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
     new_task->mailbox.buffer_end = NULL;
     new_task->mailbox.head = NULL;
     new_task->mailbox.tail = NULL;
+    new_task->num_successful_jobs = 0;
 
     if (msg_hdr != NULL) {
         new_task->has_mailbox = TRUE;
