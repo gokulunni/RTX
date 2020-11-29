@@ -18,6 +18,8 @@ extern TCB *gp_current_task;
 volatile U32 g_timer_count_wall = 0;
 extern struct time_t time;
 extern int wall_clock_enabled;
+volatile int timer_1_set = 0;
+volatile int startedTimer=0;
 
 /**
  * @brief: initialize timer. Only timer 0 is supported
@@ -209,15 +211,21 @@ uint32_t timer_init_100MHZ(uint8_t n_timer)
 
     /* Step 4: Enable the counter. See table 427 on pg494 of LPC17xx_UM. */
     pTimer->TCR = 1;
+		
+		timer_1_set=1;
 
     return 0;
 }
 
 void start_timer1(){
-    LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-    pTimer->TCR = 2;  // disable counter, reset counters
-    pTimer->TCR = 1;  //enable counter
-    return;
+		if (timer_1_set){
+			LPC_TIM_TypeDef *pTimer = LPC_TIM1;
+			pTimer->TCR = 2;  // disable counter, reset counters
+			pTimer->TCR = 1;  //enable counter
+			startedTimer=1;
+		}
+		return;
+		
 }
 
 void get_timer1(){
@@ -229,12 +237,16 @@ void get_timer1(){
 }
 
 void end_timer1(){
-    LPC_TIM_TypeDef *pTimer = LPC_TIM1;
-    pTimer->TCR = 0;
-    int e_tc = pTimer->TC;
-    int e_pc = pTimer->PC;
-    g_timer_count += e_pc / 2497; // TODO: how did we derive this number?
-    g_timer_seconds += g_timer_count / 10000;
-    g_timer_count = g_timer_count % 10000;
-    // TODO: shouldn't the wall clock also be updated here?
+		if (startedTimer){
+			LPC_TIM_TypeDef *pTimer = LPC_TIM1;
+			pTimer->TCR = 0;
+			int e_tc = pTimer->TC;
+			int e_pc = pTimer->PC;
+			g_timer_count += e_pc / 2497; // TODO: how did we derive this number?
+			g_timer_seconds += g_timer_count / 10000;
+			g_timer_count = g_timer_count % 10000;
+			// TODO: shouldn't the wall clock also be updated here?
+			startedTimer=0;
+		}
+		return;
 }
