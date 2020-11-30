@@ -1257,6 +1257,9 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 	}	else {
 		push_timeout_queue(&timeout_queue_head, gp_current_task, *tv);
 	}
+
+	pop_task_by_id(&ready_queue_head, 0);
+	gp_current_task = g_tcbs[0];
 	k_tsk_yield();
 	return;
 }
