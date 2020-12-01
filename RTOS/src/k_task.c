@@ -476,7 +476,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT || p_tcb_old->state == SUSPENDED)) {
+    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || (p_tcb_old->state != READY && p_tcb_old->state != RUNNING))) {
 
         //Pop the next task in queue
         gp_current_task = scheduler();
