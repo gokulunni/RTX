@@ -195,6 +195,27 @@ void push_edf_queue(TCB **edf_queue_head, TCB *task) {
     }
 }
 
+void push_rm_queue(TCB **rm_queue_head, TCB *task)	{
+	if (*rm_queue_head == NULL || is_greater((*rm_queue_head)->p_n, task->p_n))	{
+		task->next = *rm_queue_head;
+		*rm_queue_head = task;
+	} else {
+		TCB *iterator = *rm_queue_head;
+		
+		while (iterator->next != NULL && is_less_equal(iterator->next->deadline, task->deadline)) {
+			iterator = iterator->next;
+		}
+		
+		task->next = iterator->next;
+		iterator->next = task;
+	}
+}
+
+void push_default_queue(TCB **default_queue_head, TCB *task)	{
+	task->next = *default_queue_head;
+	*default_queue_head = task;
+}
+
 /**
  * TIMEOUT QUEUE
  */
