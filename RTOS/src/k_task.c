@@ -386,14 +386,20 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 TCB *scheduler(void) {
     TCB *next_task = NULL;
     if (!is_empty(ready_rt_queue_head)) {
-        if (gp_current_task && is_less(gp_current_task->deadline, ready_rt_queue_head->deadline)) {
-            return gp_current_task;
+        if (gp_current_task && gp_current_task->prio == PRIO_RT) {
+            if (gp_current_task->state != SUSPENDED && is_less(gp_current_task->deadline, ready_rt_queue_head->deadline)) {
+                return gp_current_task;
+            }
         }
 
         next_task = pop_edf_queue(&ready_rt_queue_head);
     } else if (!is_empty(ready_queue_head)){
-        if (gp_current_task && gp_current_task->prio < ready_queue_head->prio) {
-            return gp_current_task;
+        if (gp_current_task) {
+            if (gp_current_task->prio == PRIO_RT && gp_current_task->state != SUSPENDED) {
+                return gp_current_task;
+            } else if (gp_current_task->prio < ready_queue_head->prio) {
+                return gp_current_task;
+            }
         }
 
         next_task = pop(&ready_queue_head);
