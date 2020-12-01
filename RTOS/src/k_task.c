@@ -19,6 +19,7 @@
 #include "k_msg.h"
 #include "k_time.h"
 #include "timeval.h"
+#include "helpers.h"
 
 #ifdef DEBUG_TSK
 #include "printf.h"
@@ -392,19 +393,11 @@ TCB *scheduler(void) {
     }
 
     // If there is a current task, push current task back on ready queue
-    if (gp_current_task && gp_current_task -> state != BLK_MSG) {
+    if (gp_current_task && gp_current_task -> state != BLK_MSG && gp_current_task -> state != SUSPENDED) {
         if (gp_current_task->prio == PRIO_RT) {
-            if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_rt_queue_head, gp_current_task, gp_current_task->p_n);
-            } else {
-                push_edf_queue(&ready_rt_queue_head, gp_current_task);
-            }
+            push_edf_queue(&ready_rt_queue_head, gp_current_task);
         } else {
-            if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_queue_head, gp_current_task, gp_current_task->p_n);
-            } else {
-                push(&ready_queue_head, gp_current_task);
-            }
+						push(&ready_queue_head, gp_current_task);
         }
     }
 
@@ -483,7 +476,7 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT)) {
+    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT || p_tcb_old->state == SUSPENDED)) {
 
         //Pop the next task in queue
         gp_current_task = scheduler();
@@ -1258,8 +1251,6 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 		push_timeout_queue(&timeout_queue_head, gp_current_task, *tv);
 	}
 
-	pop_task_by_id(&ready_queue_head, 0);
-	gp_current_task = &g_tcbs[0];
 	k_tsk_yield();
 	return;
 }
