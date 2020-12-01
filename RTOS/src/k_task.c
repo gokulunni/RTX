@@ -386,13 +386,21 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 TCB *scheduler(void) {
     TCB *next_task = NULL;
     if (!is_empty(ready_rt_queue_head)) {
+        if (gp_current_task && is_less(gp_current_task->deadline, ready_rt_queue_head->deadline)) {
+            return gp_current_task;
+        }
+
         next_task = pop_edf_queue(&ready_rt_queue_head);
     } else if (!is_empty(ready_queue_head)){
+        if (gp_current_task && gp_current_task->prio < ready_queue_head->prio) {
+            return gp_current_task;
+        }
+
         next_task = pop(&ready_queue_head);
     }
 
     // If there is a current task, push current task back on ready queue
-    if (gp_current_task && gp_current_task -> state != BLK_MSG) {
+    if (gp_current_task && gp_current_task->state != BLK_MSG) {
         if (gp_current_task->prio == PRIO_RT) {
             if (gp_current_task->state == SUSPENDED) {
                 push_timeout_queue(&timeout_rt_queue_head, gp_current_task, gp_current_task->p_n);
@@ -482,39 +490,34 @@ int k_tsk_yield(void) {
     //Get the old task
     TCB *p_tcb_old = gp_current_task;
 
-    // a prioritity with a smaller value equals a higher priority
-    if (ready_queue_head != NULL && p_tcb_old != NULL && (ready_queue_head->prio <= p_tcb_old->prio || p_tcb_old->state == BLK_MSG || p_tcb_old->state == DORMANT)) {
+    //Pop the next task in queue
+    gp_current_task = scheduler();
 
-        //Pop the next task in queue
-        gp_current_task = scheduler();
+#ifdef DEBUG_TSK
+    printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
+#endif /* DEBUG_TSK */
 
-        #ifdef DEBUG_TSK
-        printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
-        #endif /* DEBUG_TSK */
+    if (gp_current_task == NULL){
+#ifdef DEBUG_TSK
+        printf("[ERROR] k_tsk_yield: No next task available");
+#endif /* DEBUG_TSK */
+        gp_current_task=p_tcb_old;
+        return RTX_ERR;
+    }
+    if (p_tcb_old == NULL){
+#ifdef DEBUG_TSK
+        printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+#endif /* DEBUG_TSK */
+        p_tcb_old = gp_current_task;
+    }
+    print_queue(ready_queue_head);
 
-        if (gp_current_task == NULL){
-            #ifdef DEBUG_TSK
-            printf("[ERROR] k_tsk_yield: No next task available");
-            #endif /* DEBUG_TSK */
-            gp_current_task=p_tcb_old;
-            return RTX_ERR;
-        }
-        if (p_tcb_old == NULL){
-            #ifdef DEBUG_TSK
-            printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
-            #endif /* DEBUG_TSK */
-            p_tcb_old = gp_current_task;
-        }
-        print_queue(ready_queue_head);
+    if (p_tcb_old != gp_current_task) {
         if (task_switch(p_tcb_old) == RTX_ERR) {
-            #ifdef DEBUG_TSK
+#ifdef DEBUG_TSK
             printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
-            #endif
+#endif
         }
-    } else {
-        #ifdef DEBUG_TSK
-        printf("k_tsk_yield: gp_current_task priority was higher than head TCB in ready_queue, no task switching occured");
-        #endif /* DEBUG_TSK */
     }
 
     return RTX_OK;
@@ -1165,12 +1168,8 @@ void k_tsk_done_rt(void) {
 
     gp_current_task->num_successful_jobs++;
 
-    if (gp_current_task->priv == 0) {
-    }
-    else {
-        gp_current_task->msp = gp_current_task->msp_hi;
-        gp_current_task->psp = gp_current_task->msp;
-    }
+    gp_current_task->msp = gp_current_task->msp_hi;
+    gp_current_task->psp = gp_current_task->psp_hi;
 
     if (gp_current_task->priv == 0) {
         U32 *sp = gp_current_task->psp_hi;
@@ -1276,10 +1275,12 @@ void update_tasks() {
     update_timeout(&timeout_queue_head, passed_time);
 
     while (timeout_rt_queue_head && timeout_rt_queue_head->timeout.sec == 0 && timeout_rt_queue_head->timeout.usec == 0) {
+        timeout_rt_queue_head->state = NEW;
         push_edf_queue(&ready_rt_queue_head, pop_timeout_queue(&timeout_rt_queue_head));
     }
 
     while (timeout_queue_head && timeout_queue_head->timeout.sec == 0 && timeout_queue_head->timeout.usec == 0) {
+        timeout_queue_head->state = RUNNING;
         push(&ready_queue_head, pop_timeout_queue(&timeout_queue_head));
     }
 
