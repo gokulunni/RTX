@@ -272,12 +272,14 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
                     p_tcb->num_msgs = p_taskinfo->num_msgs;
                     p_tcb->has_mailbox = TRUE;
 
+                    gp_current_task = p_tcb;
                     if (k_mbx_create(p_tcb->num_msgs * p_tcb->msg_hdr->length) == RTX_ERR) {
                         #ifdef DEBUG_TSK
                         printf("[ERROR] k_tsk_init: not enough space for mailbox\n\r");
                         #endif /* DEBUG_TSK */
                         return RTX_ERR;
                     }
+                    gp_current_task = &kernal_task;
                 } else {
                     #ifdef DEBUG_TSK
                     printf("[ERROR] k_tsk_init: num_msgs < 1\n\r");
@@ -1118,12 +1120,14 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     if (msg_hdr != NULL) {
         if (num_msgs > 0) {
+            gp_current_task = new_task;
             if (k_mbx_create(num_msgs * msg_hdr->length) == RTX_ERR) {
                 #ifdef DEBUG_TSK
                 printf("[ERROR] k_tsk_create_rt: not enough space for mailbox\n\r");
                 #endif /* DEBUG_TSK */
                 return RTX_ERR;
             }
+            gp_current_task = &kernal_task;
             new_task->has_mailbox = TRUE;
         }
     }
