@@ -1,11 +1,11 @@
-/* @brief: common defines and structs for both kernel and user
- * @file: common.h
+/* @brief: common defines and structs for both kernel and user 
+ * @file: common.h 
  * @author: Yiqing Huang
  * IMPORTANT: DO NOT MODIFY
-   If you want to define your own macros and data structures,
+   If you want to define your own macros and data structures, 
    add them to common_ext.h and do not let your
    newly-added code cause conflicts with the existing code in this file.
-   For example, if you want to define new message types,
+   For example, if you want to define new message types, 
    use a value starting from 10. Do not overwrite existing message type macro values.
  */
 
@@ -55,7 +55,7 @@ typedef unsigned char   task_t;
 #define KERN_STACK_SIZE 0x200 /* task kernel stack size in bytes */
 
 /* Real-time Task Priority. Highest in the system*/
-#define PRIO_RT 0    /* priority level for real-time tasks */
+#define PRIO_RT 0    /* priority level for real-time tasks */ 
 #define HIGH    100
 #define MEDIUM  101
 #define LOW     102
@@ -121,7 +121,7 @@ typedef struct rtx_msg_hdr {
 /* common data structures in both kernel and user spaces */
 /* Task information structure */
 typedef struct rtx_task_info {
-    void   (*ptask)();   /* Task entry address                      */
+    void   (*ptask)();   /* Task entry address                      */ 
     U32    k_sp;         /* The task current kernel stack pointer   */
     U32    k_stack_hi;   /* The kernel stack starting addr. (high addr.)*/
     U32    u_sp;         /* The task current user stack pointer     */
@@ -131,10 +131,10 @@ typedef struct rtx_task_info {
     task_t tid;          /* Task ID                                 */
     U8     prio;         /* Execution priority                      */
     U8     state;        /* Task state                              */
-    U8     priv;         /* = 0 unprivileged, =1 priviliged         */
+    U8     priv;         /* = 0 unprivileged, =1 priviliged         */  
     struct timeval_rt tv_cpu;  /* task execution cpu time */
     struct timeval_rt tv_wall; /* task execution wall clock time */
-
+    
     /* The following only applies to real-time tasks */
     struct timeval_rt p_n;    /* period in seconds and microseconds */
     RTX_MSG_HDR *msg_hdr;     /* real-time task message header      */
@@ -144,9 +144,9 @@ typedef struct rtx_task_info {
 /* Real-time task information structure */
 typedef struct task_rt {
     struct timeval_rt p_n;  /* periodic in seconds and microseconds    */
-    void (*task_entry)();   /* Task entry address                      */
+    void (*task_entry)();   /* Task entry address                      */ 
     U16  u_stack_size;      /* The task user total stack space in bytes*/
-    U8   priv;              /* = 0 unprivileged, =1 privileged         */
+    U8   priv;              /* = 0 unprivileged, =1 priviliged         */  
 } TASK_RT;
 
 #endif // _COMMON_H_

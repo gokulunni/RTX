@@ -7,6 +7,7 @@
 
 /*----- Includes -----*/
 #include "common.h"
+#include "common_ext.h"
 
 #define __SVC_0  __svc_indirect(0)
 
