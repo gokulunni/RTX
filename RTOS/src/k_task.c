@@ -397,9 +397,7 @@ TCB *scheduler(void) {
         next_task = pop_edf_queue(&ready_rt_queue_head);
     } else if (!is_empty(ready_queue_head)){
         if (gp_current_task && gp_current_task->state != BLK_MSG) {
-            if (gp_current_task->prio == PRIO_RT && gp_current_task->state != SUSPENDED) {
-                return gp_current_task;
-            } else if (gp_current_task->prio < ready_queue_head->prio) {
+            if (gp_current_task->state != SUSPENDED && gp_current_task->prio < ready_queue_head->prio) {
                 return gp_current_task;
             }
         }
