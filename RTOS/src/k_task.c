@@ -410,17 +410,11 @@ TCB *scheduler(void) {
     // If there is a current task, push current task back on ready queue
     if (gp_current_task && gp_current_task->state != BLK_MSG) {
         if (gp_current_task->prio == PRIO_RT) {
-            if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_rt_queue_head, gp_current_task, gp_current_task->p_n);
-            } else {
+            if (gp_current_task->state == PRIO_RT) {
                 push_edf_queue(&ready_rt_queue_head, gp_current_task);
             }
         } else {
-            if (gp_current_task->state == SUSPENDED) {
-                push_timeout_queue(&timeout_queue_head, gp_current_task, gp_current_task->p_n);
-            } else {
-                push(&ready_queue_head, gp_current_task);
-            }
+            push(&ready_queue_head, gp_current_task);
         }
     }
 
