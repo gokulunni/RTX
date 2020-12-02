@@ -520,12 +520,10 @@ int k_tsk_yield(void) {
     }
     print_queue(ready_queue_head);
 
-    if (p_tcb_old != gp_current_task) {
-        if (task_switch(p_tcb_old) == RTX_ERR) {
+    if (p_tcb_old == gp_current_task || task_switch(p_tcb_old) == RTX_ERR) {
 #ifdef DEBUG_TSK
-            printf("[WARNING] k_tsk_yield: could not switch task, same task resuming\r\n");
+    printf("[WARNING] k_tsk_yield: could not switch task, same task resuming\r\n");
 #endif
-        }
     }
 
     return RTX_OK;
@@ -1268,8 +1266,6 @@ void k_tsk_suspend(struct timeval_rt *tv) {
 		push_timeout_queue(&timeout_queue_head, gp_current_task, *tv);
 	}
 
-	pop_task_by_id(&ready_queue_head, 0);
-	gp_current_task = &g_tcbs[0];
 	k_tsk_yield();
 	return;
 }
