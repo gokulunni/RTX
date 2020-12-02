@@ -394,7 +394,7 @@ TCB *scheduler(void) {
 
         next_task = pop_edf_queue(&ready_rt_queue_head);
     } else if (!is_empty(ready_queue_head)){
-        if (gp_current_task) {
+        if (gp_current_task && gp_current_task->state != BLK_MSG) {
             if (gp_current_task->prio == PRIO_RT && gp_current_task->state != SUSPENDED) {
                 return gp_current_task;
             } else if (gp_current_task->prio < ready_queue_head->prio) {
@@ -500,19 +500,19 @@ int k_tsk_yield(void) {
     gp_current_task = scheduler();
 
 #ifdef DEBUG_TSK
-    printf("k_tsk_yield: Yielding task with ID: %d \n",p_tcb_old->tid);
+    printf("k_tsk_yield: Yielding task with ID: %d to %d\r\n",p_tcb_old->tid, gp_current_task->tid);
 #endif /* DEBUG_TSK */
 
     if (gp_current_task == NULL){
 #ifdef DEBUG_TSK
-        printf("[ERROR] k_tsk_yield: No next task available");
+        printf("[ERROR] k_tsk_yield: No next task available\r\n");
 #endif /* DEBUG_TSK */
         gp_current_task=p_tcb_old;
         return RTX_ERR;
     }
     if (p_tcb_old == NULL){
 #ifdef DEBUG_TSK
-        printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called");
+        printf("[WARNING] k_tsk_yield: gp_current_task was NULL while Yield() was called\r\n");
 #endif /* DEBUG_TSK */
         p_tcb_old = gp_current_task;
     }
@@ -521,7 +521,7 @@ int k_tsk_yield(void) {
     if (p_tcb_old != gp_current_task) {
         if (task_switch(p_tcb_old) == RTX_ERR) {
 #ifdef DEBUG_TSK
-            printf("[WARNING] k_tsk_yield: could not switch task, same task resuming");
+            printf("[WARNING] k_tsk_yield: could not switch task, same task resuming\r\n");
 #endif
         }
     }
@@ -629,11 +629,12 @@ int k_tsk_create(task_t *task, void (*task_entry)(void), U8 prio, U16 stack_size
     push(&ready_queue_head, new_task);
     print_queue(ready_queue_head);
 
+    *task = new_task->tid;
+
     if(gp_current_task->prio > new_task->prio)  {
         //must run immediately
         k_tsk_yield(); // TODO: do we need to save registers?
     }
-    *task = new_task->tid;
 
     return RTX_OK;
 }
@@ -658,14 +659,14 @@ void k_tsk_exit(void) {
         if (prev_current_task->has_mailbox){
             if (k_mem_dealloc(prev_current_task->mailbox.buffer_start) == RTX_ERR) {
                 #ifdef DEBUG_TSK
-                printf("k_task_exit: could not deallocate pointer to mailbox");
+                printf("k_task_exit: could not deallocate pointer to mailbox\r\n");
                 #endif /* DEBUG_TSK */
             }
 
             if (prev_current_task->msg_hdr != NULL) {
                 if (k_mem_dealloc(prev_current_task->msg_hdr) == RTX_ERR) {
                     #ifdef DEBUG_TSK
-                    printf("k_task_exit: could not deallocate pointer to msg_hdr");
+                    printf("k_task_exit: could not deallocate pointer to msg_hdr\r\n");
                     #endif /* DEBUG_TSK */
                 }
             }
@@ -921,13 +922,13 @@ int k_tsk_ls(task_t *buf, int count){
 	
 	if (buf == NULL) {
 		#ifdef DEBUG_TSK
-    printf("k_tsk_ls: can not pass in NULL task elements");
+    printf("k_tsk_ls: can not pass in NULL task elements\r\n");
 		#endif /* DEBUG_TSK */
 		return RTX_ERR;
 	}
 	if (count < 0) {
 		#ifdef DEBUG_TSK
-    printf("k_tsk_ls: invalid count passed in");
+    printf("k_tsk_ls: invalid count passed in\r\n");
 		#endif /* DEBUG_TSK */
 		return RTX_ERR;
 	}
@@ -1286,19 +1287,17 @@ void update_tasks() {
     }
 
     while (timeout_queue_head && timeout_queue_head->timeout.sec == 0 && timeout_queue_head->timeout.usec == 0) {
-        timeout_queue_head->state = RUNNING;
+        timeout_queue_head->state = READY;
         push(&ready_queue_head, pop_timeout_queue(&timeout_queue_head));
     }
 
     if (ready_rt_queue_head) {
         if (gp_current_task->prio != PRIO_RT) {
             k_tsk_yield();
-        } else if (is_less(gp_current_task->deadline, ready_rt_queue_head->deadline) ){
+        } else if (is_less(gp_current_task->deadline, ready_rt_queue_head->deadline)) {
             k_tsk_yield();
         }
-    }
-
-    if (ready_queue_head && gp_current_task->prio != PRIO_RT && gp_current_task->prio > ready_queue_head->prio) {
+    } else if (ready_queue_head && gp_current_task->prio != PRIO_RT && gp_current_task->prio > ready_queue_head->prio) {
         k_tsk_yield();
     }
 }
