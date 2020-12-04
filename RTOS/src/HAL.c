@@ -37,13 +37,13 @@ __asm void __restore_registers(void)
 __asm void SVC_Handler (void) 
 {
     PRESERVE8            ; 8 bytes alignement of the stack
-    IMPORT start_timer1
-    IMPORT end_timer1
+    ;IMPORT start_timer1
+    ;IMPORT end_timer1
     CPSID I              ; disable interrupt
 
-    PUSH {R4-R11, LR}
-    BL start_timer1		 ; start timer 1
-    POP {R4-R11, LR}     ; Restore other registers
+    ;PUSH {R4-R11, LR}
+    ;BL start_timer1		 ; start timer 1
+    ;POP {R4-R11, LR}     ; Restore other registers
 
     CMP LR, 0xFFFFFFF9    ; Check LR value to see if MSP or PSP was used
     MRSEQ  R0, MSP        ; Read MSP
@@ -91,9 +91,9 @@ kernel_thread
     MVN LR, #:NOT:0xFFFFFFF9   ; set EXC_RETURN value to Thread mode, MSP
     MOV R3, #0                 ;
     MSR CONTROL, R3            ; set control bit[0] to 0 (privileged)
-    PUSH {R4-R11, LR}
-    BL end_timer1							; end timer 1
-    POP {R4-R11, LR}     ; Restore other registers
+    ;PUSH {R4-R11, LR}
+    ;BL end_timer1							; end timer 1
+    ;POP {R4-R11, LR}     ; Restore other registers
     CPSIE I                    ; enable interrupt
     BX   LR
 
@@ -101,9 +101,9 @@ user_thread
     MVN LR, #:NOT:0xFFFFFFFD   ; set EXC_RETURN value to Thread mode, PSP
     MOV R3, #1                 ;
     MSR CONTROL, R3            ; set control bit[0] to 1 (unpriviledged)
-    PUSH {R4-R11, LR}
-    BL end_timer1							; end timer 1
-    POP {R4-R11, LR}     ; Restore other registers
+    ;PUSH {R4-R11, LR}
+    ;BL end_timer1							; end timer 1
+    ;POP {R4-R11, LR}     ; Restore other registers
     CPSIE I                    ; enable interrupt
     BX   LR
 }
