@@ -12,12 +12,40 @@
 #include "k_task.h"
 #include "timer.h"
 
-RTX_SYS_INFO sys_info_copy;
-int sys_info_set=0;
+U8 kernel_sched = DEFAULT;
+POLLING_SERVER kernel_server;
 
 int k_rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
-		
-		/* interrupts are already disabled when we enter here */
+
+    if (sys_info == NULL) {
+        return RTX_ERR;
+    }
+
+    if (tasks == NULL) {
+        return RTX_ERR;
+    }
+
+    if (num_tasks < 1 || num_tasks > MAX_TASKS) {
+        return RTX_ERR;
+    }
+
+    if (sys_info->mem_algo != FIXED_POOL && sys_info->mem_algo != FIRST_FIT && sys_info->mem_algo != BEST_FIT && sys_info->mem_algo != WORST_FIT) {
+        return RTX_ERR;
+    }
+
+    if (!(sys_info->mem_blk_size > 0)) {
+        return RTX_ERR;
+    }
+
+    if (sys_info->sched != DEFAULT && sys_info->sched != RM_NPS && sys_info->sched != RM_PS && sys_info->sched != EDF) {
+        return RTX_ERR;
+    }
+
+    if (sys_info->rtx_time_qtm % MIN_RTX_QTM != 0) {
+        return RTX_ERR;
+    }
+
+    /* interrupts are already disabled when we enter here */
     if (uart_irq_init(0) != RTX_OK) {
         return RTX_ERR;
     }
@@ -37,34 +65,27 @@ int k_rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
     if (timer_init_100MHZ(1) != RTX_OK) {
         return RTX_ERR;
     }
-		
-		//save sys_info
-		sys_info_copy.mem_blk_size = sys_info->mem_blk_size;
-		sys_info_copy.mem_algo = sys_info->mem_algo;
-		sys_info_copy.rtx_time_qtm = sys_info->rtx_time_qtm;
-		sys_info_copy.server = sys_info->server;
-		sys_info_copy.sched = sys_info->sched;
-		sys_info_set=1;
-		
-    
+
+    kernel_server = sys_info->server;
+    kernel_sched = sys_info->sched;
+
     /* start the first task */
     return k_tsk_yield();
 }
 
 
 int k_get_sys_info(RTX_SYS_INFO *buffer){
-	
-		if (buffer!=NULL){
-			return 0;
-		}
-		
-		buffer->mem_blk_size =sys_info_copy.mem_blk_size;
-		buffer->mem_algo=sys_info_copy.mem_algo;
-		buffer->rtx_time_qtm=sys_info_copy.rtx_time_qtm;
-		buffer->server=sys_info_copy.server;
-		buffer->sched=sys_info_copy.sched;
-	
-		return sys_info_set;
+    if (buffer == NULL){
+        return RTX_ERR;
+    }
+
+    buffer->mem_blk_size =sys_info_copy.mem_blk_size;
+    buffer->mem_algo=sys_info_copy.mem_algo;
+    buffer->rtx_time_qtm=sys_info_copy.rtx_time_qtm;
+    buffer->server=sys_info_copy.server;
+    buffer->sched=sys_info_copy.sched;
+
+    return sys_info_set;
 }
 
 int k_rtx_init(size_t blk_size, int algo, RTX_TASK_INFO *task_info, int num_tasks)
