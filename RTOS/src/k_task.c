@@ -684,6 +684,10 @@ void k_tsk_exit(void) {
 
         gp_current_task = prev_current_task;
         k_tsk_yield();
+				//if(polling server is enabled)
+        //{
+        //  task_switch(&ps_task_tcb);
+        //}
     }
 
     return;
