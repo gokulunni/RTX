@@ -9,6 +9,7 @@
 #define K_RTX_H_
 
 #include "common.h"
+#include "common_ext.h"
 #include "circular_buffer.h"
 
 /*----- Definitations -----*/
