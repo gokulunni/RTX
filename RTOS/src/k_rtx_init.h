@@ -13,4 +13,6 @@
 /* Functions */
 
 int k_rtx_init(size_t blk_size, int alog, RTX_TASK_INFO *task_info, int num_tasks);
+int get_sys_info(RTX_SYS_INFO *buffer);
+int rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks);
 #endif /* ! K_RTX_INIT_H_ */

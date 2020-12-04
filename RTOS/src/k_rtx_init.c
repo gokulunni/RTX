@@ -12,6 +12,15 @@
 #include "k_task.h"
 #include "timer.h"
 
+int rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
+	
+	
+}
+
+int get_sys_info(RTX_SYS_INFO *buffer){
+	
+}
+
 int k_rtx_init(size_t blk_size, int algo, RTX_TASK_INFO *task_info, int num_tasks)
 {
     /* interrupts are already disabled when we enter here */
