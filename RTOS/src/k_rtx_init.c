@@ -109,7 +109,7 @@ nt k_get_sys_info(RTX_SYS_INFO *buffer) {
     }
 
     buffer->mem_blk_size = kernel_sys_info.mem_blk_size;
-    buffer->mem_algo = sys_info_copy.mem_algo;
+    buffer->mem_algo = kernel_sys_info.mem_algo;
     buffer->rtx_time_qtm = kernel_sys_info.rtx_time_qtm;
     buffer->server = kernel_sys_info.server;
     buffer->sched = kernel_sys_info.sched;
