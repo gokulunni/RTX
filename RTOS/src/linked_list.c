@@ -348,8 +348,8 @@ void print_queue(TCB *queue_head) {
         if (iterator->prio == PRIO_RT) {
             printf("Node %d: period.sec = %d, period.usec = %d\r\n", counter, iterator->p_n.sec, iterator->p_n.usec);
             printf("Node %d: deadline.sec = %d, deadline.usec = %d\r\n", counter, iterator->deadline.sec, iterator->deadline.usec);
-            printf("Node %d: timeout.sec = %d, timeout.usec = %d\r\n", counter, msg_hdr, iterator->tv_wall.usec);
-            printf("Node %d: msg type = %d, msg length = %d\r\n", counter, *((U32 *) ((char *) msg_hdr + 4)), *((U32 *) msg_hdr));
+            printf("Node %d: timeout.sec = %d, timeout.usec = %d\r\n", counter, iterator->tv_wall.sec, iterator->tv_wall.usec);
+            printf("Node %d: msg type = %d, msg length = %d\r\n", counter, *((U32 *) ((char *) iterator->msg_hdr + 4)), *((U32 *) iterator->msg_hdr));
             printf("Node %d: num_msgs = %d\r\n", counter, iterator->num_msgs);
         }
 
