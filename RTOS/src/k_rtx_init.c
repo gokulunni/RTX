@@ -12,8 +12,7 @@
 #include "k_task.h"
 #include "timer.h"
 
-U8 kernel_sched = DEFAULT;
-POLLING_SERVER kernel_server;
+RTX_SYS_INFO kernel_sys_info;
 
 int k_rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
 
@@ -66,27 +65,16 @@ int k_rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
         return RTX_ERR;
     }
 
-    kernel_server = sys_info->server;
-    kernel_sched = sys_info->sched;
+    kernel_sys_info.mem_blk_size = sys_info->mem_blk_size;
+    kernel_sys_info.mem_algo = sys_info->mem_algo;
+    kernel_sys_info.rtx_time_qtm = sys_info->rtx_time_qtm;
+    kernel_sys_info.server = sys_info->server;
+    kernel_sys_info.sched = sys_info->sched;
 
     /* start the first task */
     return k_tsk_yield();
 }
 
-
-int k_get_sys_info(RTX_SYS_INFO *buffer){
-    if (buffer == NULL){
-        return RTX_ERR;
-    }
-
-    buffer->mem_blk_size =sys_info_copy.mem_blk_size;
-    buffer->mem_algo=sys_info_copy.mem_algo;
-    buffer->rtx_time_qtm=sys_info_copy.rtx_time_qtm;
-    buffer->server=sys_info_copy.server;
-    buffer->sched=sys_info_copy.sched;
-
-    return sys_info_set;
-}
 
 int k_rtx_init(size_t blk_size, int algo, RTX_TASK_INFO *task_info, int num_tasks)
 {
@@ -114,3 +102,17 @@ int k_rtx_init(size_t blk_size, int algo, RTX_TASK_INFO *task_info, int num_task
     /* start the first task */
     return k_tsk_yield();
 }
+
+nt k_get_sys_info(RTX_SYS_INFO *buffer) {
+    if (buffer == NULL) {
+        return RTX_ERR;
+    }
+
+    buffer->mem_blk_size = kernel_sys_info.mem_blk_size;
+    buffer->mem_algo = sys_info_copy.mem_algo;
+    buffer->rtx_time_qtm = kernel_sys_info.rtx_time_qtm;
+    buffer->server = kernel_sys_info.server;
+    buffer->sched = kernel_sys_info.sched;
+
+    return sys_info_set;
+}	}

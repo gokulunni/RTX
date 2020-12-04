@@ -38,6 +38,8 @@ extern void null_task(void);
 extern void kcd_task(void);
 extern void lcd_task(void);
 
+extern RTX_SYS_INFO kernel_sys_info;
+
 void update_tasks();
 
 #endif /* ! K_TASK_H_ */

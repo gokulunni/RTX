@@ -44,6 +44,11 @@ volatile U32 g_switch_flag = 0;  /* whether to continue to run the process befor
 void *alloc_user_stack(size_t size);
 int dealloc_user_stack(U32 *ptr, size_t size);
 
+TCB *edf_scheduler(void);
+TCB *fcfs_scheduler(void);
+TCB *rm_ps_scheduler(void);
+TCB *rm_nps_scheduler(void);
+
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
 
@@ -386,6 +391,23 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
  */
 
 TCB *scheduler(void) {
+    switch (kernel_sys_info.sched) {
+        case RM_PS:
+            return rm_ps_scheduler();
+            break;
+        case RM_NPS:
+            return rm_nps_scheduler();
+            break;
+        case EDF:
+            return edf_scheduler();
+            break;
+        case DEFAULT:
+            return fcfs_scheduler();
+            break;
+    }
+}
+
+TCB *edf_scheduler(void) {
     TCB *next_task = NULL;
     if (!is_empty(ready_rt_queue_head)) {
         if (gp_current_task && gp_current_task->prio == PRIO_RT) {
@@ -419,14 +441,52 @@ TCB *scheduler(void) {
     gp_current_task = next_task;
 
     if (gp_current_task == NULL) {
-        #ifdef DEBUG_TSK
+#ifdef DEBUG_TSK
         printf("[ERROR] scheduler: gp_current_task is NULL\n");
-        #endif /* DEBUG_TSK */
+#endif /* DEBUG_TSK */
         pop_task_by_id(&ready_queue_head, 0);
         gp_current_task = &g_tcbs[0];
     }
 
     return gp_current_task;
+}
+
+TCB *fcfs_scheduler(void) {
+    TCB *next_task = NULL;
+    if (!is_empty(ready_queue_head)){
+        if (gp_current_task && gp_current_task->state != BLK_MSG) {
+            if (gp_current_task->state != SUSPENDED && gp_current_task->prio < ready_queue_head->prio) {
+                return gp_current_task;
+            }
+        }
+
+        next_task = pop(&ready_queue_head);
+    }
+
+    // If there is a current task, push current task back on ready queue
+    if (gp_current_task && gp_current_task->state != BLK_MSG) {
+        push(&ready_queue_head, gp_current_task);
+    }
+
+    gp_current_task = next_task;
+
+    if (gp_current_task == NULL) {
+#ifdef DEBUG_TSK
+        printf("[ERROR] scheduler: gp_current_task is NULL\n");
+#endif /* DEBUG_TSK */
+        pop_task_by_id(&ready_queue_head, 0);
+        gp_current_task = &g_tcbs[0];
+    }
+
+    return gp_current_task;
+}
+
+TCB *rm_ps_scheduler(void) {
+    return NULL;
+}
+
+TCB *rm_nps_scheduler(void) {
+    return NULL;
 }
 
 /*@brief: switch out old tcb (p_tcb_old), run the new tcb (gp_current_task)
