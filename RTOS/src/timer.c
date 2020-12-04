@@ -220,11 +220,14 @@ void start_timer1(){
     return;
 }
 
-void get_timer1(){
+void get_timer1(struct timeval_rt *tv){
     LPC_TIM_TypeDef *pTimer = LPC_TIM1;
     pTimer->TCR = 0; //disable counter
     int e_tc = pTimer->TC;
     int e_pc = pTimer->PC;
+    int hundred_microseconds = e_pc / 2497;
+    tv->sec =  hundred_microseconds/10000;//seconds obviouslly
+    tv->usec =  (hundred_microseconds%10000)*100; //microseconds
     return;
 }
 
