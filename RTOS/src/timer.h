@@ -7,7 +7,7 @@
 
 #include <LPC17xx.h>
 
-extern uint32_t timer_init (uint8_t n_timer);  /* initialize timer n_timer */
+extern uint32_t timer_init (uint8_t n_timer,U32 rtx_time_qtm);  /* initialize timer n_timer */
 extern uint32_t timer_init_100MHZ(uint8_t n_timer);
 
 extern void start_timer1();

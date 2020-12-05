@@ -18,12 +18,16 @@ extern TCB *gp_current_task;
 volatile U32 g_timer_count_wall = 0;
 extern struct time_t time;
 extern int wall_clock_enabled;
+U32 rtx_time_qtm_saved=1;
+int oneSecondAlpha=10000;
 
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
-uint32_t timer_init(uint8_t n_timer)
+uint32_t timer_init(uint8_t n_timer,U32 rtx_time_qtm)
 {
+    rtx_time_qtm_saved=rtx_time_qtm;
+    oneSecondAlpha=10000/rtx_time_qtm_saved;
     LPC_TIM_TypeDef *pTimer;
     if (n_timer == 0) {
         /*
@@ -71,7 +75,7 @@ uint32_t timer_init(uint8_t n_timer)
        TC (Timer Counter) toggles b/w 0 and 1 every 50 PCLKs
        see MR setting below
     */
-    pTimer->PR = 4999;
+    pTimer->PR = rtx_time_qtm*5000-1;
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1;
@@ -142,8 +146,9 @@ void c_TIMER0_IRQHandler(void) {
     /* ack interrupt, see section  21.6.1 on pg 493 of LPC17XX_UM */
     LPC_TIM0->IR = BIT(0);  //Writing 1 to MR0 interrupt resets the interrupt
 
+
     g_timer_count++;
-    if (g_timer_count == 10000){
+    if (g_timer_count == oneSecondAlpha){
         g_timer_seconds++;
         g_timer_count = 0;
     }
@@ -152,7 +157,7 @@ void c_TIMER0_IRQHandler(void) {
         g_timer_count_wall++;
 
         //Update wall clock time value
-        if (g_timer_count_wall == 10000) {
+        if (g_timer_count_wall == oneSecondAlpha) {
             g_timer_count_wall = 0;
             (time.sec)++;
             if (time.sec == 60) {
@@ -233,8 +238,8 @@ void end_timer1(){
     pTimer->TCR = 0;
     int e_tc = pTimer->TC;
     int e_pc = pTimer->PC;
-    g_timer_count += e_pc / 2497; // TODO: how did we derive this number?
-    g_timer_seconds += g_timer_count / 10000;
-    g_timer_count = g_timer_count % 10000;
+    g_timer_count += e_pc / (2497*rtx_time_qtm_saved); // TODO: how did we derive this number?
+    g_timer_seconds += g_timer_count / oneSecondAlpha;
+    g_timer_count = g_timer_count % oneSecondAlpha;
     // TODO: shouldn't the wall clock also be updated here?
 }
