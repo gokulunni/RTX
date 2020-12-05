@@ -19,6 +19,7 @@
 #include "uart_polling.h"
 #include "usr_tasks.h"
 #include "timer.h"
+#include "helpers.h"
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* DEBUG_0 */
@@ -33,7 +34,6 @@ extern void lcd_task(void);
 extern void kcd_task(void);
 extern void wall_clock_task(void);
 extern void null_task(void);
-void benchmark_task(void);
 
 int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
@@ -66,8 +66,6 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
 void benchmark_task_mem_alloc(void)
 {
-	struct timeval_rt time;
-	
 	//MEDIUM FRAGMENTATION:
 	void *pointers[50];
 	for(int i = 0; i < 50; i++)
@@ -101,6 +99,7 @@ void benchmark_task_mem_alloc(void)
 	}
 	
 	//RUN TEST:
+	struct timeval_rt time;
 	start_timer1();
 	void *tmp = mem_alloc(128);
 	end_timer1();
@@ -108,7 +107,35 @@ void benchmark_task_mem_alloc(void)
 	get_timer1(&time);
 	mem_dealloc(tmp);
 	#ifdef DEBUG_0
-	printf("8 bytes - Seconds: %d, microseconds: %d\n", time.sec, time.usec);
+	printf("mem_alloc benchmark - Seconds: %d, microseconds: %d\n", time.sec, time.usec);
+	#endif
+	tsk_exit();
+}
+
+void benchmark_test_send_msg(void)
+{
+	mbx_create(136); //only here for successfully sending a msg
+	
+	//PREPARE MSG BUFFER:
+	int msg_hdr_size = 8;
+	int data_length = 128;
+	U8 *buf = mem_alloc(136);
+	
+	RTX_MSG_HDR *header = (void*)buf;
+
+  header->length = msg_hdr_size + data_length;
+  header->type = DEFAULT;
+	char *message = "1234567812345678123456781234567812345678123456781234567812345671234567812345678123456781234567812345678123456781234567812345678"; 
+	mem_cpy(buf + msg_hdr_size, message, data_length);
+	
+	//RUN TEST:
+	struct timeval_rt time;
+	start_timer1();
+  send_msg(1, buf); //we know the TID because there's only 1 task
+	end_timer1();
+	get_timer1(time);
+	#ifdef DEBUG_0
+	printf("send_msg benchmark - Seconds: %d, microseconds: %d\n", time.sec, time.usec);
 	#endif
 	tsk_exit();
 }
@@ -133,7 +160,7 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     set_fixed_tasks(task_info, 4);  /* kcd, lcd, null tasks */
-		task_info[4].ptask = &benchmark_task_mem_alloc;
+		task_info[4].ptask = &benchmark_test_send_msg;
 		task_info[4].u_stack_size = 0x000;
 		task_info[4].prio = MEDIUM;
 		task_info[4].priv = 1;
