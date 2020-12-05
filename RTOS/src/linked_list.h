@@ -24,6 +24,9 @@ void push(TCB **prio_queue_head, TCB *task);
 TCB *pop_edf_queue(TCB **edf_queue_head);
 void push_edf_queue(TCB **edf_queue_head, TCB *task);
 
+TCB *pop_rm_queue(TCB **rm_queue_head);
+void push_rm_queue(TCB **rm_queue_head, TCB *task);
+
 TCB *pop_timeout_queue(TCB **timeout_queue_head);
 void push_timeout_queue(TCB **timeout_queue_head, TCB *task, struct timeval_rt timeout);
 int update_timeout(TCB **timeout_queue_head, struct timeval_rt passed_time);

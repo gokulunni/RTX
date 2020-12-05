@@ -267,6 +267,36 @@ int update_timeout(TCB **timeout_queue_head, struct timeval_rt passed_time) {
     return 1;
 }
 
+TCB *pop_rm_queue(TCB **rm_queue_head) {
+    TCB *popped = *rm_queue_head;
+
+    if (popped) {
+        *rm_queue_head = (*rm_queue_head)->next;
+        popped->next = NULL;
+    } else {
+        *rm_queue_head = NULL;
+    }
+
+    return popped;
+}
+
+void push_rm_queue(TCB **rm_queue_head, TCB *task) {
+    if (*rm_queue_head == NULL || is_greater((*rm_queue_head)->p_n, task->p_n)) {
+        task->next = *rm_queue_head;
+        *rm_queue_head = task;
+    } else {
+        TCB *iterator = *rm_queue_head;
+
+        while (iterator->next != NULL && is_less_equal(iterator->next->p_n, task->p_n)) {
+            iterator = iterator->next;
+        }
+
+        task->next = iterator->next;
+        iterator->next = task;
+    }
+}
+
+
 /**
  * PRINT TCB QUEUE
  */
