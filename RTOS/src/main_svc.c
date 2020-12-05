@@ -139,6 +139,43 @@ void benchmark_test_send_msg(void)
 	#endif
 	tsk_exit();
 }
+
+void benchmark_test_recv_msg_nb(void)
+{
+	mbx_create(136); //only here for successfully sending a msg
+	
+	//PREPARE MSG BUFFER:
+	int msg_hdr_size = 8;
+	int data_length = 64;
+	U8 *buf = mem_alloc(136);
+	
+	RTX_MSG_HDR *header = (void*)buf;
+
+  header->length = msg_hdr_size + data_length;
+  header->type = DEFAULT;
+	char *message = "123456781234567812345678123456781234567812345678123456781234567"; 
+	mem_cpy(buf + msg_hdr_size, message, data_length);
+	if(send_msg(1, buf) != RTX_OK) //we know the TID because there's only 1 task
+	{
+		tsk_exit();
+	}
+	
+	U8 *recv_buf = (U8*)mem_alloc(136);
+	task_t sender_tid;
+	
+	//RUN TEST:
+	struct timeval_rt time;
+	
+	start_timer1();
+	recv_msg_nb(&sender_tid, recv_buf, data_length + msg_hdr_size);
+	end_timer1();
+	get_timer1(time);
+	#ifdef DEBUG_0
+	printf("send_msg benchmark - Seconds: %d, microseconds: %d\n", time.sec, time.usec);
+	#endif
+	tsk_exit();
+}
+
 int main() 
 {      
     RTX_TASK_INFO task_info[5];    /* 6 tasks, only 2 are used in uncommented code */
@@ -160,7 +197,7 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     set_fixed_tasks(task_info, 4);  /* kcd, lcd, null tasks */
-		task_info[4].ptask = &benchmark_test_send_msg;
+		task_info[4].ptask = &benchmark_test_recv_msg_nb;
 		task_info[4].u_stack_size = 0x000;
 		task_info[4].prio = MEDIUM;
 		task_info[4].priv = 1;
