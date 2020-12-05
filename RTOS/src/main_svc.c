@@ -18,6 +18,7 @@
 #include "priv_tasks.h"
 #include "uart_polling.h"
 #include "usr_tasks.h"
+#include "timer.h"
 #ifdef DEBUG_0
 #include "printf.h"
 #endif /* DEBUG_0 */
@@ -32,6 +33,7 @@ extern void lcd_task(void);
 extern void kcd_task(void);
 extern void wall_clock_task(void);
 extern void null_task(void);
+void benchmark_task(void);
 
 int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
@@ -61,9 +63,42 @@ int set_fixed_tasks(RTX_TASK_INFO *tasks, int num_tasks){
 
     return RTX_OK;
 }
+
+void benchmark_task_mem_alloc(void)
+{
+	struct timeval_rt time;
+	
+	//Fragment the heap
+	void *pointers[50];
+	for(int i = 0; i < 50; i++)
+	{
+		pointers[i] = mem_alloc((i*3)%14 + 4);
+		if(pointers[i] == NULL)
+		{
+			tsk_exit();
+		}
+	}
+	
+	mem_dealloc(pointers[10]);
+	mem_dealloc(pointers[20]);
+	mem_dealloc(pointers[30]);
+	mem_dealloc(pointers[40]);
+	mem_dealloc(pointers[49]);
+	
+	start_timer1();
+	void *tmp = mem_alloc(128);
+	end_timer1();
+	
+	get_timer1(&time);
+	mem_dealloc(tmp);
+	#ifdef DEBUG_0
+	printf("8 bytes - Seconds: %d, microseconds: %d\n", time.sec, time.usec);
+	#endif
+	tsk_exit();
+}
 int main() 
 {      
-    RTX_TASK_INFO task_info[6];    /* 6 tasks, only 2 are used in uncommented code */
+    RTX_TASK_INFO task_info[5];    /* 6 tasks, only 2 are used in uncommented code */
    
     /* CMSIS system initialization */
     SystemInit();  /* initialize the system */
@@ -82,9 +117,13 @@ int main()
 #endif /*DEBUG_0*/    
     /* sets task information */
     set_fixed_tasks(task_info, 4);  /* kcd, lcd, null tasks */
-    set_task_info(task_info + 4, 2);
+		task_info[4].ptask = &benchmark_task_mem_alloc;
+		task_info[4].u_stack_size = 0x000;
+		task_info[4].prio = MEDIUM;
+		task_info[4].priv = 1;
+		
     /* start the RTX and built-in tasks */
-    rtx_init(32, FIRST_FIT, task_info, 6);
+    rtx_init(32, FIRST_FIT, task_info+4, 1);
     /* We should never reach here!!! */
     return RTX_ERR;  
 }
