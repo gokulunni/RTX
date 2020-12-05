@@ -584,6 +584,9 @@ int k_tsk_yield(void) {
     //Pop the next task in queue
     if (ps_task_on == 0) {
         gp_current_task = scheduler();
+        if (gp_current_task == &kernal_task) {
+            ps_task_on = 1;
+        }
     } else {
         gp_current_task = &kernel_ps_task;
     }
@@ -1260,6 +1263,10 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 void k_tsk_done_rt(void) {
     if (gp_current_task->prio != PRIO_RT) {
         return;
+    }
+
+    if (gp_current_task == &kernal_task) {
+        ps_task_on = 0;
     }
 
     gp_current_task->num_successful_jobs++;
