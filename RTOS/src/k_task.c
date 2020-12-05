@@ -19,6 +19,7 @@
 #include "k_msg.h"
 #include "k_time.h"
 #include "timeval.h"
+#include "ps_task.c"
 
 #ifdef DEBUG_TSK
 #include "printf.h"
@@ -26,6 +27,7 @@
 
 /* ----- Global Variables ----- */
 TCB *gp_current_task;    /* always point to the current RUN process */
+int ps_task_on = 0;
 
 /* TCBs and Kernel stacks are statically allocated and is inside the OS image */
 TCB g_tcbs[MAX_TASKS];
@@ -33,6 +35,7 @@ U32 g_k_stacks[MAX_TASKS][KERN_STACK_SIZE >> 2];
 
 // Kernal Fake Task used for mem alloc of kernel necessary data
 TCB kernal_task;
+TCB kernel_ps_task;
 TCB *k_null_tsk = NULL;
 
 TCB *ready_queue_head = NULL;
@@ -150,9 +153,40 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
     RTX_TASK_INFO *p_taskinfo = task_info;
   
     // Create fake kernal task with ID = MAX_TASKS+1
-    kernal_task.tid = MAX_TASKS + 1;
+    kernal_task.tid = MAX_TASKS + 2;
     kernal_task.priv = 1;
     gp_current_task = &kernal_task;
+
+    if (kernel_sys_info.sched == RM_PS) {
+        kernel_ps_task.tid = MAX_TASKS + 1;
+        kernel_ps_task.priv = 1;
+        kernel_ps_task.prio = PRIO_RT;
+        kernel_ps_task.state = NEW;
+        kernel_ps_task.num_successful_jobs = 0;
+        kernel_ps_task.has_mailbox = 0;
+        kernel_ps_task.tv_cpu = (struct timeval_rt) {0, 0};
+        kernel_ps_task.tv_wall = (struct timeval_rt) {0, 0};
+        kernel_ps_task.timeout = (struct timeval_rt) {0, 0};
+        kernel_ps_task.p_n = (struct timeval_rt) {kernel_sys_info.server.p_n.sec, kernel_sys_info.server.p_n.usec};
+        kernel_ps_task.deadline = (struct timeval_rt) {kernel_sys_info.server.p_n.sec, kernel_sys_info.server.p_n.usec};
+        kernel_ps_task.next = NULL;
+
+        kernel_ps_task.ptask = &ps_task();
+        kernel_ps_task.msp_hi = g_k_stacks[kernel_ps_task.tid] + (KERN_STACK_SIZE >> 2);
+        sp = p_tcb.msp_hi; /* stacks grows down, so get the high addr. */
+        *(--sp) = INITIAL_xPSR;    									/* task initial xPSR (program status register) */
+        *(--sp) = (U32)(kernel_ps_task.ptask); 					/* PC contains the entry point of the task */
+        for ( j = 0; j < 6; j++ ) { 									/*R0-R3, R12, LR */
+            *(--sp) = 0x0;
+        }
+
+        kernel_ps_task.msp = sp;
+        kernel_ps_task.psp = kernel_ps_task.msp;
+        kernel_ps_task.psp_hi = NULL;
+        kernel_ps_task.psp_size = 0;
+        push_task_into_queue(&kernal_task);
+    }
+
 
     /* Pretend an exception happened, by adding exception stack frame */
     /* initilize exception stack frame (i.e. initial context) for each task */
@@ -548,7 +582,11 @@ int k_tsk_yield(void) {
     TCB *p_tcb_old = gp_current_task;
 
     //Pop the next task in queue
-    gp_current_task = scheduler();
+    if (ps_task_on == 0) {
+        gp_current_task = scheduler();
+    } else {
+        gp_current_task = &kernel_ps_task;
+    }
 
 #ifdef DEBUG_TSK
     printf("k_tsk_yield: Yielding task with ID: %d to %d\r\n",p_tcb_old->tid, gp_current_task->tid);

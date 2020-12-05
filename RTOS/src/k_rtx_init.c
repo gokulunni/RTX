@@ -11,6 +11,7 @@
 #include "k_mem.h"
 #include "k_task.h"
 #include "timer.h"
+#include "timeval.h"
 
 RTX_SYS_INFO kernel_sys_info;
 
@@ -41,6 +42,10 @@ int k_rtx_init_rt(RTX_SYS_INFO *sys_info, RTX_TASK_INFO *tasks, int num_tasks){
     }
 
     if (sys_info->rtx_time_qtm % MIN_RTX_QTM != 0) {
+        return RTX_ERR;
+    }
+
+    if (is_greater(sys_info->server.b_n, sys_info->server.p_n)) {
         return RTX_ERR;
     }
 
