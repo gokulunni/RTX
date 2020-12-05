@@ -9,4 +9,6 @@
 /* ----- Functions ------ */
 int k_get_time(struct timeval_rt *tv);
 
+extern RTX_SYS_INFO kernel_sys_info;
+
 #endif //ECE350_K_TIME_H

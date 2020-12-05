@@ -19,6 +19,8 @@ volatile U32 g_timer_count_wall = 0;
 extern struct time_t time;
 extern int wall_clock_enabled;
 
+int timeAlpha = 10000;
+
 /**
  * @brief: initialize timer. Only timer 0 is supported
  */
@@ -71,7 +73,8 @@ uint32_t timer_init(uint8_t n_timer)
        TC (Timer Counter) toggles b/w 0 and 1 every 50 PCLKs
        see MR setting below
     */
-    pTimer->PR = 4999;
+    pTimer->PR = kernel_sys_info.rtx_time_qtm * 50 - 1;
+    timeAlpha =  10000 / (kernel_sys_info.rtx_time_qtm / MIN_RTX_QTM);
 
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1;
@@ -143,7 +146,7 @@ void c_TIMER0_IRQHandler(void) {
     LPC_TIM0->IR = BIT(0);  //Writing 1 to MR0 interrupt resets the interrupt
 
     g_timer_count++;
-    if (g_timer_count == 10000){
+    if (g_timer_count == timeAlpha){
         g_timer_seconds++;
         g_timer_count = 0;
     }
@@ -152,7 +155,7 @@ void c_TIMER0_IRQHandler(void) {
         g_timer_count_wall++;
 
         //Update wall clock time value
-        if (g_timer_count_wall == 10000) {
+        if (g_timer_count_wall == timeAlpha) {
             g_timer_count_wall = 0;
             (time.sec)++;
             if (time.sec == 60) {
@@ -171,8 +174,6 @@ void c_TIMER0_IRQHandler(void) {
     }
 
     update_tasks();
-
-
 }
 
 
@@ -233,8 +234,9 @@ void end_timer1(){
     pTimer->TCR = 0;
     int e_tc = pTimer->TC;
     int e_pc = pTimer->PC;
-    g_timer_count += e_pc / 2497; // TODO: how did we derive this number?
-    g_timer_seconds += g_timer_count / 10000;
-    g_timer_count = g_timer_count % 10000;
+    g_timer_count += e_pc / (2497 * (kernel_sys_info.rtx_time_qtm / MIN_RTX_QTM));
+    g_timer_seconds += g_timer_count / timeAlpha;
+    g_timer_count = g_timer_count % timeAlpha;
+    pTimer->TCR = 0; //disable counter
     // TODO: shouldn't the wall clock also be updated here?
 }

@@ -14,4 +14,6 @@ extern void start_timer1();
 extern void get_timer1();
 extern void end_timer1();
 
+extern RTX_SYS_INFO kernel_sys_info;
+
 #endif //ECE350_TIMER_H

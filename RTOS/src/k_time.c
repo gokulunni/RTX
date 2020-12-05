@@ -20,7 +20,7 @@ int k_get_time(struct timeval_rt *tv){
     }
 
     tv->sec = g_timer_seconds;
-    tv->usec = g_timer_count;
+    tv->usec = g_timer_count * kernel_sys_info.rtx_time_qtm;
 
     return RTX_OK;
 }
