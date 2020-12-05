@@ -68,7 +68,7 @@ void benchmark_task_mem_alloc(void)
 {
 	struct timeval_rt time;
 	
-	//Fragment the heap
+	//MEDIUM FRAGMENTATION:
 	void *pointers[50];
 	for(int i = 0; i < 50; i++)
 	{
@@ -85,6 +85,22 @@ void benchmark_task_mem_alloc(void)
 	mem_dealloc(pointers[40]);
 	mem_dealloc(pointers[49]);
 	
+	//HIGH FRAGMENTATION:
+	for(int i = 1; i < 100; i++)
+	{
+		pointers[10] = mem_alloc(i);
+		pointers[20] = mem_alloc(i*2);
+		pointers[30] = mem_alloc(i + 6);
+		if(pointers[10] == NULL || pointers[20] == NULL || pointers[30] == NULL)
+		{
+			tsk_exit();
+		}
+		mem_dealloc(pointers[10]);
+		mem_dealloc(pointers[20]);
+		mem_dealloc(pointers[30]);
+	}
+	
+	//RUN TEST:
 	start_timer1();
 	void *tmp = mem_alloc(128);
 	end_timer1();
