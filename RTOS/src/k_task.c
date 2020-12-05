@@ -37,6 +37,7 @@ TCB *k_null_tsk = NULL;
 
 TCB *ready_queue_head = NULL;
 TCB *ready_rt_queue_head = NULL;
+TCB *ready_rm_queue_head = NULL;
 TCB *timeout_queue_head = NULL;
 TCB *timeout_rt_queue_head = NULL;
 INT_LL_NODE_T *free_tid_head = NULL;
@@ -48,6 +49,8 @@ TCB *edf_scheduler(void);
 TCB *fcfs_scheduler(void);
 TCB *rm_ps_scheduler(void);
 TCB *rm_nps_scheduler(void);
+
+int push_task_into_queue(TCB *task);
 
 /*---------------------------------------------------------------------------
 The memory map of the OS image may look like the following:
@@ -321,7 +324,7 @@ int k_tsk_init(RTX_TASK_INFO *task_info, int num_tasks) {
 
         //Add task to the priority queue for NEW tasks
         if (p_tcb->tid != PID_NULL) {
-            push(&ready_queue_head, p_tcb);
+            push_task_into_queue(p_tcb);
         }
 
         p_taskinfo++;
@@ -429,13 +432,7 @@ TCB *edf_scheduler(void) {
 
     // If there is a current task, push current task back on ready queue
     if (gp_current_task && gp_current_task->state != BLK_MSG) {
-        if (gp_current_task->prio == PRIO_RT) {
-            if (gp_current_task->state == PRIO_RT) {
-                push_edf_queue(&ready_rt_queue_head, gp_current_task);
-            }
-        } else {
-            push(&ready_queue_head, gp_current_task);
-        }
+        push_task_into_queue(gp_current_task);
     }
 
     gp_current_task = next_task;
@@ -465,7 +462,7 @@ TCB *fcfs_scheduler(void) {
 
     // If there is a current task, push current task back on ready queue
     if (gp_current_task && gp_current_task->state != BLK_MSG) {
-        push(&ready_queue_head, gp_current_task);
+        push_task_into_queue(gp_current_task);
     }
 
     gp_current_task = next_task;
@@ -847,7 +844,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
             //if priority for a task in ready Q is higher than running task
             if ((task->state == READY || task->state == NEW) && task->prio < gp_current_task->prio) {
                 TCB *p_tcb_old = gp_current_task;
-                push(&ready_queue_head, p_tcb_old);
+                push_task_into_queue(p_tcb_old);
                 gp_current_task = task;
                 if (task_switch(p_tcb_old) == RTX_ERR) {
                     #ifdef DEBUG_TSK
@@ -859,7 +856,7 @@ int k_tsk_set_prio(task_t task_id, U8 prio) {
             else{
                 //Push the changed priority task back into ready Q
                 //Condition if setting task to equal or lower priority than running task
-                push(&ready_queue_head,task);
+                push_task_into_queue(task);
             }
         }
         //changing priority for current running task
@@ -1215,7 +1212,7 @@ int k_tsk_create_rt(task_t *tid, TASK_RT *task, RTX_MSG_HDR *msg_hdr, U32 num_ms
 
     *tid = new_task->tid;
 
-    push_edf_queue(&ready_rt_queue_head, new_task);
+    push_task_into_queue(new_task);
 
     k_tsk_yield();
 
@@ -1335,12 +1332,14 @@ void update_tasks() {
 
     while (timeout_rt_queue_head && timeout_rt_queue_head->timeout.sec == 0 && timeout_rt_queue_head->timeout.usec == 0) {
         timeout_rt_queue_head->state = NEW;
-        push_edf_queue(&ready_rt_queue_head, pop_timeout_queue(&timeout_rt_queue_head));
+        TCB *popped_tcb = pop_timeout_queue(&timeout_rt_queue_head);
+        push_task_into_queue(popped_tcb);
     }
 
     while (timeout_queue_head && timeout_queue_head->timeout.sec == 0 && timeout_queue_head->timeout.usec == 0) {
         timeout_queue_head->state = READY;
-        push(&ready_queue_head, pop_timeout_queue(&timeout_queue_head));
+        TCB *popped_tcb = pop_timeout_queue(&timeout_queue_head);
+        push_task_into_queue(popped_tcb);
     }
 
     if (ready_rt_queue_head) {
@@ -1352,4 +1351,28 @@ void update_tasks() {
     } else if (ready_queue_head && gp_current_task->prio != PRIO_RT && gp_current_task->prio > ready_queue_head->prio) {
         k_tsk_yield();
     }
+}
+
+int push_task_into_queue(TCB *task) {
+    switch (kernel_sys_info.sched) {
+        case RM_PS:
+        case RM_NPS:
+            if (task->prio == PRIO_RT && task->state != SUSPENDED) {
+                push_rm_queue(&ready_rm_queue_head, task);
+            } else {
+                push(&ready_queue_head, task);
+            }
+            break;
+        case EDF:
+            if (task->prio == PRIO_RT && task->state != SUSPENDED) {
+                push_edf_queue(&ready_rt_queue_head, task);
+            } else {
+                push(&ready_queue_head, task);
+            }
+            break;
+        case DEFAULT:
+            push(&ready_queue_head, task);
+            break;
+    }
+
 }
